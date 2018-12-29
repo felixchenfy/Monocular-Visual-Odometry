@@ -1,3 +1,11 @@
+
+.vscode/
+bin/
+cmake_modules
+dataset_images/
+lib/
+run.bash
+
 *build*
 *.out
 CMakeCache.txt
