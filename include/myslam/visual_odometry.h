@@ -8,7 +8,7 @@
 #include "myslam/map.h"
 #include "myslam/mappoint.h"
 #include "myslam/frame.h"
-#include "myslam/feature_match.h"
+#include "mygeometry/feature_match.h"
 
 namespace myslam
 {
@@ -68,6 +68,7 @@ class VisualOdometry
     // int num_lost_;           // number of lost times
 
     // --------------- parameters ---------------
+
     // ORB
     int num_of_features_; // number of features
     double scale_factor_; // scale in image pyramid
@@ -83,8 +84,12 @@ class VisualOdometry
 
 
   protected: // inner operation
-    void extractKeyPoints() { orb_->detect(curr_->rgb_img_, keypoints_curr_); }
-    void computeDescriptors() { orb_->compute(curr_->rgb_img_, keypoints_curr_, descriptors_curr_); }
+    void extractKeyPoints() { 
+      mygeometry::extractKeyPoints(curr_->rgb_img_, keypoints_curr_);
+    }
+    void computeDescriptors(){
+      mygeometry::computeDescriptors(curr_->rgb_img_, keypoints_curr_, descriptors_curr_);
+    };
 
     // // Currently not used !!! This will be used after triangulation !!!
     // void matchFeatures_withMapPoints(); 

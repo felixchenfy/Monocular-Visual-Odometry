@@ -19,7 +19,8 @@ buffsize_of_prev_frames: 1
 match_ratio: 2.0
 
 # ORB settings 
-number_of_features: 500
+number_of_keypoints_to_extract: 5000
+max_number_of_keypoints: 1000
 scale_factor: 1.2
 level_pyramid: 4
 

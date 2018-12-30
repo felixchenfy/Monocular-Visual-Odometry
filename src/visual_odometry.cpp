@@ -20,11 +20,6 @@ VisualOdometry::VisualOdometry() : state_(INITIALIZING),
     // Set for matching descriptors
     // num_lost_(0), num_inliers_(0)
 
-    // Set for ORB properties
-    num_of_features_ = Config::get<int>("number_of_features");
-    scale_factor_ = Config::get<double>("scale_factor");
-    level_pyramid_ = Config::get<int>("level_pyramid");
-    orb_ = cv::ORB::create(num_of_features_, scale_factor_, level_pyramid_);
 }
 
 bool VisualOdometry::addFrame(Frame::Ptr frame)
@@ -45,7 +40,6 @@ bool VisualOdometry::addFrame(Frame::Ptr frame)
     {
     case INITIALIZING:
     {
-        cout << "buff_frames.size()" << buff_frames.size()<<endl;
         if (buff_frames.size() < BUFFSIZE)
         {
             // do nothing
@@ -54,7 +48,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame)
         {
             // matching features between "buff_frames[0]" and "curr_"
             cv::Mat desciptors_prev=buff_frames.buff_descriptors_[0];
-            matchFeatures(desciptors_prev, descriptors_curr_, matches);
+            mygeometry::matchFeatures(desciptors_prev, descriptors_curr_, matches);
 
             // Estimate camera motion between two frames
             // Mat R,t;
@@ -73,6 +67,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame)
     cout << "Add frame " << frame->id_ << endl;
     cout << "time cost = " << timer.elapsed() * 1000 << "ms" << endl;
     cout << "number of keypoints = " << keypoints_curr_.size() << endl;
+    cout << "rows of descriptors_curr_ = " << descriptors_curr_.rows << endl;
     cout << "number of matched keypoints = " << matches.size() << endl;
 
     // Manage the buff
@@ -112,7 +107,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame)
 
 //     // Match keypoints' descriptors
 //     vector<cv::DMatch> matches;
-//     matchFeatures(candidates_descriptors, descriptors_curr_, matches);
+//     mygeometry::matchFeatures(candidates_descriptors, descriptors_curr_, matches);
 
 //     // Push points to result
 //     matched_3d_MapPoints_.clear();
