@@ -5,6 +5,7 @@ add_library( myslam SHARED
     frame.cpp
     map.cpp
     mappoint.cpp
+    feature_match.cpp
 )
 
 target_link_libraries( myslam

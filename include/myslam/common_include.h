@@ -28,6 +28,7 @@ using cv::Mat;
 #include <set>
 #include <unordered_map>
 #include <map>
+#include <deque>
 
 using namespace std; 
 #endif

@@ -17,7 +17,7 @@ public:
     // bool        good_;      // wheter a good point 
     // Vector3d    pos_;       // Position in world
     // Vector3d    norm_;      // Normal of viewing direction 
-    // Mat         descriptor_; // Descriptor for matching 
+    Mat         descriptor_; // Descriptor for matching 
     
     // list<Frame*>    observed_frames_;   // key-frames that can observe this point 
     

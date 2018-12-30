@@ -8,9 +8,29 @@
 #include "myslam/map.h"
 #include "myslam/mappoint.h"
 #include "myslam/frame.h"
+#include "myslam/feature_match.h"
 
 namespace myslam
 {
+
+class Buff_FramesWithFeatures{
+public:
+   deque<Frame::Ptr> buff_frames_; // use deque for const time of pop_front
+   deque<vector<cv::KeyPoint>> buff_keypoints_;
+   deque<cv::Mat> buff_descriptors_;
+  void push_back(Frame::Ptr frame, vector<cv::KeyPoint> keypoints, cv::Mat descriptors){
+    buff_frames_.push_back(frame);
+    buff_keypoints_.push_back(keypoints);
+    buff_descriptors_.push_back(descriptors);
+  }
+  void pop_ith(int i){
+    buff_frames_.erase(buff_frames_.begin()+i);
+    buff_keypoints_.erase(buff_keypoints_.begin()+i);
+    buff_descriptors_.erase(buff_descriptors_.begin()+i);
+  }
+  void pop_front(){pop_ith(0);}
+  int size(){return buff_descriptors_.size();}
+};
 
 class VisualOdometry
 {
@@ -21,7 +41,6 @@ class VisualOdometry
 
     enum VOState
     {
-        EMPTY = 0,
         INITIALIZING = 1,
         OK = 2,
         LOST = 3
@@ -41,19 +60,14 @@ class VisualOdometry
     Mat descriptors_curr_;
 
     // feature matching
-    cv::FlannBasedMatcher matcher_flann_;      // flann matcher
-    vector<MapPoint::Ptr> match_3d_MapPoints_; // matched 3d points
-    vector<int> match_2d_keypts_index_;        // matched 2d pixels (index of kp_curr)
+    vector<MapPoint::Ptr> matched_3d_MapPoints_; // matched 3d points
+    vector<int> matched_2d_keypts_index_;        // matched 2d pixels (index of kp_curr)
 
     // SE3 T_c_w_estimated_;    // the estimated pose of current frame
     // int num_inliers_;        // number of inlier features in icp
     // int num_lost_;           // number of lost times
 
     // --------------- parameters ---------------
-
-    // matching
-    double match_ratio_; // used here: double threshold_dis = max<double>(min_dis * match_ratio_, 30.0);
-
     // ORB
     int num_of_features_; // number of features
     double scale_factor_; // scale in image pyramid
@@ -65,12 +79,15 @@ class VisualOdometry
     VisualOdometry();
     ~VisualOdometry(){}
     bool addFrame(Frame::Ptr frame); // add a new frame
+    
 
-  protected:
-    // inner operation
+
+  protected: // inner operation
     void extractKeyPoints() { orb_->detect(curr_->rgb_img_, keypoints_curr_); }
     void computeDescriptors() { orb_->compute(curr_->rgb_img_, keypoints_curr_, descriptors_curr_); }
-    // void featureMatching();
+
+    // // Currently not used !!! This will be used after triangulation !!!
+    // void matchFeatures_withMapPoints(); 
 
   // ------------------ IO -------------------
   public: 
