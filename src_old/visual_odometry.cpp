@@ -146,17 +146,17 @@ void VisualOdometry::featureMatching()
         return m1.distance < m2.distance;
     } )->distance;
 
-    match_3dpts_.clear();
-    match_2dkp_index_.clear();
+    match_3d_MapPoints_.clear();
+    match_2d_keypts_index_.clear();
     for ( cv::DMatch& m : matches )
     {
         if ( m.distance < max<float> ( min_dis*match_ratio_, 30.0 ) )
         {
-            match_3dpts_.push_back( candidate[m.queryIdx] ); // map point in map
-            match_2dkp_index_.push_back( m.trainIdx ); // key point in current frame
+            match_3d_MapPoints_.push_back( candidate[m.queryIdx] ); // map point in map
+            match_2d_keypts_index_.push_back( m.trainIdx ); // key point in current frame
         }
     }
-    cout<<"good matches: "<<match_3dpts_.size() <<endl;
+    cout<<"good matches: "<<match_3d_MapPoints_.size() <<endl;
     cout<<"match cost time: "<<timer.elapsed() <<endl;
 }
 
@@ -166,11 +166,11 @@ void VisualOdometry::poseEstimationPnP()
     vector<cv::Point3f> pts3d;
     vector<cv::Point2f> pts2d;
 
-    for ( int index:match_2dkp_index_ )
+    for ( int index:match_2d_keypts_index_ )
     {
         pts2d.push_back ( keypoints_curr_[index].pt );
     }
-    for ( MapPoint::Ptr pt:match_3dpts_ )
+    for ( MapPoint::Ptr pt:match_3d_MapPoints_ )
     {
         pts3d.push_back( pt->getPositionCV() );
     }
@@ -218,7 +218,7 @@ void VisualOdometry::poseEstimationPnP()
         edge->setInformation ( Eigen::Matrix2d::Identity() );
         optimizer.addEdge ( edge );
         // set the inlier map points 
-        match_3dpts_[index]->matched_times_++;
+        match_3d_MapPoints_[index]->matched_times_++;
     }
 
     optimizer.initializeOptimization();
@@ -292,7 +292,7 @@ void VisualOdometry::addMapPoints()
 {
     // add the new map points into map
     vector<bool> matched(keypoints_curr_.size(), false); 
-    for ( int index:match_2dkp_index_ )
+    for ( int index:match_2d_keypts_index_ )
         matched[index] = true;
     for ( int i=0; i<keypoints_curr_.size(); i++ )
     {
@@ -344,7 +344,7 @@ void VisualOdometry::optimizeMap()
         iter++;
     }
     
-    if ( match_2dkp_index_.size()<100 )
+    if ( match_2d_keypts_index_.size()<100 )
         addMapPoints();
     if ( map_->map_points_.size() > 1000 )  
     {

@@ -30,17 +30,18 @@ class Frame
     // std::vector<MapPoint*>         map_points_; // associated map points
 
   public: // Constructor
-    Frame(Mat rgb_img, Camera::Ptr camera, double time_stamp = -1)
-    {
-        rgb_img_ = rgb_img_;
-        id_=factory_id_++;
-        time_stamp_ = time_stamp;
-        camera_ = camera;
-    }
+    // Frame(Mat rgb_img, Camera::Ptr camera, double time_stamp = -1)
+    // {
+    //     rgb_img_ = rgb_img;
+    //     id_=factory_id_++;
+    //     time_stamp_ = time_stamp;
+    //     camera_ = camera;
+    // }
+    Frame(){}
     ~Frame() {}
+    static Frame::Ptr createFrame(Mat rgb_img, Camera::Ptr camera, double time_stamp = -1);
 
   public: // Member functions
-    static Frame::Ptr createFrame();
     Vector3d getCamCenter() const { return T_c_w_.inverse().translation(); }
     void setPose(const SE3 &T_c_w) { T_c_w_ = T_c_w; }
 

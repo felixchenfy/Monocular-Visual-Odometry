@@ -83,11 +83,15 @@ int main(int argc, char **argv)
             break;
 
         // Add to map        
-        myslam::Frame::Ptr frame( new myslam::Frame(rgb_img, camera) );
-        // vo.addFrame(pFrame)
+        // myslam::Frame::Ptr frame( new myslam::Frame(rgb_img, camera) );
+        myslam::Frame::Ptr frame = myslam::Frame::createFrame(rgb_img, camera);
+        vo->addFrame(frame);
 
         // Display
         cv::Mat img_show=rgb_img.clone();
+        cv::Scalar color(0,255,0);
+        cv::Scalar color2= cv::Scalar::all(-1);
+        cv::drawKeypoints(img_show, vo->getCurrentKeypoints(), img_show, color);
         cv::imshow ( "image", img_show );
         cv::waitKey (1000);
     }

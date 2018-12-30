@@ -3,6 +3,8 @@ add_library( myslam SHARED
     visual_odometry.cpp
     camera.cpp
     frame.cpp
+    map.cpp
+    mappoint.cpp
 )
 
 target_link_libraries( myslam
