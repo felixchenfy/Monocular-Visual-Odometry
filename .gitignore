@@ -3,6 +3,7 @@
 bin/
 cmake_modules
 dataset_images/
+dataset_images_copy/
 lib/
 run.bash
 

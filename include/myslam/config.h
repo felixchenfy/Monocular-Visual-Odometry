@@ -31,4 +31,4 @@ public:
 };
 }
 
-#endif // CONFIG_H
+#endif
