@@ -7,8 +7,9 @@
 namespace myslam
 {
 
-VisualOdometry::VisualOdometry() : state_(INITIALIZING), 
-    ref_(nullptr), curr_(nullptr), map_(new Map)
+VisualOdometry::VisualOdometry() : state_(INITIALIZING),
+    // map_(new Map),
+    ref_(nullptr), curr_(nullptr)
 {
 
     // max_num_lost_       = Config::get<float> ( "max_num_lost" );
@@ -22,7 +23,7 @@ VisualOdometry::VisualOdometry() : state_(INITIALIZING),
 
 }
 
-bool VisualOdometry::addFrame(Frame::Ptr frame)
+bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
 {
     static Buff_FramesWithFeatures buff_frames;
     const int BUFFSIZE = myslam::Config::get<int>("buffsize_of_prev_frames");
@@ -76,6 +77,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame)
     {
         buff_frames.pop_front();
     }
+
     // Return
     return resAddFrameSuccess;
 }

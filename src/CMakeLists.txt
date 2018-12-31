@@ -3,8 +3,8 @@ add_library( myslam SHARED
     visual_odometry.cpp
     camera.cpp
     frame.cpp
-    map.cpp
-    mappoint.cpp
+    # map.cpp
+    # mappoint.cpp
     feature_match.cpp
 )
 

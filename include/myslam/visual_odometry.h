@@ -5,8 +5,8 @@
 #include <opencv2/features2d/features2d.hpp>
 
 #include "myslam/common_include.h"
-#include "myslam/map.h"
-#include "myslam/mappoint.h"
+// #include "myslam/map.h"
+// #include "myslam/mappoint.h"
 #include "myslam/frame.h"
 #include "mygeometry/feature_match.h"
 
@@ -47,7 +47,7 @@ class VisualOdometry
     };
     VOState state_; // current VO status
 
-    Map::Ptr map_; // Pointer to the map.
+    // Map::Ptr map_; // Pointer to the map.
     // This is for:
     //      map_->map_points_
 
@@ -60,8 +60,8 @@ class VisualOdometry
     Mat descriptors_curr_;
 
     // feature matching
-    vector<MapPoint::Ptr> matched_3d_MapPoints_; // matched 3d points
-    vector<int> matched_2d_keypts_index_;        // matched 2d pixels (index of kp_curr)
+    // vector<MapPoint::Ptr> matched_3d_MapPoints_; // matched 3d points
+    // vector<int> matched_2d_keypts_index_;        // matched 2d pixels (index of kp_curr)
 
     // SE3 T_c_w_estimated_;    // the estimated pose of current frame
     // int num_inliers_;        // number of inlier features in icp
@@ -69,19 +69,11 @@ class VisualOdometry
 
     // --------------- parameters ---------------
 
-    // ORB
-    int num_of_features_; // number of features
-    double scale_factor_; // scale in image pyramid
-    int level_pyramid_;   // number of pyramid levels
-
-    
-
   public: // functions
     VisualOdometry();
     ~VisualOdometry(){}
     bool addFrame(Frame::Ptr frame); // add a new frame
     
-
 
   protected: // inner operation
     void extractKeyPoints() { 

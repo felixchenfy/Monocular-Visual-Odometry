@@ -19,7 +19,9 @@ void matchFeatures(
     const cv::Mat &descriptors_1, const cv::Mat &descriptors_2,
     vector<cv::DMatch> &matches);
 
-// Remove duplicate matches by sorting the trainIdx and make it unique.
+// Remove duplicate matches. 
+// After cv's match func, many kpts in I1 might matched to a same kpt in I2.
+// Sorting the trainIdx(I2), and make the match unique.
 void _remove_duplicate_matches(vector<cv::DMatch> &matches);
 
 // Use a grid to remove the keypoints that are too close to each other.
