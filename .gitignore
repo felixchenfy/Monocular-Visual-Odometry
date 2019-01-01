@@ -1,4 +1,5 @@
 
+test/*.png
 .vscode/
 bin/
 cmake_modules

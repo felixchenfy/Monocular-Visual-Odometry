@@ -14,7 +14,7 @@ set( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib )
 # Eigen
 include_directories( "/usr/include/eigen3" )
 # OpenCV
-find_package( OpenCV 3.1 REQUIRED )
+find_package( OpenCV 4.0 REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 # Sophus 
 find_package( Sophus REQUIRED )
@@ -32,4 +32,4 @@ set( THIRD_PARTY_LIBS
 ############### dependencies ######################
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 add_subdirectory( src )
-# add_subdirectory( test )
+add_subdirectory( test )

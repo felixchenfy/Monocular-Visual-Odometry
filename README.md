@@ -19,3 +19,7 @@ Despite these lots of borrowing, I still learned a lot. I've read large percent 
 * add grid sampling for ORB features.
 
 # 1. Algorithm
+
+结论
+pnp用两张图中共同区域的点估计相机2的姿态。估计完后，第一次不需要补充，但第二次就需要通过三角化补充特征点。
+然而，问题是如何补充特征点？哪些是真正匹配上的特征点？这还是需要用E/H matrix来估计。所以还需要PnP吗。
