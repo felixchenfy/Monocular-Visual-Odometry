@@ -3,17 +3,19 @@ add_library( mylibs SHARED
     visual_odometry.cpp
     camera.cpp
     frame.cpp
-    # map.cpp
-    # mappoint.cpp
     feature_match.cpp
     epipolar_geometry.cpp
+
+    # --------------no used---------
+    # map.cpp
+    # mappoint.cpp
 )
 
 target_link_libraries( mylibs
     ${THIRD_PARTY_LIBS}
 )
 
-# add_executable(main main.cpp)
-# target_link_libraries( main
-#     mylibs
-# )
+add_executable(main main.cpp)
+target_link_libraries( main
+    mylibs
+)

@@ -1,4 +1,5 @@
 
+garbage/*
 test/*.png
 .vscode/
 bin/
