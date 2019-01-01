@@ -78,8 +78,8 @@ void print_R_t(const Mat &R, const Mat &t)
 {
     Mat rvec;
     Rodrigues(R, rvec);
-    cout << "R is:\n"
-         << R << endl;
+    // cout << "R is:\n"
+    //      << R << endl;
     cout << "R_vec is: " << rvec.t() << endl;
     cout << "t is: " << t.t() << endl;
 }
@@ -279,6 +279,43 @@ double computeEpipolarConsError(
     return d.at<double>(0, 0);
 }
 
+double computeEpipolarConsError( // mean square error
+    const vector<Point2f> &pts1, const vector<Point2f> &pts2,
+    const Mat &R, const Mat &t, const Mat &K)
+{
+    double err=0;
+    int N=pts1.size();
+    if(N==0)return 99999999999999;
+    for (int i=0;i<N;i++){
+        double e = computeEpipolarConsError(pts1[i],pts2[i],R,t,K);
+        err += e*e;
+    }
+    return sqrt(err/N);
+}
+double ptPosInNormPlane(const Point3f &pt_3d_pos_in_cam1,
+    const Mat &R_cam2_to_cam1, const Mat &t_cam2_to_cam1,
+    Point2f &pt_pos_on_cam1_nplane, double &depth1,
+    Point2f &pt_pos_on_cam2_nplane, double &depth2)
+{
+    Point3f pts3dc1 = pt_3d_pos_in_cam1;
+    
+    // cam1
+    depth1 = pts3dc1.z;
+    Point2f pts3dc1_norm(pts3dc1.x / depth1, pts3dc1.y / depth1);
+
+    // cam2
+    Mat tmp = t_cam2_to_cam1 + 
+        R_cam2_to_cam1 * (Mat_<double>(3, 1) << pts3dc1.x, pts3dc1.y, pts3dc1.z);
+    Point3f pts3dc2(tmp.at<double>(0, 0), tmp.at<double>(1, 0), tmp.at<double>(2, 0));
+    depth2 = pts3dc2.z;
+    Point2f pts3dc2_norm(pts3dc2.x / depth2, pts3dc2.y / depth2);
+    
+    // return
+    pt_pos_on_cam1_nplane=pts3dc1_norm;
+    pt_pos_on_cam2_nplane=pts3dc2_norm;
+}
+    
+
 Mat transRt2T(const Mat &R, const Mat &t)
 {
     Mat T = (Mat_<float>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
@@ -329,6 +366,18 @@ void triangulation(
 
     // return
     pts3d_in_cam1 = pts3d_in_world;
+}
+
+vector<int> getIntersection(vector<int> v1, vector<int> v2){
+    int comb_len=v1.size()+v2.size();
+    std::vector<int> v(comb_len);
+    std::vector<int>::iterator it;
+    it=std::set_intersection(
+        v1.begin(), v1.end(),
+        v2.begin(), v2.end(),
+        v.begin());
+    v.resize(it-v.begin());
+    return v;
 }
 
 } // namespace mygeometry

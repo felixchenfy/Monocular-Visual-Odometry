@@ -8,23 +8,22 @@ int main(int argc, char **argv)
 {
     string filename = "config/default.yaml";
     int level_pyramid;
-    string key="level_pyramid";
-   
+    string key = "level_pyramid";
+
     // test 1
     FileStorage fs(filename, FileStorage::READ);
-    if ( fs.isOpened() == false )
+    if (fs.isOpened() == false)
     {
-        std::cerr<<"Parameter file "<<filename<<" does not exist."<<std::endl;
+        std::cerr << "Parameter file " << filename << " does not exist." << std::endl;
         return 1;
     }
     level_pyramid = fs[key];
-    cout << "Read yaml by this cpp: level_pyrimid = "<< level_pyramid << endl;
+    cout << "Read yaml by this cpp: level_pyrimid = " << level_pyramid << endl;
 
     // test 2
     myslam::Config::setParameterFile(filename);
     level_pyramid = myslam::Config::get<int>(key);
-    cout << "Read yaml by config.h: level_pyrimid = "<< level_pyramid << endl;
-
+    cout << "Read yaml by config.h: level_pyrimid = " << level_pyramid << endl;
 
     return 1;
 }

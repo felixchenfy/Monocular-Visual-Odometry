@@ -23,14 +23,11 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
 {
     static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid;
     static double scale_factor=_scale_factor;
-    static bool FIRST_IN=true;
-   if (FIRST_IN){
-        FIRST_IN=false;
-        if(SET_PARAM_BY_YAML){
-            num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
-            scale_factor = myslam::Config::get<double>("scale_factor");
-            level_pyramid = myslam::Config::get<int>("level_pyramid");
-        }
+    static int CNT_=0;
+    if (CNT_++==0 && SET_PARAM_BY_YAML){
+        num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = myslam::Config::get<double>("scale_factor");
+        level_pyramid = myslam::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -44,14 +41,11 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
 {
     static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid;
     static double scale_factor=_scale_factor;
-    static bool FIRST_IN=true;
-    if (FIRST_IN){
-        FIRST_IN=false;
-        if(SET_PARAM_BY_YAML){
-            num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
-            scale_factor = myslam::Config::get<double>("scale_factor");
-            level_pyramid = myslam::Config::get<int>("level_pyramid");
-        }
+    static int CNT_=0;
+    if (CNT_++==0 && SET_PARAM_BY_YAML){
+        num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = myslam::Config::get<double>("scale_factor");
+        level_pyramid = myslam::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -64,17 +58,14 @@ void _remove_tooclose_keypoints_by_grid(vector<cv::KeyPoint>& keypoints,
     const int image_rows, const int image_cols,
     const bool SET_PARAM_BY_YAML)
 {
-    static int GRID_SIZE=_grid_size, MAX_PTS_IN_GRID=_max_pts_in_grid;
-    static int MAX_NUM_KEYPOINTS = _max_num_keypoints;
-    static bool FIRST_IN=true;
-    if(FIRST_IN){
-        FIRST_IN=false;
-        if(SET_PARAM_BY_YAML){
-            MAX_NUM_KEYPOINTS = myslam::Config::get<int>("max_number_of_keypoints");
-        }
+    static int grid_size=_grid_size, MAX_PTS_IN_GRID=_max_pts_in_grid;
+    static int max_num_keypoints = _max_num_keypoints;
+    static int CNT_=0;
+    if (CNT_++==0 && SET_PARAM_BY_YAML){
+        max_num_keypoints = myslam::Config::get<int>("max_number_of_keypoints");
     }
-    static vector<vector<int>> grid(image_rows/GRID_SIZE,
-        vector<int>(image_cols/GRID_SIZE,0));
+    static vector<vector<int>> grid(image_rows/grid_size,
+        vector<int>(image_cols/grid_size,0));
 
     // clear grid
     for (auto row: grid) //clear grid
@@ -84,11 +75,11 @@ void _remove_tooclose_keypoints_by_grid(vector<cv::KeyPoint>& keypoints,
     vector<cv::KeyPoint> tmp_keypoints;
     int cnt=0;
     for (auto &kpt: keypoints){
-        int row=((int)kpt.pt.y)/GRID_SIZE, col=((int)kpt.pt.x)/GRID_SIZE;
+        int row=((int)kpt.pt.y)/grid_size, col=((int)kpt.pt.x)/grid_size;
         if (++grid[row][col]<=MAX_PTS_IN_GRID){
             tmp_keypoints.push_back(kpt);
             cnt++;
-            if (cnt>MAX_NUM_KEYPOINTS)break;
+            if (cnt>max_num_keypoints)break;
         }
     }
 
@@ -105,12 +96,9 @@ void matchFeatures(
 {
     static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
     static double match_ratio = _match_ratio;
-    static bool FIRST_IN=true;
-    if(FIRST_IN){
-        FIRST_IN=false;
-        if(SET_PARAM_BY_YAML){
-            match_ratio = myslam::Config::get<int>("match_ratio");
-        }
+    static int CNT_=0;
+    if (CNT_++==0 && SET_PARAM_BY_YAML){
+        match_ratio = myslam::Config::get<int>("match_ratio");
     }
 
     // Match keypoints with similar descriptors.

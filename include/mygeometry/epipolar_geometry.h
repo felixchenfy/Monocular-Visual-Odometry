@@ -55,12 +55,21 @@ void triangulation(
 // ---------------- validation ----------------
 double computeEpipolarConsError(
     const Point2f &p1, const Point2f &p2, const Mat &R, const Mat &t, const Mat &K);
+double computeEpipolarConsError( // mean square error
+    const vector<Point2f> &pts1, const vector<Point2f> &pts2,
+    const Mat &R, const Mat &t, const Mat &K);
+double ptPosInNormPlane(const Point3f &pt_3d_pos_in_cam1,
+    const Mat &R_cam2_to_cam1, const Mat &t_cam2_to_cam1,
+    Point2f &pt_pos_on_cam1_nplane, double &depth1,
+    Point2f &pt_pos_on_cam2_nplane, double &depth2);
 
 // ---------------- assist ----------------
 void extractPtsFromMatches(
     const vector<KeyPoint> &keypoints_1, const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
     vector<Point2f> &pts1, vector<Point2f> &pts2);
+
+vector<int> getIntersection(vector<int> v1, vector<int> v2); // please sort v1 and v2 first
 
 // ---------------- transformation ----------------
 Point2f pixel2camNormPlane(const Point2f &p, const Mat &K);

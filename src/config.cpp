@@ -25,7 +25,7 @@ Config::~Config()
 {
     if ( file_.isOpened() )
         file_.release();
-    delete &file_;
+    // delete &file_;
 }
 
 shared_ptr<Config> Config::config_ = nullptr;
