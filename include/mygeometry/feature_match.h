@@ -35,6 +35,11 @@ void _remove_tooclose_keypoints_by_grid(vector<cv::KeyPoint> &keypoints,
     const int image_rows, const int image_cols, 
     const bool SET_PARAM_BY_YAML=true);
 
+// --------------------- for display ---------------------
+vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);
+vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts);
+
+
 } // namespace mygeometry
 
 #endif

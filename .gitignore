@@ -1,4 +1,4 @@
-
+*.png
 garbage/*
 test/*.png
 .vscode/

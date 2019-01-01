@@ -147,7 +147,10 @@ void estiMotionByEssential(
 
     // Recover R,t from Essential matrix
     recoverPose(essential_matrix, pts_in_img1, pts_in_img2, R, t, focal_length, principal_point);
-
+    // Normalize t
+    t = t/sqrt( t.at<double>(1,0)*t.at<double>(1,0)+t.at<double>(2,0)*t.at<double>(2,0)+
+                t.at<double>(0,0)*t.at<double>(0,0));
+    
     // Print
     if (PRINT_RESULT)
     {
@@ -175,22 +178,32 @@ void estiMotionByEssential(
                           R, t, inliers_index, inlier_pts_in_img1, inlier_pts_in_img2);
 }
 
-void removeWrongRtOfHomography(
-    const vector<Point2f> &pts_in_img1, const vector<Point2f> &pts_in_img2,
+void _removeWrongRtOfHomography(
+    const vector<Point2f> &pts_in_img1, const vector<Point2f> &pts_in_img2, const Mat &K,
     vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> &normals)
 {
-    Mat possibleSolutions; //Use print_MatProperty to know its type: 32SC1
-    filterHomographyDecompByVisibleRefpoints(Rs, normals, pts_in_img1, pts_in_img2, possibleSolutions);
-    vector<Mat> res_Rs, res_ts, res_normals;
-    int num_solutions = possibleSolutions.rows;
+    // Convert pts_in_image to pts_on_norm_plane
+    vector<Point2f> pts_on_nplane1, pts_on_nplane2;
+    for(int i=0;i<pts_in_img1.size();i++){
+        pts_on_nplane1.push_back(pixel2camNormPlane(pts_in_img1[i], K));
+        pts_on_nplane2.push_back(pixel2camNormPlane(pts_in_img2[i], K));
+    }
 
-    for (int i = 0; i < num_solutions; i++)
+    // Remove wrong R,t. 
+    // If for a (R,t), a point's pos is behind the camera, then this is wrong.
+    // see: https://github.com/opencv/opencv/blob/master/modules/calib3d/src/homography_decomp.cpp
+    vector<Mat> res_Rs, res_ts, res_normals;
+    Mat possibleSolutions; //Use print_MatProperty to know its type: 32SC1
+    filterHomographyDecompByVisibleRefpoints(Rs, normals, pts_on_nplane1, pts_on_nplane2, possibleSolutions);
+    for (int i = 0; i < possibleSolutions.rows; i++)
     {
         int idx = possibleSolutions.at<int>(i, 0);
         res_Rs.push_back(Rs[idx]);
         res_ts.push_back(ts[idx]);
         res_normals.push_back(normals[idx]);
     }
+    
+    // return
     Rs = res_Rs;
     ts = res_ts;
     normals = res_normals;
@@ -229,9 +242,14 @@ void estiMotionByHomography(const vector<Point2f> &pts_in_img1,
     // -- Recover R,t from Homograph matrix
     decomposeHomographyMat(
         homography_matrix, camera_intrinsics, Rs, ts, normals);
-
+    // Normalize t
+    for (auto &t:ts){
+        t = t/sqrt( t.at<double>(1,0)*t.at<double>(1,0)+t.at<double>(2,0)*t.at<double>(2,0)+
+                    t.at<double>(0,0)*t.at<double>(0,0));
+    }
     // Try to remove wrong solutions
-    removeWrongRtOfHomography(pts_in_img1, pts_in_img2, Rs, ts, normals);
+    _removeWrongRtOfHomography(pts_in_img1, pts_in_img2, camera_intrinsics, Rs, ts, normals);
+    
 
     // Print result
     if (PRINT_RESULT)
@@ -279,7 +297,7 @@ double computeEpipolarConsError(
     return d.at<double>(0, 0);
 }
 
-double computeEpipolarConsError( // mean square error
+double computeEpipolarConsError(
     const vector<Point2f> &pts1, const vector<Point2f> &pts2,
     const Mat &R, const Mat &t, const Mat &K)
 {

@@ -18,6 +18,8 @@ namespace mygeometry
 // set default feature matching params
 #define _match_ratio 2.0
 
+using namespace cv;
+
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     const bool SET_PARAM_BY_YAML)
 {
@@ -154,6 +156,24 @@ void _remove_duplicate_matches(vector<cv::DMatch> &matches)
         }
     }
     res.swap(matches);
+}
+
+vector<DMatch> inliers2DMatches(const vector<int> inliers){
+    vector<DMatch> matches;
+    for(auto idx:inliers){
+        // DMatch (int _queryIdx, int _trainIdx, float _distance)
+        matches.push_back(DMatch(idx,idx,0.0));
+    }
+    return matches;
+}
+vector<KeyPoint> pts2keypts(const vector<Point2f> pts){
+    // cv.KeyPoint(	x, y, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
+    // cv.KeyPoint(	pt, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
+    vector<KeyPoint> keypts;
+    for(Point2f pt:pts){
+        keypts.push_back(KeyPoint(pt, 10));
+    }
+    return keypts;
 }
 
 } // namespace mygeometry
