@@ -141,29 +141,34 @@ int main(int argc, char **argv)
     {
         int i = inliers_common[iii];
         cout << "\n--------------" << endl;
-        cout << "Printing the " << i << "th point:" << endl;
+        cout << "Printing the " << i << "th point's 'real' pos:" << endl;
         Point2f p1 = pts_img1[i], p2 = pts_img2[i];
         Point2f p_cam1 = pixel2camNormPlane(p1, K); // point's pos in the camera 1 frame, with depth=1
         Point2f p_cam2 = pixel2camNormPlane(p2, K);
-        cout << "cam1, pixel on norm plane by inv(K)*(u,v): " << p_cam1.x << ", " << p_cam1.y << endl;
-        cout << "cam2, pixel on norm plane by inv(K)*(u,v): " << p_cam2.x << ", " << p_cam2.y << endl;
+        cout << "cam1, pixel pos (u,v): " << p1 << endl;
+        cout << "cam2, pixel pos (u,v): " << p2 << endl;
+        // cout << "cam1, pixel on norm plane by inv(K)*(u,v): " << p_cam1.x << ", " << p_cam1.y << endl;
+        // cout << "cam2, pixel on norm plane by inv(K)*(u,v): " << p_cam2.x << ", " << p_cam2.y << endl;
+        
 
         for (int j = 0; j < num_solutions; j++)
         {
+            Mat &R=list_R[j], &t=list_t[j];
+
             // print epipolar error
-            double err_epi = computeEpipolarConsError(p1, p2, list_R[j], list_t[j], K);
+            double err_epi = computeEpipolarConsError(p1, p2, R, t, K);
             cout << "===solu " << j << ": epipolar error is " << err_epi * 1e6 << endl;
 
-            // print triangulation result
-            double depth1, depth2;
-            Point2f pts3dc1_norm, pts3dc2_norm;
-            Point3f pts3dc1 = sols_pts3d_in_cam1[j][i]; // 3d points pos in camera 1
-            ptPosInNormPlane(pts3dc1, list_R[j], list_t[j],
-                             pts3dc1_norm, depth1, pts3dc2_norm, depth2);
+            // print triangulation result            
+            Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][i]); // 3d pos in camera 1
+            Mat pts3dc2 = R*pts3dc1+t;
+            Point2f pts2dc1 = cam2pixel(pts3dc1, K);
+            Point2f pts2dc2 = cam2pixel(pts3dc2, K);
 
-            cout << "By triangulation, the point pos on normalized plane is:" << endl;
-            cout << "-- On cam1, pos: " << pts3dc1_norm << ". Depth:" << depth1 << endl;
-            cout << "-- On cam2, pos: " << pts3dc2_norm << ". Depth:" << depth2 << endl;
+            cout << "-- In img1, pos: " << pts2dc1 << endl;
+            cout << "-- In img2, pos: " << pts2dc2 << endl;
+            cout << "-- On cam1, pos: " << pts3dc1.t() << endl;
+            cout << "-- On cam2, pos: " << pts3dc2.t() << endl;
         }
 
         cout << endl;
@@ -182,37 +187,29 @@ int main(int argc, char **argv)
         // epipolar error
         double err_epi = computeEpipolarConsError(inlpts1, inlpts2, list_R[j], list_t[j], K);
 
-        // On camera normalized plane,
-        // the error between triangulation and real
+        // In image frame,  the error between triangulation and real
         double err_triang = 0;
         int num_pts = pts_img1.size();
         for (int i = 0; i < num_pts; i++)
         {
             Point2f p1 = pts_img1[i], p2 = pts_img2[i];
-            Point2f p_cam1 = pixel2camNormPlane(p1, K); // point's pos in the camera 1 frame, with depth=1
-            Point2f p_cam2 = pixel2camNormPlane(p2, K);
-
-            // print triangulation result
-            double depth1, depth2;
-            Point2f pts3dc1_norm, pts3dc2_norm;
-            Point3f pts3dc1 = sols_pts3d_in_cam1[j][i]; // 3d points pos in camera 1
-            ptPosInNormPlane(pts3dc1, list_R[j], list_t[j],
-                             pts3dc1_norm, depth1, pts3dc2_norm, depth2);
-
-            double err_x = p_cam1.x - pts3dc1_norm.x;
-            double err_y = p_cam2.y - pts3dc2_norm.y;
-            double err = err_x * err_x + err_y * err_y;
-            err_triang += err;
+            // print triangulation result            
+            Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][i]); // 3d pos in camera 1
+            Mat pts3dc2 = R*pts3dc1+t;
+            Point2f pts2dc1 = cam2pixel(pts3dc1, K);
+            Point2f pts2dc2 = cam2pixel(pts3dc2, K);
+            err_triang = err_triang + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
         }
         if (num_pts == 0)
             err_triang = 9999999999;
         else
-            err_triang = sqrt(err_triang / num_pts);
+            err_triang = sqrt(err_triang / 2.0 / num_pts);
 
         // print
         printf("\n---------------\n");
         printf("Solution %d, num inliers = %d \n", j, (int)inlpts1.size());
         print_R_t(R, t);
+        if(j>=1)cout << "norm is:" << (normal_list[j-1]).t() << endl;
         printf("-- Eppipolar cons error = %f \n", err_epi);
         printf("-- Triangulation error = %f \n", err_triang); // the error on the normalized image plane
     }

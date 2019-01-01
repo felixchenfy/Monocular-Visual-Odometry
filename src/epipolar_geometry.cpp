@@ -69,8 +69,8 @@ Point2f pixel2camNormPlane(const Point2f &p, const Mat &K)
 Point3f pixel2cam(const Point2f &p, const Mat &K, double depth)
 {
     return Point3f(
-        (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
-        (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1),
+        depth*(p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
+        depth*(p.y - K.at<double>(1, 2)) / K.at<double>(1, 1),
         depth);
 }
 
@@ -212,7 +212,7 @@ void _removeWrongRtOfHomography(
 void estiMotionByHomography(const vector<Point2f> &pts_in_img1,
                             const vector<Point2f> &pts_in_img2,
                             const Mat &camera_intrinsics,
-                            vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> normals,
+                            vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> &normals,
                             vector<int> &inliers_index,
                             vector<Point2f> &inlier_pts_in_img1, vector<Point2f> &inlier_pts_in_img2)
 {
@@ -270,7 +270,6 @@ void estiMotionByHomography(const vector<Point2f> &pts_in_img1,
             cout << "* Solution " << i + 1 << ":" << endl; // Start index from 1. The index 0 is for essential matrix.
             print_R_t(Rs[i], ts[i]);
             cout << "plane normal: " << normals[i].t() << endl;
-            cout << endl;
         }
     }
 }
@@ -397,5 +396,35 @@ vector<int> getIntersection(vector<int> v1, vector<int> v2){
     v.resize(it-v.begin());
     return v;
 }
+
+Mat Point3f_to_Mat(const Point3f &p){
+    return (Mat_<double>(3,1)<<p.x, p.y, p.z);
+}
+Mat Point2f_to_Mat(const Point2f &p){
+    return (Mat_<double>(2,1)<<p.x, p.y);
+}
+
+Point2f cam2pixel(const Point3f &p, const Mat &K){
+    return Point2f(
+        K.at<double>(0,0) * p.x / p.z + K.at<double>(0,2),
+        K.at<double>(1,1) * p.y / p.z + K.at<double>(1,2)
+    );
+}
+
+Point2f cam2pixel(const Mat &p, const Mat &K){
+    Mat p0 = K*p; // project onto image
+    Mat pp = p0/p0.at<double>(2,0); // normalize
+    return Point2f(pp.at<double>(0,0),pp.at<double>(1,0));
+}
+
+double calcError(const Point2f &p1, const Point2f &p2){
+    double dx = p1.x - p2.x, dy = p1.y - p2.y;
+    return dx*dx+dy*dy;
+}
+double calcDist(const Point2f &p1, const Point2f &p2){
+    double dx = p1.x - p2.x, dy = p1.y - p2.y;
+    return sqrt(dx*dx+dy*dy);
+}
+
 
 } // namespace mygeometry
