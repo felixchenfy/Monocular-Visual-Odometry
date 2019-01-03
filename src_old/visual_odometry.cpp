@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <boost/timer.hpp>
 
-#include "my_common/config.h"
+#include "my_basics/config.h"
 #include "my_slam/visual_odometry.h"
 #include "my_slam/g2o_types.h"
 

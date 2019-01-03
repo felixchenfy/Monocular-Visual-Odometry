@@ -1,5 +1,5 @@
 #include <iostream>
-#include <my_common/config.h>
+#include <my_basics/config.h>
 
 using namespace std;
 using namespace cv;
@@ -21,8 +21,8 @@ int main(int argc, char **argv)
     cout << "Read yaml by this cpp: level_pyrimid = " << level_pyramid << endl;
 
     // test 2
-    my::Config::setParameterFile(filename);
-    level_pyramid = my::Config::get<int>(key);
+    my_basics::Config::setParameterFile(filename);
+    level_pyramid = my_basics::Config::get<int>(key);
     cout << "Read yaml by config.h: level_pyrimid = " << level_pyramid << endl;
 
     return 1;

@@ -1,7 +1,7 @@
 
-#include "my_common/opencv_funcs.h"
+#include "my_basics/opencv_funcs.h"
 
-namespace my
+namespace my_basics
 {
 
 // ---------------- Math ----------------
@@ -85,4 +85,4 @@ string cvMatType2str(int cvMatType)
     return r;
 }
 
-} // namespace my
+}

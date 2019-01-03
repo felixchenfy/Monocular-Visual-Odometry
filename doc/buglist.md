@@ -1,5 +1,5 @@
 
-Please view this doc in txt format. I made it .md just for color visualization.
+I record some bugs during this project. Just for myself's usage.
 
 ### YAML, string cannot start with "."
 The setence below in .yaml gives an error: 

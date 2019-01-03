@@ -1,7 +1,11 @@
 
-#include "my_common/eigen_funcs.h"
+#include "my_basics/eigen_funcs.h"
 
-namespace my
+using namespace std;
+using namespace cv;
+using namespace Eigen;
+
+namespace my_basics
 {
     
 Eigen::Affine3d transCVMatRt2Affine3d(const Mat &R0, const Mat &t)
@@ -19,4 +23,4 @@ Eigen::Affine3d transCVMatRt2Affine3d(const Mat &R0, const Mat &t)
     return T;
 }
 
-} // namespace my
+}

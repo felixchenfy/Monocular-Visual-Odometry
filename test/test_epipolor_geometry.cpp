@@ -1,3 +1,9 @@
+// Test functions in "include/my_geometry", including:
+//  * Keypoint extraction and feature matching.
+//  * Estimate camera motion by Essential/Homography matrix and triangulation (1+2=3 solutions).
+// The error of the estimated motions are displayed.
+// (As for which to choose from the 3 solutions, I might do it in "test_vo.cpp") ### <-- delete this later
+
 #include <iostream>
 #include <algorithm> // std::min
 #include <opencv2/core/core.hpp>
@@ -7,17 +13,11 @@
 
 #include "my_geometry/epipolar_geometry.h"
 #include "my_geometry/feature_match.h"
-#include "my_common/config.h"
+#include "my_basics/config.h"
 
 using namespace std;
 using namespace cv;
 using namespace my_geometry;
-
-// void doFeatureMatching(
-//     Mat &img_1, Mat &img_2,
-//     vector<KeyPoint> &keypoints_1, vector<KeyPoint> &keypoints_2,
-//     Mat &descriptors_1, Mat &descriptors_2,
-//     vector<DMatch> matches);
 
 int main(int argc, char **argv)
 {
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     else
     { // use settings in .yaml file
         string filename = "config/default.yaml";
-        my::Config::setParameterFile(filename);
+        my_basics::Config::setParameterFile(filename);
         extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
         extractKeyPoints(img_2, keypoints_2);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;

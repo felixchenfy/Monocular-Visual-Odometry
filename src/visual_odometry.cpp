@@ -2,7 +2,7 @@
 #include <boost/timer.hpp>
 
 #include "my_slam/visual_odometry.h"
-#include "my_common/config.h"
+#include "my_basics/config.h"
 
 namespace my_slam
 {
@@ -26,7 +26,7 @@ VisualOdometry::VisualOdometry() : state_(INITIALIZING),
 bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
 {
     static Buff_FramesWithFeatures buff_frames;
-    const int BUFFSIZE = my::Config::get<int>("buffsize_of_prev_frames");
+    const int BUFFSIZE = my_basics::Config::get<int>("buffsize_of_prev_frames");
 
     boost::timer timer;
     bool resAddFrameSuccess = true;

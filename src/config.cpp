@@ -1,7 +1,7 @@
 
-#include "my_common/config.h"
+#include "my_basics/config.h"
 
-namespace my 
+namespace my_basics
 {
     
 void Config::setParameterFile( const std::string& filename )

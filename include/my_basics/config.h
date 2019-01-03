@@ -7,7 +7,7 @@
 #include <opencv2/core/core.hpp>
 using namespace std;
 
-namespace my 
+namespace my_basics 
 {
 class Config
 {

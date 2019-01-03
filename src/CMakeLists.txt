@@ -1,6 +1,6 @@
 
 
-add_library(my_common SHARED
+add_library(my_basics SHARED
     config.cpp
     eigen_funcs.cpp
     opencv_funcs.cpp
@@ -24,7 +24,7 @@ add_library( my_slam SHARED
     # mappoint.cpp
 )
 
-target_link_libraries( my_common
+target_link_libraries( my_basics
     ${THIRD_PARTY_LIBS} 
 )
 
@@ -33,11 +33,11 @@ target_link_libraries( my_display
 )
 
 target_link_libraries( my_geometry
-    ${THIRD_PARTY_LIBS} my_common
+    ${THIRD_PARTY_LIBS} my_basics
 )
 
 target_link_libraries( my_slam
-    ${THIRD_PARTY_LIBS} my_geometry my_common
+    ${THIRD_PARTY_LIBS} my_geometry my_basics
 )
 
 # add_executable(main main.cpp)

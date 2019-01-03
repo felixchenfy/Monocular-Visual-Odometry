@@ -1,6 +1,6 @@
 
 #include "my_geometry/feature_match.h"
-#include "my_common/config.h"
+#include "my_basics/config.h"
 
 namespace my_geometry
 {
@@ -27,9 +27,9 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     static double scale_factor=_scale_factor;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = my::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = my::Config::get<double>("scale_factor");
-        level_pyramid = my::Config::get<int>("level_pyramid");
+        num_keypoints = my_basics::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = my_basics::Config::get<double>("scale_factor");
+        level_pyramid = my_basics::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -45,9 +45,9 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
     static double scale_factor=_scale_factor;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = my::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = my::Config::get<double>("scale_factor");
-        level_pyramid = my::Config::get<int>("level_pyramid");
+        num_keypoints = my_basics::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = my_basics::Config::get<double>("scale_factor");
+        level_pyramid = my_basics::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -64,7 +64,7 @@ void removeTooCloseKeypointsByGrid(vector<cv::KeyPoint>& keypoints,
     static int max_num_keypoints = _max_num_keypoints;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        max_num_keypoints = my::Config::get<int>("max_number_of_keypoints");
+        max_num_keypoints = my_basics::Config::get<int>("max_number_of_keypoints");
     }
     static vector<vector<int>> grid(image_rows/grid_size,
         vector<int>(image_cols/grid_size,0));
@@ -100,7 +100,7 @@ void matchFeatures(
     static double match_ratio = _match_ratio;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        match_ratio = my::Config::get<int>("match_ratio");
+        match_ratio = my_basics::Config::get<int>("match_ratio");
     }
 
     // Match keypoints with similar descriptors.

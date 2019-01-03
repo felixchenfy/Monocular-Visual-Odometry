@@ -6,7 +6,7 @@
 #include <opencv2/viz.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "my_common/config.h"
+#include "my_basics/config.h"
 #include "my_slam/visual_odometry.h"
 
 int main ( int argc, char** argv )
@@ -17,10 +17,10 @@ int main ( int argc, char** argv )
         return 1;
     }
 
-    my::Config::setParameterFile ( argv[1] );
+    my_basics::Config::setParameterFile ( argv[1] );
     my_slam::VisualOdometry::Ptr vo ( new my_slam::VisualOdometry );
 
-    string dataset_dir = my::Config::get<string> ( "dataset_dir" );
+    string dataset_dir = my_basics::Config::get<string> ( "dataset_dir" );
     cout<<"dataset: "<<dataset_dir<<endl;
     ifstream fin ( dataset_dir+"/associate.txt" );
     if ( !fin )

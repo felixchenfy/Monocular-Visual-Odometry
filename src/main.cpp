@@ -5,7 +5,7 @@
 #include <string>
 #include <boost/format.hpp> // for setting image filename
 
-#include "my_common/config.h"
+#include "my_basics/config.h"
 #include "my_slam/visual_odometry.h"
 #include "my_slam/camera.h"
 #include "my_slam/frame.h"
@@ -20,7 +20,7 @@ vector<string> getImagePaths()
     vector<string> image_paths;
 
     // Set up image_paths
-    string dataset_dir = my::Config::get<string>("dataset_dir"); // get dataset_dir from config
+    string dataset_dir = my_basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
     boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
     for (int i = 0; i < 5; i++)
     {
@@ -43,10 +43,10 @@ vector<string> getImagePaths()
 my_slam::Camera::Ptr setupCamera(){
     my_slam::Camera::Ptr camera(
         new my_slam::Camera(
-            my::Config::get<double>("camera_info.fx"),
-            my::Config::get<double>("camera_info.fy"),
-            my::Config::get<double>("camera_info.cx"),
-            my::Config::get<double>("camera_info.cy")
+            my_basics::Config::get<double>("camera_info.fx"),
+            my_basics::Config::get<double>("camera_info.fy"),
+            my_basics::Config::get<double>("camera_info.cx"),
+            my_basics::Config::get<double>("camera_info.cy")
         )
     );
     return camera;
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         return 1;
     }
     const string path_of_config_file = argv[1];
-    my::Config::setParameterFile(path_of_config_file);
+    my_basics::Config::setParameterFile(path_of_config_file);
 
     // -----------------------------------------------------------
     

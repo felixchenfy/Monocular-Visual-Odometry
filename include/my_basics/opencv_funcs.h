@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-namespace my
+namespace my_basics
 {
 
 // ---------------- Math ----------------
@@ -27,5 +27,5 @@ void print_MatProperty(cv::Mat &M); // print data type and size
 void print_R_t(const Mat &R, const Mat &t);
 string cvMatType2str(int cvMatType);
 
-} // namespace my
+}
 #endif

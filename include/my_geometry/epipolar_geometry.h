@@ -9,11 +9,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "my_common/opencv_funcs.h"
+#include "my_basics/opencv_funcs.h"
 
 using namespace std;
 using namespace cv;
-using namespace my;
+using namespace my_basics;
 
 namespace my_geometry
 {

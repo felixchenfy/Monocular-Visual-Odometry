@@ -10,7 +10,7 @@
 // 1. Datatype conversions between:
 //      OpenCV and Matrix3d/Vector3d/Isometry3d/Affine3d.
 
-#include "my_common/eigen_funcs.h" // namespce my
+#include "my_basics/eigen_funcs.h" // namespce my
 
 using namespace std;
 using namespace cv;
@@ -57,7 +57,7 @@ int main(void)
 
     { // test 2: functions in the library
 
-        Eigen::Affine3d T_affine = my::transCVMatRt2Affine3d(R_vec, t);
+        Eigen::Affine3d T_affine = my_basics::transCVMatRt2Affine3d(R_vec, t);
         Eigen::Affine3f tmpT = T_affine.cast<float>();
         cout << "\n==============================================\n";
         cout << "Print result of T_affine:\n"
