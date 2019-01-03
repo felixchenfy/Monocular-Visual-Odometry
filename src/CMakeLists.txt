@@ -29,7 +29,7 @@ target_link_libraries( my_basics
 )
 
 target_link_libraries( my_display
-    ${THIRD_PARTY_LIBS} 
+    ${THIRD_PARTY_LIBS} my_basics
 )
 
 target_link_libraries( my_geometry
