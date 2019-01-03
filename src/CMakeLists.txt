@@ -4,6 +4,7 @@ add_library(my_basics SHARED
     config.cpp
     eigen_funcs.cpp
     opencv_funcs.cpp
+    io.cpp
 )
 
 add_library(my_display SHARED
@@ -14,13 +15,13 @@ add_library(my_display SHARED
 add_library(my_geometry SHARED
     feature_match.cpp
     epipolar_geometry.cpp
+    camera.cpp
 )
 
 add_library( my_slam SHARED
-    visual_odometry.cpp
-    camera.cpp
     frame.cpp
     # --------------not used ---------
+    # visual_odometry.cpp
     # map.cpp
     # mappoint.cpp
 )

@@ -35,7 +35,7 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
 
     // compute
     orb->detect(image, keypoints);
-    removeTooCloseKeypointsByGrid(keypoints, image.rows, image.cols, SET_PARAM_BY_YAML);
+    selectUniformByGrid(keypoints, image.rows, image.cols, SET_PARAM_BY_YAML);
 }
 
 void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat &descriptors,
@@ -56,7 +56,7 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
 }
 
 
-void removeTooCloseKeypointsByGrid(vector<cv::KeyPoint>& keypoints,
+void selectUniformByGrid(vector<cv::KeyPoint>& keypoints,
     const int image_rows, const int image_cols,
     const bool SET_PARAM_BY_YAML)
 {

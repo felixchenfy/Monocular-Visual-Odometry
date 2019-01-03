@@ -2,14 +2,11 @@
 #ifndef EPIPOLAR_GEOMETRY_H
 #define EPIPOLAR_GEOMETRY_H
 
-#include <stdio.h>
-#include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include "my_geometry/common_include.h"
 #include <opencv2/calib3d/calib3d.hpp>
 
 #include "my_basics/opencv_funcs.h"
+#include "my_geometry/camera.h" // transformations related to camera
 
 using namespace std;
 using namespace cv;
@@ -61,14 +58,6 @@ double computeEpipolarConsError(
 double computeEpipolarConsError( // mean square error of a vector of points
     const vector<Point2f> &pts1, const vector<Point2f> &pts2,
     const Mat &R, const Mat &t, const Mat &K);
-
-
-// ---------------- transformation ----------------
-Point2f pixel2camNormPlane(const Point2f &p, const Mat &K);
-Point3f pixel2cam(const Point2f &p, const Mat &K, double depth=1);
-Point2f cam2pixel(const Point3f &p, const Mat &K);
-Point2f cam2pixel(const Mat &p, const Mat &K);
-
 
 // ---------------- assist ----------------
 Mat Point3f_to_Mat(const Point3f &p);

@@ -25,13 +25,14 @@ void matchFeatures(
     const bool PRINT_RES=false,
     const bool SET_PARAM_BY_YAML=true);
 
+
 // Remove duplicate matches. 
 // After cv's match func, many kpts in I1 might matched to a same kpt in I2.
 // Sorting the trainIdx(I2), and make the match unique.
 void removeDuplicatedMatches(vector<cv::DMatch> &matches);
 
 // Use a grid to remove the keypoints that are too close to each other.
-void removeTooCloseKeypointsByGrid(vector<cv::KeyPoint> &keypoints,
+void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
     const int image_rows, const int image_cols, 
     const bool SET_PARAM_BY_YAML=true);
 

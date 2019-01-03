@@ -1,7 +1,7 @@
 %YAML:1.0
 
 # Path to the images
-dataset_dir: /home/feiyu/Desktop/slam/code/project/0.5/dataset_images
+dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images
 
 # Camera intrinsics
 # fr1 dataset

@@ -1,19 +1,6 @@
 
-#ifndef COMMON_INCLUDE_H
-#define COMMON_INCLUDE_H
-
-// define the commonly included file to avoid a long include list
-// for Eigen
-// #include <Eigen/Core>
-// #include <Eigen/Geometry>
-// using Eigen::Vector2d;
-// using Eigen::Vector3d;
-
-// for Sophus
-// #include <sophus/se3.h>
-// #include <sophus/so3.h>
-// using Sophus::SO3;
-// using Sophus::SE3;
+#ifndef MY_GEOMETRY_COMMON_INCLUDE_H
+#define MY_GEOMETRY_COMMON_INCLUDE_H
 
 // for cv
 #include <opencv2/core/core.hpp>
@@ -21,6 +8,7 @@
 #include <opencv2/features2d/features2d.hpp>
 
 // std 
+#include <stdio.h>
 #include <vector>
 #include <list>
 #include <memory>

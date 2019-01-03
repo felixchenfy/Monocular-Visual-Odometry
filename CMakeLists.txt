@@ -27,11 +27,11 @@ include_directories( "/usr/include/eigen3" )
 find_package( OpenCV 4.0 REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 # Sophus 
-find_package( Sophus REQUIRED )
-include_directories( ${Sophus_INCLUDE_DIRS} )
+# find_package( Sophus REQUIRED )
+# include_directories( ${Sophus_INCLUDE_DIRS} )
 # G2O
-find_package( G2O REQUIRED )
-include_directories( ${G2O_INCLUDE_DIRS} )
+# find_package( G2O REQUIRED )
+# include_directories( ${G2O_INCLUDE_DIRS} )
 # PCL 
 find_package( PCL REQUIRED ) 
 include_directories( ${PCL_INCLUDE_DIRS} )
@@ -41,8 +41,8 @@ add_definitions( ${PCL_DEFINITIONS} )
 set( THIRD_PARTY_LIBS 
     ${OpenCV_LIBS}
     ${PCL_LIBRARIES}
-    libSophus.so
-    g2o_core g2o_stuff g2o_types_sba
+    # libSophus.so
+    # g2o_core g2o_stuff g2o_types_sba
 )
 
 ############### dependencies ######################
