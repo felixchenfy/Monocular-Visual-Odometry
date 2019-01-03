@@ -2,11 +2,11 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "myslam/common_include.h"
-#include "myslam/frame.h"
-#include "myslam/mappoint.h"
+#include "my_slam/common_include.h"
+#include "my_slam/frame.h"
+#include "my_slam/mappoint.h"
 
-namespace myslam
+namespace my_slam
 {
 class Map
 {

@@ -1,8 +1,8 @@
 
-#include "mygeometry/feature_match.h"
-#include "myslam/config.h"
+#include "my_geometry/feature_match.h"
+#include "my_common/config.h"
 
-namespace mygeometry
+namespace my_geometry
 {
 
 // set default ORB params
@@ -25,17 +25,17 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
 {
     static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid;
     static double scale_factor=_scale_factor;
-    static int CNT_=0;
-    if (CNT_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = myslam::Config::get<double>("scale_factor");
-        level_pyramid = myslam::Config::get<int>("level_pyramid");
+    static int cnt_call_times_=0;
+    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
+        num_keypoints = my::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = my::Config::get<double>("scale_factor");
+        level_pyramid = my::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
     // compute
     orb->detect(image, keypoints);
-    _remove_tooclose_keypoints_by_grid(keypoints, image.rows, image.cols, SET_PARAM_BY_YAML);
+    removeTooCloseKeypointsByGrid(keypoints, image.rows, image.cols, SET_PARAM_BY_YAML);
 }
 
 void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat &descriptors,
@@ -43,11 +43,11 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
 {
     static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid;
     static double scale_factor=_scale_factor;
-    static int CNT_=0;
-    if (CNT_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = myslam::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = myslam::Config::get<double>("scale_factor");
-        level_pyramid = myslam::Config::get<int>("level_pyramid");
+    static int cnt_call_times_=0;
+    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
+        num_keypoints = my::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = my::Config::get<double>("scale_factor");
+        level_pyramid = my::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -56,15 +56,15 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
 }
 
 
-void _remove_tooclose_keypoints_by_grid(vector<cv::KeyPoint>& keypoints,
+void removeTooCloseKeypointsByGrid(vector<cv::KeyPoint>& keypoints,
     const int image_rows, const int image_cols,
     const bool SET_PARAM_BY_YAML)
 {
     static int grid_size=_grid_size, MAX_PTS_IN_GRID=_max_pts_in_grid;
     static int max_num_keypoints = _max_num_keypoints;
-    static int CNT_=0;
-    if (CNT_++==0 && SET_PARAM_BY_YAML){
-        max_num_keypoints = myslam::Config::get<int>("max_number_of_keypoints");
+    static int cnt_call_times_=0;
+    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
+        max_num_keypoints = my::Config::get<int>("max_number_of_keypoints");
     }
     static vector<vector<int>> grid(image_rows/grid_size,
         vector<int>(image_cols/grid_size,0));
@@ -98,9 +98,9 @@ void matchFeatures(
 {
     static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
     static double match_ratio = _match_ratio;
-    static int CNT_=0;
-    if (CNT_++==0 && SET_PARAM_BY_YAML){
-        match_ratio = myslam::Config::get<int>("match_ratio");
+    static int cnt_call_times_=0;
+    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
+        match_ratio = my::Config::get<int>("match_ratio");
     }
 
     // Match keypoints with similar descriptors.
@@ -128,7 +128,7 @@ void matchFeatures(
 
     // Sort res by "trainIdx", and then
     // remove duplicated "trainIdx" to obtain unique matches.
-    _remove_duplicate_matches(matches);
+    removeDuplicatedMatches(matches);
 
     if (PRINT_RES){
         printf("Matching features: threshold = %f\n",distance_threshold);
@@ -138,7 +138,7 @@ void matchFeatures(
     }
 }
 
-void _remove_duplicate_matches(vector<cv::DMatch> &matches)
+void removeDuplicatedMatches(vector<cv::DMatch> &matches)
 {
     // Sort res by "trainIdx".
     sort(matches.begin(), matches.end(),
@@ -176,4 +176,4 @@ vector<KeyPoint> pts2keypts(const vector<Point2f> pts){
     return keypts;
 }
 
-} // namespace mygeometry
+} // namespace my_geometry

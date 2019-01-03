@@ -1,7 +1,7 @@
 
-#include "myslam/camera.h"
+#include "my_slam/camera.h"
 
-namespace myslam
+namespace my_slam
 {
 
 // p_w -> p_c
@@ -42,4 +42,4 @@ Vector3d Camera::pixel2world(const Vector2d &p_p, const SE3 &T_c_w, double depth
     return camera2world(pixel2camera(p_p, depth), T_c_w);
 }
 
-} // namespace myslam
+} // namespace my_slam

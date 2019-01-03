@@ -17,10 +17,10 @@
  *
  */
 
-#ifndef MYSLAM_G2O_TYPES_H
-#define MYSLAM_G2O_TYPES_H
+#ifndef my_slam_G2O_TYPES_H
+#define my_slam_G2O_TYPES_H
 
-#include "myslam/common_include.h"
+#include "my_slam/common_include.h"
 #include "camera.h"
 
 #include <g2o/core/base_vertex.h>
@@ -32,7 +32,7 @@
 #include <g2o/core/robust_kernel.h>
 #include <g2o/core/robust_kernel_impl.h>
 
-namespace myslam
+namespace my_slam
 {
 class EdgeProjectXYZRGBD : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, g2o::VertexSBAPointXYZ, g2o::VertexSE3Expmap>
 {
@@ -78,4 +78,4 @@ public:
 }
 
 
-#endif // MYSLAM_G2O_TYPES_H
+#endif // my_slam_G2O_TYPES_H

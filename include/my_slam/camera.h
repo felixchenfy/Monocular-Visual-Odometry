@@ -2,9 +2,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "myslam/common_include.h"
+#include "my_slam/common_include.h"
 
-namespace myslam
+namespace my_slam
 {
 
 // Pinhole RGBD camera model
@@ -46,5 +46,5 @@ public:
   Vector3d pixel2world(const Vector2d &p_p, const SE3 &T_c_w, double depth);
 };
 
-} // namespace myslam
+} // namespace my_slam
 #endif

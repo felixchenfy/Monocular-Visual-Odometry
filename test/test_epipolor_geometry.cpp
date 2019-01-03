@@ -5,13 +5,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "mygeometry/epipolar_geometry.h"
-#include "mygeometry/feature_match.h"
-#include "myslam/config.h"
+#include "my_geometry/epipolar_geometry.h"
+#include "my_geometry/feature_match.h"
+#include "my_common/config.h"
 
 using namespace std;
 using namespace cv;
-using namespace mygeometry;
+using namespace my_geometry;
 
 // void doFeatureMatching(
 //     Mat &img_1, Mat &img_2,
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     else
     { // use settings in .yaml file
         string filename = "config/default.yaml";
-        myslam::Config::setParameterFile(filename);
+        my::Config::setParameterFile(filename);
         extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
         extractKeyPoints(img_2, keypoints_2);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;

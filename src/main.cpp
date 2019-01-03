@@ -5,10 +5,10 @@
 #include <string>
 #include <boost/format.hpp> // for setting image filename
 
-#include "myslam/config.h"
-#include "myslam/visual_odometry.h"
-#include "myslam/camera.h"
-#include "myslam/frame.h"
+#include "my_common/config.h"
+#include "my_slam/visual_odometry.h"
+#include "my_slam/camera.h"
+#include "my_slam/frame.h"
 
 // const int FRAME_RATE=30;
 
@@ -20,7 +20,7 @@ vector<string> getImagePaths()
     vector<string> image_paths;
 
     // Set up image_paths
-    string dataset_dir = myslam::Config::get<string>("dataset_dir"); // get dataset_dir from config
+    string dataset_dir = my::Config::get<string>("dataset_dir"); // get dataset_dir from config
     boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
     for (int i = 0; i < 5; i++)
     {
@@ -40,13 +40,13 @@ vector<string> getImagePaths()
     return image_paths;
 }
 
-myslam::Camera::Ptr setupCamera(){
-    myslam::Camera::Ptr camera(
-        new myslam::Camera(
-            myslam::Config::get<double>("camera_info.fx"),
-            myslam::Config::get<double>("camera_info.fy"),
-            myslam::Config::get<double>("camera_info.cx"),
-            myslam::Config::get<double>("camera_info.cy")
+my_slam::Camera::Ptr setupCamera(){
+    my_slam::Camera::Ptr camera(
+        new my_slam::Camera(
+            my::Config::get<double>("camera_info.fx"),
+            my::Config::get<double>("camera_info.fy"),
+            my::Config::get<double>("camera_info.cx"),
+            my::Config::get<double>("camera_info.cy")
         )
     );
     return camera;
@@ -65,15 +65,15 @@ int main(int argc, char **argv)
         return 1;
     }
     const string path_of_config_file = argv[1];
-    myslam::Config::setParameterFile(path_of_config_file);
+    my::Config::setParameterFile(path_of_config_file);
 
     // -----------------------------------------------------------
     
     vector<string> image_paths=getImagePaths();
 
-    myslam::Camera::Ptr camera=setupCamera();
+    my_slam::Camera::Ptr camera=setupCamera();
         
-    myslam::VisualOdometry::Ptr vo ( new myslam::VisualOdometry );
+    my_slam::VisualOdometry::Ptr vo ( new my_slam::VisualOdometry );
 
     for (int i = 0; i< image_paths.size(); i++){
         
@@ -83,8 +83,8 @@ int main(int argc, char **argv)
             break;
 
         // Add to map        
-        // myslam::Frame::Ptr frame( new myslam::Frame(rgb_img, camera) );
-        myslam::Frame::Ptr frame = myslam::Frame::createFrame(rgb_img, camera);
+        // my_slam::Frame::Ptr frame( new my_slam::Frame(rgb_img, camera) );
+        my_slam::Frame::Ptr frame = my_slam::Frame::createFrame(rgb_img, camera);
         vo->addFrame(frame);
 
         // Display

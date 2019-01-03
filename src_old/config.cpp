@@ -1,8 +1,8 @@
 
 
-#include "myslam/config.h"
+#include "my_common/config.h"
 
-namespace myslam 
+namespace my_slam 
 {
     
 void Config::setParameterFile( const std::string& filename )

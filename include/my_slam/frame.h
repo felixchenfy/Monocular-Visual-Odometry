@@ -2,10 +2,10 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include "myslam/common_include.h"
-#include "myslam/camera.h"
+#include "my_slam/common_include.h"
+#include "my_slam/camera.h"
 
-namespace myslam
+namespace my_slam
 {
 
 class MapPoint; // forward declare
@@ -53,6 +53,6 @@ class Frame
     // double findDepth(const cv::KeyPoint &kp);
 };
 
-} // namespace myslam
+} // namespace my_slam
 
 #endif // FRAME_H

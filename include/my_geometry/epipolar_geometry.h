@@ -9,10 +9,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
+#include "my_common/opencv_funcs.h"
+
 using namespace std;
 using namespace cv;
+using namespace my;
 
-namespace mygeometry
+namespace my_geometry
 {
 
 // ---------------- main: essential, homography, triangulation ----------------
@@ -42,7 +45,7 @@ void estiMotionByHomography(
 
 // Remove wrong solutions of R,t.
 // 4 solutions --> 1 or 2 solutions
-void _removeWrongRtOfHomography(
+void removeWrongRtOfHomography(
     const vector<Point2f> &pts_in_img1, const vector<Point2f> &pts_in_img2,
     vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> &normals); 
 
@@ -85,16 +88,5 @@ double ptPosInNormPlane(const Point3f &pt_3d_pos_in_cam1,
     Point2f &pt_pos_on_cam1_nplane, double &depth1,
     Point2f &pt_pos_on_cam2_nplane, double &depth2);
 
-
-// ---------------- Math ----------------
-Mat skew(const Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
-Mat transRt2T(const Mat &R, const Mat &t);
-
-// ---------------- print ----------------
-string cvMatType2str(int cvMatType);
-void print_MatProperty(cv::Mat &M); // print data type and size
-void print_R_t(const Mat &R, const Mat &t);
-
-
-} // namespace mygeometry
+} // namespace my_geometry
 #endif

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-namespace mygeometry
+namespace my_geometry
 {
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     bool SET_PARAM_BY_YAML=true);
@@ -28,10 +28,10 @@ void matchFeatures(
 // Remove duplicate matches. 
 // After cv's match func, many kpts in I1 might matched to a same kpt in I2.
 // Sorting the trainIdx(I2), and make the match unique.
-void _remove_duplicate_matches(vector<cv::DMatch> &matches);
+void removeDuplicatedMatches(vector<cv::DMatch> &matches);
 
 // Use a grid to remove the keypoints that are too close to each other.
-void _remove_tooclose_keypoints_by_grid(vector<cv::KeyPoint> &keypoints,
+void removeTooCloseKeypointsByGrid(vector<cv::KeyPoint> &keypoints,
     const int image_rows, const int image_cols, 
     const bool SET_PARAM_BY_YAML=true);
 
@@ -40,6 +40,6 @@ vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);
 vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts);
 
 
-} // namespace mygeometry
+} // namespace my_geometry
 
 #endif

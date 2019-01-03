@@ -20,12 +20,12 @@
 #ifndef VISUALODOMETRY_H
 #define VISUALODOMETRY_H
 
-#include "myslam/common_include.h"
-#include "myslam/map.h"
+#include "my_slam/common_include.h"
+#include "my_slam/map.h"
 
 #include <opencv2/features2d/features2d.hpp>
 
-namespace myslam 
+namespace my_slam 
 {
 class VisualOdometry
 {

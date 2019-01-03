@@ -1,7 +1,7 @@
 
-#include "myslam/map.h"
+#include "my_slam/map.h"
 
-namespace myslam
+namespace my_slam
 {
 
 // void Map::insertKeyFrame ( Frame::Ptr frame )

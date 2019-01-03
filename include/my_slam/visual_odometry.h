@@ -4,13 +4,13 @@
 
 #include <opencv2/features2d/features2d.hpp>
 
-#include "myslam/common_include.h"
-// #include "myslam/map.h"
-// #include "myslam/mappoint.h"
-#include "myslam/frame.h"
-#include "mygeometry/feature_match.h"
+#include "my_slam/common_include.h"
+// #include "my_slam/map.h"
+// #include "my_slam/mappoint.h"
+#include "my_slam/frame.h"
+#include "my_geometry/feature_match.h"
 
-namespace myslam
+namespace my_slam
 {
 
 class Buff_FramesWithFeatures{
@@ -77,10 +77,10 @@ class VisualOdometry
 
   protected: // inner operation
     void extractKeyPoints() { 
-      mygeometry::extractKeyPoints(curr_->rgb_img_, keypoints_curr_);
+      my_geometry::extractKeyPoints(curr_->rgb_img_, keypoints_curr_);
     }
     void computeDescriptors(){
-      mygeometry::computeDescriptors(curr_->rgb_img_, keypoints_curr_, descriptors_curr_);
+      my_geometry::computeDescriptors(curr_->rgb_img_, keypoints_curr_, descriptors_curr_);
     };
 
     // // Currently not used !!! This will be used after triangulation !!!
@@ -92,5 +92,5 @@ class VisualOdometry
 
 };
 
-} // namespace myslam
+} // namespace my_slam
 #endif

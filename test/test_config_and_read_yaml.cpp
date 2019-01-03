@@ -1,5 +1,5 @@
 #include <iostream>
-#include <myslam/config.h>
+#include <my_common/config.h>
 
 using namespace std;
 using namespace cv;
@@ -21,8 +21,8 @@ int main(int argc, char **argv)
     cout << "Read yaml by this cpp: level_pyrimid = " << level_pyramid << endl;
 
     // test 2
-    myslam::Config::setParameterFile(filename);
-    level_pyramid = myslam::Config::get<int>(key);
+    my::Config::setParameterFile(filename);
+    level_pyramid = my::Config::get<int>(key);
     cout << "Read yaml by config.h: level_pyrimid = " << level_pyramid << endl;
 
     return 1;

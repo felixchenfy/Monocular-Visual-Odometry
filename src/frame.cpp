@@ -1,6 +1,6 @@
-#include "myslam/frame.h"
+#include "my_slam/frame.h"
 
-namespace myslam
+namespace my_slam
 {
 
 unsigned long Frame::factory_id_=0;

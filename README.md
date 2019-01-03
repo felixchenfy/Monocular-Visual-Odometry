@@ -35,3 +35,23 @@ pnp用两张图中共同区域的点估计相机2的姿态。估计完后，第�
 
 ` E在特征点共面的时候误差较大
 
+
+# Euler Angle of cv::Rodrigues(input, output)
+Axis of r_vec: x, y, z
+
+
+# 2. bug list
+## Eigen
+### AngleAxisf: how to change to matrix
+Correct:
+	Matrix3f m;
+	m = AngleAxisf(1.0, Vector3f::UnitY());
+Correct:
+	Matrix3f m=AngleAxisf(1.0, Vector3f::UnitY()).toRotationMatrix();
+Wrong:
+	Matrix3f m=AngleAxisf(1.0, Vector3f::UnitY());
+
+### data type: use double all the time
+When I change data from opencv's double to eigen's float,
+the result goes wrong.
+Whatever the reason, it's better to keep them consistent.

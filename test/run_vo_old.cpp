@@ -6,8 +6,8 @@
 #include <opencv2/viz.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "myslam/config.h"
-#include "myslam/visual_odometry.h"
+#include "my_common/config.h"
+#include "my_slam/visual_odometry.h"
 
 int main ( int argc, char** argv )
 {
@@ -17,10 +17,10 @@ int main ( int argc, char** argv )
         return 1;
     }
 
-    myslam::Config::setParameterFile ( argv[1] );
-    myslam::VisualOdometry::Ptr vo ( new myslam::VisualOdometry );
+    my::Config::setParameterFile ( argv[1] );
+    my_slam::VisualOdometry::Ptr vo ( new my_slam::VisualOdometry );
 
-    string dataset_dir = myslam::Config::get<string> ( "dataset_dir" );
+    string dataset_dir = my::Config::get<string> ( "dataset_dir" );
     cout<<"dataset: "<<dataset_dir<<endl;
     ifstream fin ( dataset_dir+"/associate.txt" );
     if ( !fin )
@@ -44,7 +44,7 @@ int main ( int argc, char** argv )
             break;
     }
 
-    myslam::Camera::Ptr camera ( new myslam::Camera );
+    my_slam::Camera::Ptr camera ( new my_slam::Camera );
 
     // visualization
     cv::viz::Viz3d vis ( "Visual Odometry" );
@@ -66,7 +66,7 @@ int main ( int argc, char** argv )
         Mat depth = cv::imread ( depth_files[i], -1 );
         if ( color.data==nullptr || depth.data==nullptr )
             break;
-        myslam::Frame::Ptr pFrame = myslam::Frame::createFrame();
+        my_slam::Frame::Ptr pFrame = my_slam::Frame::createFrame();
         pFrame->camera_ = camera;
         pFrame->color_ = color;
         pFrame->depth_ = depth;
@@ -76,7 +76,7 @@ int main ( int argc, char** argv )
         vo->addFrame ( pFrame );
         cout<<"VO costs time: "<<timer.elapsed() <<endl;
 
-        if ( vo->state_ == myslam::VisualOdometry::LOST )
+        if ( vo->state_ == my_slam::VisualOdometry::LOST )
             break;
         SE3 Twc = pFrame->T_c_w_.inverse();
 
@@ -95,7 +95,7 @@ int main ( int argc, char** argv )
         Mat img_show = color.clone();
         for ( auto& pt:vo->map_->map_points_ )
         {
-            myslam::MapPoint::Ptr p = pt.second;
+            my_slam::MapPoint::Ptr p = pt.second;
             Vector2d pixel = pFrame->camera_->world2pixel ( p->pos_, pFrame->T_c_w_ );
             cv::circle ( img_show, cv::Point2f ( pixel ( 0,0 ),pixel ( 1,0 ) ), 5, cv::Scalar ( 0,255,0 ), 2 );
         }

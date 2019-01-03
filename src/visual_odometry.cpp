@@ -1,10 +1,10 @@
 
 #include <boost/timer.hpp>
 
-#include "myslam/visual_odometry.h"
-#include "myslam/config.h"
+#include "my_slam/visual_odometry.h"
+#include "my_common/config.h"
 
-namespace myslam
+namespace my_slam
 {
 
 VisualOdometry::VisualOdometry() : state_(INITIALIZING),
@@ -26,7 +26,7 @@ VisualOdometry::VisualOdometry() : state_(INITIALIZING),
 bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
 {
     static Buff_FramesWithFeatures buff_frames;
-    const int BUFFSIZE = myslam::Config::get<int>("buffsize_of_prev_frames");
+    const int BUFFSIZE = my::Config::get<int>("buffsize_of_prev_frames");
 
     boost::timer timer;
     bool resAddFrameSuccess = true;
@@ -49,7 +49,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
         {
             // matching features between "buff_frames[0]" and "curr_"
             cv::Mat desciptors_prev=buff_frames.buff_descriptors_[0];
-            mygeometry::matchFeatures(desciptors_prev, descriptors_curr_, matches);
+            my_geometry::matchFeatures(desciptors_prev, descriptors_curr_, matches);
 
             // Estimate camera motion between two frames
             // Mat R,t;
@@ -109,7 +109,7 @@ bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
 
 //     // Match keypoints' descriptors
 //     vector<cv::DMatch> matches;
-//     mygeometry::matchFeatures(candidates_descriptors, descriptors_curr_, matches);
+//     my_geometry::matchFeatures(candidates_descriptors, descriptors_curr_, matches);
 
 //     // Push points to result
 //     matched_3d_MapPoints_.clear();
@@ -122,4 +122,4 @@ bool VisualOdometry::addFrame(Frame::Ptr frame) // This is the "main" function
 //     // cout<<"good matches: "<<matched_3d_MapPoints_.size() <<endl;
 // }
 
-} // namespace myslam
+} // namespace my_slam
