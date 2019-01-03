@@ -17,6 +17,9 @@ namespace my_basics
 // convert cv::Mat R and t --> Affine3d SE3
 Eigen::Affine3d transCVMatRt2Affine3d(const cv::Mat &R0, const cv::Mat &t);
 
+// get Affine3d using pos (x,y,z) and euler angles (ea_x, ea_y, ea_z)
+Eigen::Affine3d getAffine3d(double x, double y, double z, double ea_x, double ea_y, double ea_z); 
+
 }
 
 #endif

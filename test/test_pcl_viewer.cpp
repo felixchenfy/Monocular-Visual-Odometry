@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-#include "my_display/pcl_display.h"
 #include "my_basics/eigen_funcs.h"
+#include "my_display/pcl_viewer.h"
 
 using namespace std;
 using namespace cv;
@@ -15,17 +15,19 @@ using namespace Eigen;
 
 using namespace my_display;
 
-
 int main()
 {
     // Init my PclViewer class
-    string viewer_name="my pcl viewer";
+    double dis_scale=3;
+    double  x = 0.5*dis_scale,
+            y = -1.0*dis_scale,
+            z = -1.0*dis_scale;
+    double ea_x = -0.5, ea_y = 0, ea_z = 0;
+    string viewer_name = "my pcl viewer";
     my_display::PclViewer::Ptr pcl_displayer(
         new my_display::PclViewer(
-            viewer_name
-        )
-    );
-    
+            viewer_name, x, y, z, ea_x, ea_y, ea_z));
+
     // Set up camera pos.
     Eigen::Affine3d T_affine;
     cv::Mat R_vec = (cv::Mat_<double>(3, 1) << 0, 0, 0);
@@ -54,8 +56,8 @@ int main()
         // Simulate feature point captured by the camera.
         //      Return: kpt_3d_pos_in_world, r, g, b
         double x = 0, y = 0, z = 2;
-        unsigned char r=255, g=0, b=0;
-        cv::Mat kpt_3d_pos_in_cam = (Mat_<double>(3,1) << x, y, z);
+        unsigned char r = 255, g = 0, b = 0;
+        cv::Mat kpt_3d_pos_in_cam = (Mat_<double>(3, 1) << x, y, z);
         Mat R;
         cv::Rodrigues(R_vec, R);
         cv::Mat kpt_3d_pos_in_world = R * kpt_3d_pos_in_cam + t;
@@ -64,7 +66,7 @@ int main()
         pcl_displayer->updateCameraPose(R_vec, t);
         pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
         pcl_displayer->update();
-        pcl_displayer->spinOnce(100);
+        pcl_displayer->spinOnce(150);
         if (pcl_displayer->wasStopped())
             break;
     }

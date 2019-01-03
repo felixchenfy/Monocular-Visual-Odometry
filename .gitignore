@@ -2,7 +2,7 @@
 README*
 *.png
 garbage/*
-test/*.png
+test_data/*.png
 .vscode/
 bin/
 cmake_modules

@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
     // read in images
     string img_file1, img_file2;
-    string folder = "test/";
+    string folder = "test_data/";
     const int IDX_TEST_CASE=1;
     if (IDX_TEST_CASE==1) // keypoints are on the same plane.
     {

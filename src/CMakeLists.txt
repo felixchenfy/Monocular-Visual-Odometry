@@ -7,7 +7,8 @@ add_library(my_basics SHARED
 )
 
 add_library(my_display SHARED
-    pcl_display.cpp
+    pcl_viewer.cpp
+    pcl_visualizations.cpp
 )
 
 add_library(my_geometry SHARED

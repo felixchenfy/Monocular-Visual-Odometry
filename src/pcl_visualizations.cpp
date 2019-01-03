@@ -1,5 +1,6 @@
 
-#include "my_display/pcl_display.h"
+#include "my_display/pcl_visualizations.h"
+#include "my_basics/eigen_funcs.h"
 
 using namespace std;
 using namespace cv;
@@ -33,7 +34,7 @@ void setPointPos(pcl::PointXYZRGB &point, cv::Mat p)
 // initialize the viewer
 boost::shared_ptr<pcl::visualization::PCLVisualizer>
 initPointCloudViewer(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
-        const string &viewer_name, const string &cloud_name, const string &camera_frame_name)
+                     const string &viewer_name, const string &cloud_name, const string &camera_frame_name)
 {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
         new pcl::visualization::PCLVisualizer(viewer_name));
@@ -53,47 +54,19 @@ initPointCloudViewer(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
     return (viewer);
 }
 
-// --------------------- Class definition -----------------------
-
-// constructor
-PclViewer::PclViewer(const string &viewer_name): 
-    point_cloud_ptr_(new pcl::PointCloud<pcl::PointXYZRGB>)
+void setViewerPose(pcl::visualization::PCLVisualizer& viewer, const Eigen::Affine3f& viewer_pose)
 {
-
-    viewer_name_ = viewer_name;
-    point_cloud_name_ = "the 0th point cloud";
-    camera_frame_name_ = "the 0th camera";
-
-    viewer_ = initPointCloudViewer(
-            point_cloud_ptr_, viewer_name_, point_cloud_name_, camera_frame_name_);
+  Eigen::Vector3f pos_vector = viewer_pose * Eigen::Vector3f(0, 0, 0);
+  Eigen::Vector3f look_at_vector = viewer_pose.rotation () * Eigen::Vector3f(0, 0, 1) + pos_vector;
+  Eigen::Vector3f up_vector = viewer_pose.rotation () * Eigen::Vector3f(0, -1, 0);
+  viewer.setCameraPosition (pos_vector[0], pos_vector[1], pos_vector[2],
+                            look_at_vector[0], look_at_vector[1], look_at_vector[2],
+                            up_vector[0], up_vector[1], up_vector[2]);
 }
-
-void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t){
-    cam_R_vec_ = R_vec;
-    cam_t_ = t;
-}
-
-void PclViewer::addPoint(const cv::Mat pt_3d_pos_in_world, uint8_t r, uint8_t g, uint8_t b){
-    pcl::PointXYZRGB point;
-    setPointPos(point, pt_3d_pos_in_world);
-    setPointColor(point, r, g, b);
-    point_cloud_ptr_->points.push_back(point);
-}
-
-void PclViewer::update(){
-    // Update camera
-    Eigen::Affine3f T_affine = my_basics::transCVMatRt2Affine3d(cam_R_vec_, cam_t_).cast<float>();
-    viewer_->removeCoordinateSystem(camera_frame_name_);
-    viewer_->addCoordinateSystem(1.0, T_affine, camera_frame_name_, 0);
-
-    // Update point
-    viewer_->updatePointCloud(point_cloud_ptr_, point_cloud_name_);
-}
-void PclViewer::spinOnce(unsigned int millisecond){
-    viewer_->spinOnce(millisecond);
-}
-bool PclViewer::wasStopped(){
-    return viewer_ ->wasStopped();
+void setViewerPose(pcl::visualization::PCLVisualizer& viewer,
+    double x, double y, double z, double ea_x, double ea_y, double ea_z){
+    Eigen::Affine3d T = my_basics::getAffine3d(x, y, z, ea_x, ea_y, ea_z); 
+    setViewerPose(viewer, T.cast<float>());
 }
 
 

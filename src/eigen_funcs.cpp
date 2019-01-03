@@ -23,4 +23,10 @@ Eigen::Affine3d transCVMatRt2Affine3d(const Mat &R0, const Mat &t)
     return T;
 }
 
+Eigen::Affine3d getAffine3d(double x, double y, double z, double ea_x, double ea_y, double ea_z){
+    cv::Mat t=(cv::Mat_<double>(3,1)<<x,y,z);
+    cv::Mat R_vec=(cv::Mat_<double>(3,1)<<ea_x,ea_y,ea_z);
+    return transCVMatRt2Affine3d(R_vec, t);
+}
+
 }
