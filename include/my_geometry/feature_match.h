@@ -2,12 +2,7 @@
 #ifndef FEATURE_MATCH_H
 #define FEATURE_MATCH_H
 
-#include <vector>
-#include <string>
-#include <iostream>
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/features2d/features2d.hpp>
+#include "my_geometry/common_include.h"
 
 using namespace std;
 

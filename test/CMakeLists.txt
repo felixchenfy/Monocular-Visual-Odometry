@@ -1,6 +1,6 @@
 
-# add_executable( test_epipolor_geometry test_epipolor_geometry.cpp )
-# target_link_libraries( test_epipolor_geometry my_geometry)
+add_executable( test_epipolor_geometry test_epipolor_geometry.cpp )
+target_link_libraries( test_epipolor_geometry my_geometry)
 
 # add_executable( test_config_and_read_yaml test_config_and_read_yaml.cpp )
 # target_link_libraries( test_config_and_read_yaml my_slam)
@@ -20,5 +20,5 @@ target_link_libraries( run_vo_v1
     my_basics
     my_geometry
     my_display
-
+    my_slam
 )

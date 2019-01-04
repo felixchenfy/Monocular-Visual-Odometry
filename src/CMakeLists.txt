@@ -16,6 +16,7 @@ add_library(my_geometry SHARED
     feature_match.cpp
     epipolar_geometry.cpp
     camera.cpp
+    motion_estimation.cpp
 )
 
 add_library( my_slam SHARED
