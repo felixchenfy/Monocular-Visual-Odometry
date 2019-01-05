@@ -33,7 +33,6 @@ void estiMotionByEssential(
     // print_MatProperty(inliers_mask);
 
     // Get inliers
-    inliers_index.clear();
     for (int i = 0; i < inliers_mask.rows; i++)
     {
         if ((int)inliers_mask.at<unsigned char>(i, 0) == 1)
@@ -51,6 +50,7 @@ void estiMotionByEssential(
 
 void removeWrongRtOfHomography(
     const vector<Point2f> &pts_on_np1, const vector<Point2f> &pts_on_np2,
+    const vector<int> &inliers,
     vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> &normals)
 {
     // Remove wrong R,t.
@@ -58,7 +58,12 @@ void removeWrongRtOfHomography(
     // see: https://github.com/opencv/opencv/blob/master/modules/calib3d/src/homography_decomp.cpp
     vector<Mat> res_Rs, res_ts, res_normals;
     Mat possibleSolutions; //Use print_MatProperty to know its type: 32SC1
-    filterHomographyDecompByVisibleRefpoints(Rs, normals, pts_on_np1, pts_on_np2, possibleSolutions);
+    vector<Point2f> inl_pts_on_np1, inl_pts_on_np2;
+    for(int idx:inliers){
+        inl_pts_on_np1.push_back(pts_on_np1[idx]);
+        inl_pts_on_np2.push_back(pts_on_np2[idx]);
+    }
+    filterHomographyDecompByVisibleRefpoints(Rs, normals, inl_pts_on_np1, inl_pts_on_np2, possibleSolutions);
     for (int i = 0; i < possibleSolutions.rows; i++)
     {
         int idx = possibleSolutions.at<int>(i, 0);
@@ -172,11 +177,10 @@ void doTriangulation(
 
     // extract inliers points
     vector<Point2f> inlier_pts_on_np1, inlier_pts_on_np2;
-    for (auto idx : inliers)
+    for (auto idx : inliers){
         inlier_pts_on_np1.push_back(pts_on_np1[idx]);
-    for (auto idx : inliers)
         inlier_pts_on_np2.push_back(pts_on_np2[idx]);
-
+    }
     // set up
     Mat T_cam1_to_world =
         (Mat_<float>(3, 4) << 1, 0, 0, 0,

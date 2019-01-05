@@ -60,26 +60,29 @@ void selectUniformByGrid(vector<cv::KeyPoint>& keypoints,
     const int image_rows, const int image_cols,
     const bool SET_PARAM_BY_YAML)
 {
-    static int grid_size=_grid_size, MAX_PTS_IN_GRID=_max_pts_in_grid;
+    static int GRID_SIZE=_grid_size, MAX_PTS_IN_GRID=_max_pts_in_grid;
     static int max_num_keypoints = _max_num_keypoints;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
         max_num_keypoints = my_basics::Config::get<int>("max_number_of_keypoints");
+        GRID_SIZE = my_basics::Config::get<int>("GRID_SIZE");
+        MAX_PTS_IN_GRID = my_basics::Config::get<int>("MAX_PTS_IN_GRID");
     }
-    static vector<vector<int>> grid(image_rows/grid_size,
-        vector<int>(image_cols/grid_size,0));
-
+    static int rows=image_rows/GRID_SIZE, cols=image_cols/GRID_SIZE;
+    static vector<vector<int>> grid(rows,vector<int>(cols,0));
     // clear grid
-    for (auto row: grid) //clear grid
+    // for (int i=0;i<rows;i++)for(int j=0;j<cols;j++)grid[i][j]=0;
+    for (auto &row: grid) //clear grid
         std::fill(row.begin(),row.end(),0);
     
     // Insert keypoints to grid. If not full, insert this keypoint to result
     vector<cv::KeyPoint> tmp_keypoints;
     int cnt=0;
     for (auto &kpt: keypoints){
-        int row=((int)kpt.pt.y)/grid_size, col=((int)kpt.pt.x)/grid_size;
-        if (++grid[row][col]<=MAX_PTS_IN_GRID){
+        int row=((int)kpt.pt.y)/GRID_SIZE, col=((int)kpt.pt.x)/GRID_SIZE;
+        if (grid[row][col]<MAX_PTS_IN_GRID){
             tmp_keypoints.push_back(kpt);
+            grid[row][col]++;
             cnt++;
             if (cnt>max_num_keypoints)break;
         }

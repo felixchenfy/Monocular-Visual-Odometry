@@ -33,6 +33,7 @@ void estiMotionByHomography(
 // 4 solutions --> 1 or 2 solutions
 void removeWrongRtOfHomography(
     const vector<Point2f> &pts_on_np1, const vector<Point2f> &pts_on_np2,
+    const vector<int> &inliers,
     vector<Mat> &Rs, vector<Mat> &ts, vector<Mat> &normals);
     
 void doTriangulation(

@@ -24,13 +24,23 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
     vector<vector<Point3f>> &sols_pts3d_in_cam1,
-    const bool print_res=false);
+    const bool print_res = false);
 
-// ---------------------------------------
-// ---------------------------------------
-// ----------- debug functions -----------
-// ---------------------------------------
-// ---------------------------------------
+double helperEvaluateEstimationsError(
+    const vector<KeyPoint> &keypoints_1,
+    const vector<KeyPoint> &keypoints_2,
+    const vector<vector<DMatch>> &list_matches,
+    const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
+    const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
+    const Mat &K,
+    vector<double> &list_error_epipolar,
+    vector<double> &list_error_triangulation,// the error on the normalized image plane
+    bool print_res);
+// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// ----------- debug functions --------------------------------------------------
+// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 void printResult_estiMotionByEssential(
     const Mat &essential_matrix,
@@ -44,13 +54,19 @@ void printResult_estiMotionByHomography(
     const vector<Mat> &Rs, const vector<Mat> &ts,
     vector<Mat> &normals);
 
-// Check [Epipoloar error] and [Triangulation result] for each feature point
-//      which is inlier in both E and H.
-void print_EpipolarError_and_TriangulationResult(
-    vector<Point2f> pts_img1, vector<Point2f> pts_img2, vector<Point2f> pts_on_np1, vector<Point2f> pts_on_np2,
-    vector<vector<Point3f>> sols_pts3d_in_cam1,
-    vector<vector<int>> list_inliers,
-    vector<Mat> list_R, vector<Mat> list_t,
-    Mat K);
+void print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
+    const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2,
+    const vector<Point2f> &pts_on_np1, const vector<Point2f> &pts_on_np2,
+    const vector<vector<Point3f>> &sols_pts3d_in_cam1,
+    const vector<vector<int>> &list_inliers,
+    const vector<Mat> &list_R, const vector<Mat> &list_t, const Mat &K);
+
+void print_EpipolarError_and_TriangulationResult_By_Solution(
+    const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2,
+    const vector<Point2f> &pts_on_np1, const vector<Point2f> &pts_on_np2,
+    const vector<vector<Point3f>> &sols_pts3d_in_cam1,
+    const vector<vector<int>> &list_inliers,
+    const vector<Mat> &list_R, const vector<Mat> &list_t, const Mat &K);
+
 } // namespace my_geometry
 #endif
