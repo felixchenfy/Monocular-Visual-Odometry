@@ -96,42 +96,70 @@ void matchFeatures(
     vector<cv::DMatch> &matches,
     const bool PRINT_RES, const bool SET_PARAM_BY_YAML)
 {
-    static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
-    static double match_ratio = _match_ratio;
-    static int cnt_call_times_=0;
-    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        match_ratio = my_basics::Config::get<int>("match_ratio");
-    }
-
-    // Match keypoints with similar descriptors.
-    // For kpt_i, if kpt_j's descriptor if most similar to kpt_i's, then they are matched.
-    vector<cv::DMatch> all_matches;
-    matcher_flann.match(descriptors_1, descriptors_2, all_matches);
-
-    // Find a min-distance threshold for selecting good matches
-    double min_dis = 9999999, max_dis = 0;
-    for (int i = 0; i < all_matches.size(); i++){
-        double dist = all_matches[i].distance;
-        if (dist < min_dis) min_dis = dist;
-        if (dist > max_dis) max_dis = dist;
-    }
-    double distance_threshold = max<float>(min_dis * match_ratio, 30.0);
-    // Another way of getting the minimum:
-    // min_dis = std::min_element(all_matches.begin(), all_matches.end(),
-    //     [](const cv::DMatch &m1, const cv::DMatch &m2) {return m1.distance < m2.distance;})->distance;
-
-    // Select good matches and push to the result vector.
     matches.clear();
-    for (cv::DMatch &m : all_matches)
-        if (m.distance < distance_threshold)
-            matches.push_back(m);
+    static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
+    static double MATCH_RATIO = _match_ratio;
+    static int cnt_call_times_=0, METHOD_INDEX=2;
+    if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
+        MATCH_RATIO = my_basics::Config::get<int>("match_ratio");
+        METHOD_INDEX = my_basics::Config::get<int>("feature_match_method_index");
+    }
 
+    double min_dis = 9999999, max_dis = 0, distance_threshold=-1;
+    if(METHOD_INDEX==1){ // by the method in Dr. Xiang Gao's slambook
+        // Match keypoints with similar descriptors.
+        // For kpt_i, if kpt_j's descriptor if most similar to kpt_i's, then they are matched.
+        vector<cv::DMatch> all_matches;
+        matcher_flann.match(descriptors_1, descriptors_2, all_matches);
+
+        // Find a min-distance threshold for selecting good matches
+        for (int i = 0; i < all_matches.size(); i++){
+            double dist = all_matches[i].distance;
+            if (dist < min_dis) min_dis = dist;
+            if (dist > max_dis) max_dis = dist;
+        }
+        distance_threshold = max<float>(min_dis * MATCH_RATIO, 30.0);
+        // Another way of getting the minimum:
+        // min_dis = std::min_element(all_matches.begin(), all_matches.end(),
+        //     [](const cv::DMatch &m1, const cv::DMatch &m2) {return m1.distance < m2.distance;})->distance;
+
+        // Select good matches and push to the result vector.
+        for (cv::DMatch &m : all_matches)
+            if (m.distance < distance_threshold)
+                matches.push_back(m);
+    }else if(METHOD_INDEX==2){ // method in Lowe's 2004 paper
+        static Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
+        // Calculate the features's distance of the two images. 
+        vector<vector<DMatch>> knn_matches;
+        vector<Mat> train_desc(1, descriptors_2);
+        matcher->add(train_desc);
+        matcher->train();
+        // For a point "PA_i" in image A, 
+        // only return its nearest 2 points "PB_i0" and "PB_i1" in image B.
+        // The result is saved in knn_matches.
+        matcher->knnMatch(descriptors_1, descriptors_2, knn_matches, 2);
+
+        // Remove bad matches using the method proposed by Lowe in his SIFT paper
+        //		by checking the ratio of the nearest and the second nearest distance.
+        for (int i = 0; i < knn_matches.size(); i++){
+
+            double dist = knn_matches[i][0].distance ;
+            if (dist < min_dis) min_dis = dist; // This is not required. Do this for debug
+            if (dist > max_dis) max_dis = dist; // This is not required. Do this for debug
+            if (dist < 0.8 * knn_matches[i][1].distance){
+                matches.push_back(knn_matches[i][0]);
+            }
+        }
+    }else{
+        assert(0);
+    }
     // Sort res by "trainIdx", and then
     // remove duplicated "trainIdx" to obtain unique matches.
     removeDuplicatedMatches(matches);
 
     if (PRINT_RES){
-        printf("Matching features: threshold = %f\n",distance_threshold);
+        printf("Matching features:\n");
+        printf("Using method %d, threshold = %f\n", METHOD_INDEX, distance_threshold);
         printf("Number of matches: %d\n", (int)matches.size());
         printf("-- Max dist : %f \n", max_dis);
         printf("-- Min dist : %f \n", min_dis);

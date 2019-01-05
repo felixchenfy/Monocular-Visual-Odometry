@@ -23,7 +23,8 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> &list_R, vector<Mat> &list_t,
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
-    vector<vector<Point3f>> &sols_pts3d_in_cam1);
+    vector<vector<Point3f>> &sols_pts3d_in_cam1,
+    const bool print_res=false);
 
 // ---------------------------------------
 // ---------------------------------------
@@ -44,6 +45,7 @@ void printResult_estiMotionByHomography(
     vector<Mat> &normals);
 
 // Check [Epipoloar error] and [Triangulation result] for each feature point
+//      which is inlier in both E and H.
 void print_EpipolarError_and_TriangulationResult(
     vector<Point2f> pts_img1, vector<Point2f> pts_img2, vector<Point2f> pts_on_np1, vector<Point2f> pts_on_np2,
     vector<vector<Point3f>> sols_pts3d_in_cam1,

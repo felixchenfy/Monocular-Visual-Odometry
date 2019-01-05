@@ -85,55 +85,57 @@ int main(int argc, char **argv)
     // estimation motion
     vector<Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
-    vector<vector<Point3f>> sols_pts3d_in_cam1;
+    vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, descriptors_1, descriptors_2, K,
         /*Output*/
-        list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1);
+        list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
+        false); // print result
 
-    // // Debug 2:
-    // // Print the error of the above three methods
-    // int num_solutions=list_R.size();
-    // printf("\n------------------------------------\n");
-    // printf("Print the mean error of each E/H method by using the inlier points.");
-    // for (int j = 0; j < num_solutions; j++)
-    // {
-    //     Mat &R = list_R[j], &t = list_t[j];
-    //     vector<Point2f> &inlpts1 = list_inlpts1[j];
-    //     vector<Point2f> &inlpts2 = list_inlpts2[j];
-    //     vector<Point3f> &pts3d = sols_pts3d_in_cam1[j];
+    // Debug 2:
+    // Print the error of the above three methods
+    int num_solutions=list_R.size();
+    printf("\n------------------------------------\n");
+    printf("Print the mean error of each E/H method by using the inlier points.");
+    for (int i = 0; i < num_solutions; i++)
+    {
+        Mat &R = list_R[i], &t = list_t[i];
+        vector<DMatch> &matches=list_matches[i];
+        vector<Point3f> &pts3d = sols_pts3d_in_cam1_by_triang[i];
+        vector<Point2f> inlpts1, inlpts2;
+        extractPtsFromMatches(keypoints_1, keypoints_2, matches, inlpts1 ,inlpts2);
+        
+        // epipolar error
+        double err_epi = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
 
-    //     // epipolar error
-    //     double err_epi = computeEpipolarConsError(inlpts1, inlpts2, list_R[j], list_t[j], K);
+        // In image frame,  the error between triangulation and real
+        double err_triang = 0;
+        int num_inlier_pts = inlpts1.size();
+        for (int j = 0; j < num_inlier_pts; j++)
+        {
+            Point2f &p1 = inlpts1[j], &p2 = inlpts2[j];
+            // print triangulation result
+            Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1_by_triang[i][j]); // 3d pos in camera 1
+            Mat pts3dc2 = R * pts3dc1 + t;
+            Point2f pts2dc1 = cam2pixel(pts3dc1, K);
+            Point2f pts2dc2 = cam2pixel(pts3dc2, K);
+            err_triang = err_triang + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
+        }
+        if (num_inlier_pts == 0)
+            err_triang = 9999999999;
+        else
+            err_triang = sqrt(err_triang / 2.0 / num_inlier_pts);
 
-    //     // In image frame,  the error between triangulation and real
-    //     double err_triang = 0;
-    //     int num_pts = pts_img1.size();
-    //     for (int i = 0; i < num_pts; i++)
-    //     {
-    //         Point2f p1 = pts_img1[i], p2 = pts_img2[i];
-    //         // print triangulation result
-    //         Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][i]); // 3d pos in camera 1
-    //         Mat pts3dc2 = R * pts3dc1 + t;
-    //         Point2f pts2dc1 = cam2pixel(pts3dc1, K);
-    //         Point2f pts2dc2 = cam2pixel(pts3dc2, K);
-    //         err_triang = err_triang + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
-    //     }
-    //     if (num_pts == 0)
-    //         err_triang = 9999999999;
-    //     else
-    //         err_triang = sqrt(err_triang / 2.0 / num_pts);
-
-    //     // print
-    //     printf("\n---------------\n");
-    //     printf("Solution %d, num inliers = %d \n", j, (int)inlpts1.size());
-    //     print_R_t(R, t);
-    //     if (j >= 1)
-    //         cout << "norm is:" << (list_normal[j]).t() << endl;
-    //     printf("-- Epipolar cons error = %f \n", err_epi);
-    //     printf("-- Triangulation error = %f \n", err_triang); // the error on the normalized image plane
-    // }
+        // print
+        printf("\n---------------\n");
+        printf("Solution %d, num inliers = %d \n", i, num_inlier_pts);
+        print_R_t(R, t);
+        if (i >= 1)
+            cout << "norm is:" << (list_normal[i]).t() << endl;
+        printf("-- Epipolar cons error = %f \n", err_epi);
+        printf("-- Triangulation error = %f \n", err_triang); // the error on the normalized image plane
+    }
 
     // plot image
     Mat Idst;

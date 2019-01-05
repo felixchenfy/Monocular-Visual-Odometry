@@ -16,7 +16,9 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> &list_R, vector<Mat> &list_t,
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
-    vector<vector<Point3f>> &sols_pts3d_in_cam1)
+    vector<vector<Point3f>> &sols_pts3d_in_cam1,
+    const bool print_res    
+    )
 {
     list_R.clear();
     list_t.clear();
@@ -45,7 +47,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
                           essential_matrix,
                           R_e, t_e, inliers_index_e);
 
-    if (DEBUG_PRINT_RESULT)
+    if (print_res && DEBUG_PRINT_RESULT)
     {
         printResult_estiMotionByEssential(essential_matrix, // debug
                                           inliers_index_e, R_e, t_e);
@@ -61,7 +63,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
                            inliers_index_h);
     removeWrongRtOfHomography(pts_on_np1, pts_on_np2, R_h_list, t_h_list, normal_list);
     int num_h_solutions = R_h_list.size();
-    if (DEBUG_PRINT_RESULT)
+    if (print_res && DEBUG_PRINT_RESULT)
     {
         printResult_estiMotionByHomography(homography_matrix, // debug
                                            inliers_index_h, R_h_list, t_h_list, normal_list);
@@ -96,7 +98,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     }
 
     // Debug
-    if (DEBUG_PRINT_RESULT)
+    if (print_res && DEBUG_PRINT_RESULT)
     {
         print_EpipolarError_and_TriangulationResult( // for each feature point
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
@@ -166,6 +168,7 @@ void printResult_estiMotionByHomography(
 }
 
 // Check [Epipoloar error] and [Triangulation result] for each feature point
+//      which is inlier in both E and H.
 void print_EpipolarError_and_TriangulationResult(
     vector<Point2f> pts_img1, vector<Point2f> pts_img2, vector<Point2f> pts_on_np1, vector<Point2f> pts_on_np2,
     vector<vector<Point3f>> sols_pts3d_in_cam1,
@@ -173,19 +176,19 @@ void print_EpipolarError_and_TriangulationResult(
     vector<Mat> list_R, vector<Mat> list_t,
     Mat K)
 {
-    const int MAX_TO_CHECK = 10;
+    const int MAX_TO_CHECK_AND_PRINT = 5;
     int num_solutions = list_R.size();
     vector<int> inliers_index_e=list_inliers[0];
     vector<int> inliers_index_h=list_inliers[1];
 
     cout << "\n---------------------------------------" << endl;
     cout << "Check [Epipoloar error] and [Triangulation result]" << endl;
-    cout << "for the first " << MAX_TO_CHECK << " points:";
+    cout << "for the first " << MAX_TO_CHECK_AND_PRINT << " points:";
 
     // Iterate through points.
     int cnt = 0;
     int num_points = pts_img1.size();
-    for (int i = 0; i < num_points && cnt < MAX_TO_CHECK; i++)
+    for (int i = 0; i < num_points && cnt < MAX_TO_CHECK_AND_PRINT; i++)
     {
         auto pe=find(inliers_index_e.begin(), inliers_index_e.end(), i);
         auto ph=find(inliers_index_h.begin(), inliers_index_h.end(), i);

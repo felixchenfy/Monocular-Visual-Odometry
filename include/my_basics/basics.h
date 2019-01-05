@@ -1,5 +1,5 @@
 
-/*This is script is currently not used*/
+/*This script is currently not used*/
 
 #include <vector>
 #include <algorithm>

@@ -16,11 +16,17 @@ camera_info.cy: 249.7
 buffsize_of_prev_frames: 1
 
 # Matching descriptos
-match_ratio: 2.0
+feature_match_method_index: 2
+  # method 1: the method in Dr. Xiang Gao's slambook:
+  #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
+  # method 2: the method in Lowe's 2004 paper:
+  #           min dis / second min dis < 0.8
+match_ratio: 2.0 # This is for method 1 used in Dr. Xiang Gao's slambook:
+                
 
 # ORB settings 
 number_of_keypoints_to_extract: 5000
-max_number_of_keypoints: 1000
+max_number_of_keypoints: 1500
 scale_factor: 1.2
 level_pyramid: 4
 
