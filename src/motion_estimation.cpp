@@ -6,11 +6,10 @@ using namespace my_basics;
 
 namespace my_geometry
 {
+
 void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
-    const Mat &descriptors_1,
-    const Mat &descriptors_2,
     const vector<DMatch> &matches,
     const Mat &K,
     vector<Mat> &list_R, vector<Mat> &list_t,
@@ -200,32 +199,55 @@ double helperEvaluateEstimationsError(
     }
 }
 
+void helperEstiMotionByEssential(
+    const vector<KeyPoint> &keypoints_1,
+    const vector<KeyPoint> &keypoints_2,
+    const vector<DMatch> &matches,
+    const Mat &K,
+    Mat &R, Mat &t, vector<int> &inliers_of_matches,
+    const bool print_res)
+{
+    vector<Point2f> pts_in_img1, pts_in_img2;
+    extractPtsFromMatches(keypoints_1, keypoints_2, matches, pts_in_img1, pts_in_img2);
+    Mat essential_matrix;
+    vector<int> inliers_index;
+    estiMotionByEssential(pts_in_img1, pts_in_img2, K, essential_matrix, R, t, inliers_index);
+    inliers_of_matches.clear();
+    for (int idx : inliers_index)
+    {
+        inliers_of_matches.push_back(matches[idx].trainIdx);
+    }
+}
+
 // Get the 3d-2d corrsponding points
 // First find curr_dmatch.train that appears also in prev_dmatch.query,
-void helperFind3Dto2DCorrespondences( 
+void helperFind3Dto2DCorrespondences(
     const vector<DMatch> &curr_dmatch, const vector<KeyPoint> &curr_kpts,
     const vector<int> &prev_inliers_of_all_pts, const vector<Point3f> &prev_inliers_pts3d,
     vector<Point3f> &pts_3d, vector<Point2f> &pts_2d)
 {
-    pts_3d.clear();pts_2d.clear();
+    pts_3d.clear();
+    pts_2d.clear();
     // Set up a table
     map<int, int> table;
-    int cnt_inliers=0;
-    for(int idx:prev_inliers_of_all_pts){
-        table[idx]=cnt_inliers++;
+    int cnt_inliers = 0;
+    for (int idx : prev_inliers_of_all_pts)
+    {
+        table[idx] = cnt_inliers++;
     }
 
     // search curr_dmatch.query in table
-    const int curr_dmatch_size=curr_dmatch.size();
-    for(int i=0;i<curr_dmatch_size;i++){
+    const int curr_dmatch_size = curr_dmatch.size();
+    for (int i = 0; i < curr_dmatch_size; i++)
+    {
         int prev_pt_idx = curr_dmatch[i].queryIdx;
-        if(table.find(prev_pt_idx)!=table.end()){ // if find a correspondance
+        if (table.find(prev_pt_idx) != table.end())
+        { // if find a correspondance
             pts_3d.push_back(prev_inliers_pts3d[table[prev_pt_idx]]);
             pts_2d.push_back(curr_kpts[curr_dmatch[i].trainIdx].pt);
         }
     }
 }
-
 
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------

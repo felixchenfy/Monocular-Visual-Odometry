@@ -41,12 +41,13 @@ Mat transRt2T_3x4(const Mat &R, const Mat &t)
 }
 void getRtFromT(const Mat &T, Mat &R, Mat &t)
 {
-    R = (Mat_<double>(3, 3) << T.at<double>(0, 0), T.at<double>(0, 1), T.at<double>(0, 2),
+    R = (Mat_<double>(3, 3) << 
+        T.at<double>(0, 0), T.at<double>(0, 1), T.at<double>(0, 2),
          T.at<double>(1, 0), T.at<double>(1, 1), T.at<double>(1, 2),
          T.at<double>(2, 0), T.at<double>(2, 1), T.at<double>(2, 2));
-    t = (Mat_<double>(3, 1) << t.at<double>(0, 0),
-         t.at<double>(1, 0),
-         t.at<double>(2, 0));
+    t = (Mat_<double>(3, 1) << T.at<double>(0, 3),
+         T.at<double>(1, 3),
+         T.at<double>(2, 3));
 }
 Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t){
    Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2

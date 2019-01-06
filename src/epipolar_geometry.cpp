@@ -22,7 +22,9 @@ void estiMotionByEssential(
 
     // -- Essential matrix
     int method = RANSAC;
-    double prob = 0.999;
+    // double prob = 0.999;
+    // double threshold = 1.0;
+    double prob = 0.99;
     double threshold = 1.0;
     Mat inliers_mask; //Use print_MatProperty to know its type: 8UC1
     essential_matrix = findEssentialMat(

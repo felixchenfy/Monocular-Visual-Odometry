@@ -22,6 +22,11 @@
 #include "my_geometry/motion_estimation.h"
 #include "my_slam/frame.h"
 
+// display
+#include "my_display/pcl_viewer.h"
+using namespace my_display;
+const bool ENABLE_PCL_DISPLAY=true;
+
 using namespace std;
 using namespace cv;
 using namespace my_geometry;
@@ -33,14 +38,26 @@ int main(int argc, char **argv)
     assert(checkInputArguments(argc, argv));
     const string config_file = argv[1];
     bool print_res = false;
-    vector<string> image_paths = my_basics::readImagePaths(config_file, print_res);
+    vector<string> image_paths = my_basics::readImagePaths(config_file, 150, print_res);
     cv::Mat K = my_basics::readCameraIntrinsics(config_file); // camera intrinsics
     my_geometry::Camera::Ptr camera(                          // init a camera class with common transformations
         new my_geometry::Camera(K));
     my_basics::Config::setParameterFile( // just to remind to set this config file.
         config_file);                    // Following algorithms will read from it for setting params.
 
-    // read in image
+    // Prepare pcl display
+    double dis_scale=3;
+    double  x = 0.5*dis_scale,
+            y = -1.0*dis_scale,
+            z = -1.0*dis_scale;
+    double ea_x = -0.5, ea_y = 0, ea_z = 0;
+    string viewer_name = "my pcl viewer";
+    my_display::PclViewer::Ptr pcl_displayer(
+        new my_display::PclViewer(
+            viewer_name, x, y, z, ea_x, ea_y, ea_z));
+
+
+    // Read in image
     deque<my_slam::Frame::Ptr> frames;
     enum VO_STATE
     {
@@ -56,8 +73,8 @@ int main(int argc, char **argv)
         // Read image.
         cv::Mat rgb_img = cv::imread(image_paths[img_id]);
         if (rgb_img.data == nullptr){
-            cout << "The image file <<"<<image_paths[img_id]<<"<< is empty "<<endl;
-            assert(0);
+            cout << "The image file <<"<<image_paths[img_id]<<"<< is empty. Finished."<<endl;
+            break;
         }
         printf("\n\n=============================================\n");
         printf("=============================================\n");
@@ -96,7 +113,6 @@ int main(int argc, char **argv)
                 helperEstimatePossibleRelativePosesByEpipolarGeometry(
                     /*Input*/
                     prev_frame->keypoints_, frame->keypoints_,
-                    prev_frame->descriptors_, frame->descriptors_,
                     frame->matches_,
                     K,
                     /*Output*/
@@ -126,6 +142,7 @@ int main(int argc, char **argv)
                 for (const Point3f &p : pts3d)
                     mean_depth += p.z;
                 mean_depth /= num_inlier_pts;
+                mean_depth = mean_depth*100;
                 t /= mean_depth;
                 for (Point3f &p : pts3d)
                 {
@@ -154,8 +171,40 @@ int main(int argc, char **argv)
                 my_slam::Frame::Ptr frame1 = frames[frames_size - 2];
                 my_slam::Frame::Ptr frame2 = frames[frames_size - 1];
 
-                if(1){ // -- Find their inliers by checking epipolar constraints
-                    
+                if(1){  // use helperEstimatePossibleRelativePosesByEpipolarGeometry (slow)
+                    vector<Mat> list_R, list_t, list_normal;
+                    vector<vector<DMatch>> list_matches; // these are the inliers matches
+                    vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
+                    helperEstimatePossibleRelativePosesByEpipolarGeometry(
+                        /*Input*/
+                        frame1->keypoints_, frame2->keypoints_,
+                        frame2->matches_,
+                        K,
+                        /*Output*/
+                        list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
+                    false); // print result
+
+                    printf("DEBUG: Printing prev frame1-frame2 inliers number by E/H:\n");
+                    for(int i=0;i<list_matches.size();i++){
+                        cout<<list_matches[i].size()<<", ";
+                    } // RESULT: 只有10几个内点？
+                    cout << endl;
+
+                    // -- update values
+                    int sol_idx_for_inlier=0;
+                    vector<int> inliers_in_kpts2; // inliers index with respect to all the points
+                    for (const DMatch &m : list_matches[sol_idx_for_inlier])
+                        inliers_in_kpts2.push_back(m.trainIdx);
+                    frame2->inliers_of_all_pts_ = inliers_in_kpts2;
+
+                    vector<Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[sol_idx_for_inlier];
+                    vector<Point3f> pts3d_in_cam2;
+                    for (const Point3f &pt3d : pts3d_in_cam1)
+                        pts3d_in_cam2.push_back(transCoord(pt3d, frame2->R_curr_to_prev_, frame2->t_curr_to_prev_));
+                    frame2->inliers_pts3d_ = pts3d_in_cam2;
+
+                }else if(1){  // get inliers of prev two frames, and do triangulation
+   
                     // -- Extract some commonly used points
                     vector<Point2f> pts_img1, pts_img2; // matched points
                     extractPtsFromMatches(frame1->keypoints_, frame2->keypoints_, frame2->matches_, pts_img1, pts_img2);
@@ -164,23 +213,32 @@ int main(int argc, char **argv)
                         pts_on_np1.push_back(pixel2camNormPlane(pt, K));
                     for (const Point2f &pt : pts_img2)
                         pts_on_np2.push_back(pixel2camNormPlane(pt, K));
+                    Mat R = frame2->R_curr_to_prev_, t = frame2->t_curr_to_prev_;
 
                     
                     // -- Here cam1 is the prev2 image, cam2 is the prev1 image.
-                    const double ERR_EPPI_TRESH = 5;
-                    Mat R = frame2->R_curr_to_prev_, t = frame2->t_curr_to_prev_;
-                    const int num_matched_pts = pts_img1.size();
-                    vector<int> inliers;
-                    for (int i = 0; i < num_matched_pts; i++)
-                    {
-                        const Point2f &p1 = pts_img1[i], &p2 = pts_img2[i];
-                        double err = abs(computeEpipolarConsError(p1, p2, R, t, K));
-                        if (err < ERR_EPPI_TRESH)
+                    vector<int> inliers;// inliers index with respect to the matched points
+                    if(0){ // -- Find their inliers by checking epipolar constraints.
+                        // -- Due to bad estimation of R and t, this method is very unrealiable
+                        const double ERR_EPPI_TRESH = 0.01;
+                        const int num_matched_pts = pts_img1.size();
+                        for (int i = 0; i < num_matched_pts; i++)
                         {
-                            inliers.push_back(i);
+                            const Point2f &p1 = pts_img1[i], &p2 = pts_img2[i];
+                            double err = abs(computeEpipolarConsError(p1, p2, R, t, K));
+                            if (err < ERR_EPPI_TRESH)
+                            {
+                                inliers.push_back(i);
+                            }
                         }
+                    }else{
+                        // Estimate Essential matrix to find the inliers
+                        Mat Rtmp, ttmp;
+                        helperEstiMotionByEssential(
+                            frame1->keypoints_, frame2->keypoints_,
+                            frame2->matches_,
+                            K, Rtmp, ttmp, inliers);
                     }
-
                     // -- Use triangulation to find these points pos in prev image's frame
                     vector<Point3f> pts3d_in_cam1, pts3d_in_cam2;
                     printf("In prev frame: num pts = %d, num matches = %d\n",
@@ -191,45 +249,11 @@ int main(int argc, char **argv)
                         pts3d_in_cam2.push_back(transCoord(pt3d, R, t));
 
                     // -- update values
-                    // frame2->inliers_of_matches_ = inliers;
-                    vector<int> inliers_of_all_pts; // inliers index with respect to all the points
+                    vector<int> inliers_in_kpts2; // inliers index with respect to all the points
                     for (int idx : inliers)
-                        inliers_of_all_pts.push_back(frame2->matches_[idx].trainIdx);
-                    frame2->inliers_of_all_pts_ = inliers_of_all_pts;
+                        inliers_in_kpts2.push_back(frame2->matches_[idx].trainIdx);
+                    frame2->inliers_of_all_pts_ = inliers_in_kpts2;
                     frame2->inliers_pts3d_ = pts3d_in_cam2;
-                }else{ // When there is pure rotation, epipolar results are bad. 
-                    // use helperEstimatePossibleRelativePosesByEpipolarGeometry
-                    vector<Mat> list_R, list_t, list_normal;
-                    vector<vector<DMatch>> list_matches; // these are the inliers matches
-                    vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
-                    helperEstimatePossibleRelativePosesByEpipolarGeometry(
-                        /*Input*/
-                        frame1->keypoints_, frame2->keypoints_,
-                        frame1->descriptors_, frame2->descriptors_,
-                        frame2->matches_,
-                        K,
-                        /*Output*/
-                        list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
-                    false); // print result
-
-                    printf("DEBUG: Printing prev frame1-frame2 inliers number under 3 solutions:\n");
-                    for(int i=0;i<list_matches.size();i++){
-                        cout<<list_matches[i].size()<<endl;
-                    } // RESULT: 只有10几个内点？
-
-                    // -- update values
-                    int sol_idx_for_inlier=0;
-                    vector<int> inliers_of_all_pts; // inliers index with respect to all the points
-                    for (const DMatch &m : list_matches[sol_idx_for_inlier])
-                        inliers_of_all_pts.push_back(m.trainIdx);
-                    frame2->inliers_of_all_pts_ = inliers_of_all_pts;
-
-                    vector<Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[sol_idx_for_inlier];
-                    vector<Point3f> pts3d_in_cam2;
-                    for (const Point3f &pt3d : pts3d_in_cam1)
-                        pts3d_in_cam2.push_back(transCoord(pt3d, frame2->R_curr_to_prev_, frame2->t_curr_to_prev_));
-                    frame2->inliers_pts3d_ = pts3d_in_cam2;
-
                 }
 
                 // --  Find the intersection between [DMatches_curr] and [DMatches_prev],
@@ -256,40 +280,60 @@ int main(int argc, char **argv)
                 vo_state = OK;
             }
         }
-        // Display
-        cv::Mat img_show=rgb_img.clone();
         
-        std::stringstream ss;
-        ss << std::setw(4) << std::setfill('0') << img_id;
-        string str_img_id=ss.str();
+        // ------------------------Complete-------------------------------
 
-        if(img_id==0){
-            cv::Scalar color(0,255,0);
-            cv::Scalar color2= cv::Scalar::all(-1);
-            cv::drawKeypoints(img_show, frame->keypoints_, img_show, color);
-            cv::imshow ( "rgb_img", img_show );
-        }else{
-            my_slam::Frame::Ptr prev_frame = frames.back();
-            string window_name = "Image "+str_img_id  + ", matched keypoints";
-            drawMatches(frame->rgb_img_, frame->keypoints_, 
-                prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
-            cv::namedWindow(window_name, WINDOW_AUTOSIZE);
-            cv::imshow(window_name, img_show);
+        printf("\n\n-----Printing frame %d results:---------\n", img_id);
+        if(1){// Display image by opencv
+            cv::destroyAllWindows();
+            cv::Mat img_show=rgb_img.clone();
+            std::stringstream ss;
+            ss << std::setw(4) << std::setfill('0') << img_id;
+            string str_img_id=ss.str();
+
+            if(img_id==0){
+                cv::Scalar color(0,255,0);
+                cv::Scalar color2= cv::Scalar::all(-1);
+                cv::drawKeypoints(img_show, frame->keypoints_, img_show, color);
+                cv::imshow ( "rgb_img", img_show );
+            }else{
+                my_slam::Frame::Ptr prev_frame = frames.back();
+                string window_name = "Image "+str_img_id  + ", matched keypoints";
+                drawMatches(frame->rgb_img_, frame->keypoints_, 
+                    prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
+                cv::namedWindow(window_name, WINDOW_AUTOSIZE);
+                cv::imshow(window_name, img_show);
+            }
+            waitKey(1);
+            imwrite("result/"+ str_img_id + ".png", img_show);
         }
-        waitKey(1);
-        imwrite("result/"+ str_img_id + ".png", img_show);
+        if(ENABLE_PCL_DISPLAY){
+            Mat R, R_vec, t;
+            getRtFromT(frame->T_w_c_, R, t);
+            Rodrigues(R, R_vec);
 
+            cout << endl;
+            cout <<"R_world_to_camera:\n"<<R<<endl;
+            cout <<"t_world_to_camera:\n"<<t.t()<<endl;
+            
+            pcl_displayer->updateCameraPose(R_vec, t);
+            // pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
+            
+            pcl_displayer->update();
+            pcl_displayer->spinOnce(100);
+            if (pcl_displayer->wasStopped())
+                break;
+        }
         // Save to buff.
         frames.push_back(frame);
         if (frames.size() > 10)
             frames.pop_front();
 
         // Print
-        printf("\n\n-----Printing frame %d results:---------\n", img_id);
         cout << "R_curr_to_prev_: " << frame->R_curr_to_prev_ << endl;
         cout << "t_curr_to_prev_: " << frame->t_curr_to_prev_ << endl;
         // Return
-        if (img_id == 10)
+        if (img_id == 5)
             break;
         cout<<"Finished an image"<<endl;
     }

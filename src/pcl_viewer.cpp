@@ -40,8 +40,8 @@ PclViewer::PclViewer(const string &viewer_name,
 
 void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
 {
-    cam_R_vec_ = R_vec;
-    cam_t_ = t;
+    cam_R_vec_ = R_vec.clone();
+    cam_t_ = t.clone();
 }
 
 void PclViewer::addPoint(const cv::Mat pt_3d_pos_in_world, uchar r, uchar g, uchar b)
@@ -60,7 +60,7 @@ void PclViewer::update()
     viewer_->addCoordinateSystem(1.0, T_affine, camera_frame_name_, 0);
 
     // Update point
-    viewer_->updatePointCloud(point_cloud_ptr_, point_cloud_name_);
+    // viewer_->updatePointCloud(point_cloud_ptr_, point_cloud_name_);
 }
 void PclViewer::spinOnce(unsigned int millisecond)
 {

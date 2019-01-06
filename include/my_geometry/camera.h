@@ -13,7 +13,7 @@ Point2f cam2pixel(const Point3f &p, const Mat &K);
 Point2f cam2pixel(const Mat &p, const Mat &K);
 
 // ---------------- Class ----------------
-class Camera
+class Camera /*This is defined but not acctually used*/
 {
 public:
   typedef std::shared_ptr<Camera> Ptr;

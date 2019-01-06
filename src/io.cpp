@@ -12,7 +12,7 @@ namespace my_basics
 {
 
 // Read in all image paths
-vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
+vector<string> readImagePaths(const string &path_of_config_file, int NUMBER_OF_IMAGES, bool print_res)
 {
     my_basics::Config::setParameterFile(path_of_config_file);
 
@@ -20,7 +20,7 @@ vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
     vector<string> image_paths;
     string dataset_dir = my_basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
     boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
-    for (int i = 0; i < 17; i++)
+    for (int i = 0; i < NUMBER_OF_IMAGES; i++)
     {
         image_paths.push_back((filename_fmt % i).str());
     }

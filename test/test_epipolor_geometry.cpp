@@ -26,12 +26,24 @@ int main(int argc, char **argv)
     // camera intrinsics
     Mat K_fr1 = (Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
     Mat K_fr2 = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1); // fr2 dataset
+    Mat K_mtb = (Mat_<double>(3, 3) << 615, 0, 320, 0, 615, 240, 0, 0, 1); // fr2 dataset
     Mat K;
 
     // read in images
     string img_file1, img_file2;
     string folder = "test_data/";
-    const int IDX_TEST_CASE = 1;
+    int IDX_TEST_CASE = 0;
+    
+    if(argc-1==2){
+        // bin/test_epipolor_geometry rgb_00000.png rgb_00001.png # inliers = 90+
+        // bin/test_epipolor_geometry rgb_00003.png rgb_00004.png # inliers = 35
+        // bin/test_epipolor_geometry rgb_00004.png rgb_00005.png # inliers = 90+
+        // bin/test_epipolor_geometry image0001.jpg image0002.jpg # inliers = 90+
+        IDX_TEST_CASE=-1;
+        img_file1 = argv[1];
+        img_file2 = argv[2];
+        K = K_mtb;
+    }
 
     if (IDX_TEST_CASE == 1) // keypoints are not on the same plane.
     {
@@ -89,7 +101,7 @@ int main(int argc, char **argv)
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
-        keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches, K,
+        keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         false); // print result

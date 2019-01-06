@@ -5,7 +5,7 @@ import yaml # for loading .yaml file
 import os # for getting/setting filenames
 
 # Open config file
-stream = open("default.yaml", "r")
+stream = open("config/default.yaml", "r")
 
 # !!!!!
 # If the first sentence is "%YAML:1.0", skip it

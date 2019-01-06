@@ -6,12 +6,16 @@
 
 #include <iostream>
 
-#include "my_basics/eigen_funcs.h"
+// #include "my_basics/eigen_funcs.h"
+
+// cv
+#include <opencv2/core/core.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 #include "my_display/pcl_viewer.h"
 
 using namespace std;
 using namespace cv;
-using namespace Eigen;
+// using namespace Eigen;
 
 using namespace my_display;
 
@@ -29,7 +33,7 @@ int main()
             viewer_name, x, y, z, ea_x, ea_y, ea_z));
 
     // Set up camera pos.
-    Eigen::Affine3d T_affine;
+    // Eigen::Affine3d T_affine;
     cv::Mat R_vec = (cv::Mat_<double>(3, 1) << 0, 0, 0);
     cv::Mat t = (cv::Mat_<double>(3, 1) << 0, 0, 0);
 
