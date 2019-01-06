@@ -18,9 +18,16 @@ using namespace cv;
 namespace my_basics
 {
 
+// ---------------- datatype conversion ----------------
+Mat Point3f_to_Mat(const Point3f &p);
+Mat Point2f_to_Mat(const Point2f &p);
+
 // ---------------- Math ----------------
 Mat skew(const Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
 Mat transRt2T(const Mat &R, const Mat &t);
+Mat transRt2T_3x4(const Mat &R, const Mat &t);
+void getRtFromT(const Mat &T, Mat &R, Mat &t);
+Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t);
 
 // ---------------- Print ----------------
 void print_MatProperty(cv::Mat &M); // print data type and size

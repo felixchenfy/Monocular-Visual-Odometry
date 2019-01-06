@@ -186,7 +186,7 @@ void doTriangulation(
         (Mat_<float>(3, 4) << 1, 0, 0, 0,
          0, 1, 0, 0,
          0, 0, 1, 0);
-    Mat T_cam2_to_world = transRt2T(R_cam2_to_cam1, t_cam2_to_cam1);
+    Mat T_cam2_to_world = transRt2T_3x4(R_cam2_to_cam1, t_cam2_to_cam1);
 
     // triangulartion
     Mat pts4d_in_world;
@@ -230,14 +230,6 @@ void removeWrongTriangulations(
     pts3d_in_cam1 = pts_good;
 }
 
-Mat Point3f_to_Mat(const Point3f &p)
-{
-    return (Mat_<double>(3, 1) << p.x, p.y, p.z);
-}
-Mat Point2f_to_Mat(const Point2f &p)
-{
-    return (Mat_<double>(2, 1) << p.x, p.y);
-}
 
 double calcError(const Point2f &p1, const Point2f &p2)
 {

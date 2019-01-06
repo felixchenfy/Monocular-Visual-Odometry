@@ -11,7 +11,7 @@ list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
 set( EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin )
 set( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib )
 
-# set ccache
+# set ccache (for speeding up)
 find_program(CCACHE_FOUND ccache) 
 if(CCACHE_FOUND) 
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache) 

@@ -29,10 +29,19 @@ public:
   vector<KeyPoint> keypoints_;
   Mat descriptors_;
   vector<DMatch> matches_; // matches with the previous frame
+  // vector<int> inliers_of_matches_; // inliers index with respect to the matches
+  vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
+  // vector<DMatch> inliers_matches; // not used
+  vector<Point3f> inliers_pts3d_; // matches with the previous frame
+
+  // -- Other commonly used points
+  // vector<Point2f> pts_matched_;
 
   // pose
   my_geometry::Camera::Ptr camera_;
-  Mat T_c_w_; // transform from camera to world
+  Mat T_w_c_; // transform from camera to world
+  Mat R_curr_to_prev_;
+  Mat t_curr_to_prev_;
 
 public:
   Frame() {}

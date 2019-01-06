@@ -4,6 +4,16 @@
 namespace my_basics
 {
 
+Mat Point3f_to_Mat(const Point3f &p)
+{
+    return (Mat_<double>(3, 1) << p.x, p.y, p.z);
+}
+Mat Point2f_to_Mat(const Point2f &p)
+{
+    return (Mat_<double>(2, 1) << p.x, p.y);
+}
+
+
 // ---------------- Math ----------------
 
 Mat skew(const Mat &t)
@@ -16,11 +26,33 @@ Mat skew(const Mat &t)
 
 Mat transRt2T(const Mat &R, const Mat &t)
 {
-    Mat T = (Mat_<float>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
+    Mat T = (Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
+             R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
+             R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0),
+             0, 0, 0, 1);
+    return T;
+}
+Mat transRt2T_3x4(const Mat &R, const Mat &t)
+{
+    Mat T = (Mat_<double>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
              R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
              R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0));
     return T;
 }
+void getRtFromT(const Mat &T, Mat &R, Mat &t)
+{
+    R = (Mat_<double>(3, 3) << T.at<double>(0, 0), T.at<double>(0, 1), T.at<double>(0, 2),
+         T.at<double>(1, 0), T.at<double>(1, 1), T.at<double>(1, 2),
+         T.at<double>(2, 0), T.at<double>(2, 1), T.at<double>(2, 2));
+    t = (Mat_<double>(3, 1) << t.at<double>(0, 0),
+         t.at<double>(1, 0),
+         t.at<double>(2, 0));
+}
+Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t){
+   Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
+   return Point3f(p2.at<double>(0,0),p2.at<double>(1,0), p2.at<double>(2,0));
+}
+
 // ---------------- Print ----------------
 
 void print_MatProperty(Mat &M)
@@ -85,4 +117,4 @@ string cvMatType2str(int cvMatType)
     return r;
 }
 
-}
+} // namespace my_basics

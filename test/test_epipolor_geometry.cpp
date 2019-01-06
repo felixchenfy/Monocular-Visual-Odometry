@@ -1,8 +1,8 @@
 // Test functions in "include/my_geometry", including:
 //  * Keypoint extraction and feature matching.
-//  * Estimate camera motion by Essential/Homography matrix and triangulation (1+2=3 solutions).
-// The error of the estimated motions are displayed.
-// (As for which to choose from the 3 solutions, I might do it in "test_vo.cpp") ### <-- delete this later
+//  * Estimate camera motion by Essential/Homography matrix (totally 1+2=3 solutions). All returned in a vector.
+//  * Triangulation.
+//  * Compute epipolar error and triangulation error in pixel.
 
 #include <iostream>
 #include <algorithm> // std::min
@@ -31,25 +31,27 @@ int main(int argc, char **argv)
     // read in images
     string img_file1, img_file2;
     string folder = "test_data/";
-    const int IDX_TEST_CASE = 2;
-    if (IDX_TEST_CASE == 1) // keypoints are on the same plane.
+    const int IDX_TEST_CASE = 1;
+
+    if (IDX_TEST_CASE == 1) // keypoints are not on the same plane.
     {
-        img_file1 = "fr2_1.png";
-        img_file2 = "fr2_2.png";
+        img_file1 = "fr1_1_1.png";
+        img_file2 = "fr1_1_2.png";
+        K = K_fr1;
+    }   
+    else if (IDX_TEST_CASE == 2) // keypoints are almost on the same plane.
+    {
+        img_file1 = "fr1_2_1.png";
+        img_file2 = "fr1_2_1.png";
+        K = K_fr1;
+    }
+     else if (IDX_TEST_CASE == 3) // keypoints are almost on the same plane.
+    {
+        img_file1 = "fr2_1_1.png";
+        img_file2 = "fr2_1_2.png";
         K = K_fr2;
     }
-    else if (IDX_TEST_CASE == 2) // keypoints are not on the same plane.
-    {
-        img_file1 = "fr1_1.png";
-        img_file2 = "fr1_2.png";
-        K = K_fr1;
-    }
-    else
-    {
-        img_file1 = "fr1_3.png";
-        img_file2 = "fr1_4.png";
-        K = K_fr1;
-    }
+    
     Mat img_1 = imread(folder + img_file1);
     Mat img_2 = imread(folder + img_file2);
 
@@ -87,7 +89,7 @@ int main(int argc, char **argv)
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
-        keypoints_1, keypoints_2, matches, descriptors_1, descriptors_2, K,
+        keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         false); // print result

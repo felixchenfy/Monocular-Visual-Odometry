@@ -16,9 +16,9 @@ namespace my_geometry
 void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
     const Mat &descriptors_1,
     const Mat &descriptors_2,
+    const vector<DMatch> &matches,
     const Mat &K,
     vector<Mat> &list_R, vector<Mat> &list_t,
     vector<vector<DMatch>> &list_matches,
@@ -36,6 +36,13 @@ double helperEvaluateEstimationsError(
     vector<double> &list_error_epipolar,
     vector<double> &list_error_triangulation,// the error on the normalized image plane
     bool print_res);
+
+// Get the 3d-2d corrsponding points
+void helperFind3Dto2DCorrespondences( 
+    const vector<DMatch> &curr_dmatch, const vector<KeyPoint> &curr_kpts,
+    const vector<int> &prev_inliers_of_all_pts, const vector<Point3f> &prev_inliers_pts3d,
+    vector<Point3f> &pts_3d, vector<Point2f> &pts_2d);
+
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------
 // ----------- debug functions --------------------------------------------------

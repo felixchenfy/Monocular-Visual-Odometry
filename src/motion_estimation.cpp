@@ -9,9 +9,9 @@ namespace my_geometry
 void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
     const Mat &descriptors_1,
     const Mat &descriptors_2,
+    const vector<DMatch> &matches,
     const Mat &K,
     vector<Mat> &list_R, vector<Mat> &list_t,
     vector<vector<DMatch>> &list_matches,
@@ -199,6 +199,34 @@ double helperEvaluateEstimationsError(
         }
     }
 }
+
+// Get the 3d-2d corrsponding points
+// First find curr_dmatch.train that appears also in prev_dmatch.query,
+void helperFind3Dto2DCorrespondences( 
+    const vector<DMatch> &curr_dmatch, const vector<KeyPoint> &curr_kpts,
+    const vector<int> &prev_inliers_of_all_pts, const vector<Point3f> &prev_inliers_pts3d,
+    vector<Point3f> &pts_3d, vector<Point2f> &pts_2d)
+{
+    pts_3d.clear();pts_2d.clear();
+    // Set up a table
+    map<int, int> table;
+    int cnt_inliers=0;
+    for(int idx:prev_inliers_of_all_pts){
+        table[idx]=cnt_inliers++;
+    }
+
+    // search curr_dmatch.query in table
+    const int curr_dmatch_size=curr_dmatch.size();
+    for(int i=0;i<curr_dmatch_size;i++){
+        int prev_pt_idx = curr_dmatch[i].queryIdx;
+        if(table.find(prev_pt_idx)!=table.end()){ // if find a correspondance
+            pts_3d.push_back(prev_inliers_pts3d[table[prev_pt_idx]]);
+            pts_2d.push_back(curr_kpts[curr_dmatch[i].trainIdx].pt);
+        }
+    }
+}
+
+
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------
 // ----------- debug functions --------------------------------------------------
@@ -291,7 +319,7 @@ void print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
 
             // print epipolar error
             double err_epipolar = computeEpipolarConsError(p1, p2, R, t, K);
-            cout << "===solu " << j << ": epipolar error is " << err_epipolar * 1e6 << endl;
+            cout << "===solu " << j << ": epipolar_error*1e6 is " << err_epipolar * 1e6 << endl;
 
             // print triangulation result
             int ith_in_curr_sol;

@@ -32,25 +32,6 @@ public:
     cy_ = K.at<double>(1, 2);
   }
 
-  //   // coordinate transform: world, camera, pixel
-  //   // p_w -> p_c
-  //   Vector3d world2camera(const Vector3d &p_w, const SE3 &T_c_w);
-
-  //   // p_c -> p_w
-  //   Vector3d camera2world(const Vector3d &p_c, const SE3 &T_c_w);
-
-  //   // p_c -> (u, v)
-  //   Vector2d camera2pixel(const Vector3d &p_c);
-
-  //   // (u, v) -> p_c
-  //   Vector3d pixel2camera(const Vector2d &p_p, double depth);
-
-  //   // p_w -> (u, v)
-  //   Vector2d world2pixel(const Vector3d &p_w, const SE3 &T_c_w);
-
-  //   // (u, v) -> p_w
-  //   Vector3d pixel2world(const Vector2d &p_p, const SE3 &T_c_w, double depth);
-
 };
 } // namespace my_slam
 #endif

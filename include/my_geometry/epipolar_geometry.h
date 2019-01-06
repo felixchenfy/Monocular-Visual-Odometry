@@ -56,8 +56,6 @@ double calcDist(const Point2f &p1, const Point2f &p2);
 double calcError(const Point2f &p1, const Point2f &p2);
 
 // ---------------- datatype conversion ----------------
-Mat Point3f_to_Mat(const Point3f &p);
-Mat Point2f_to_Mat(const Point2f &p);
 
 vector<Point2f> convertKeypointsToPoint2f(const vector<KeyPoint> kpts);
 
@@ -78,7 +76,6 @@ void extractPtsFromMatches(
     const vector<KeyPoint> &keypoints_1, const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
     vector<Point2f> &pts1, vector<Point2f> &pts2);
-
 // ---------------- assist ----------------
 // compute a point's pos on both cam1 and cam2's normalized plane
 double ptPosInNormPlane(const Point3f &pt_3d_pos_in_cam1,
