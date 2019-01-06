@@ -16,7 +16,7 @@ camera_info.cy: 249.7
 buffsize_of_prev_frames: 1
 
 # Matching descriptos
-feature_match_method_index: 1
+feature_match_method_index: 2
   # method 1: the method in Dr. Xiang Gao's slambook:
   #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
   # method 2: the method in Lowe's 2004 paper:

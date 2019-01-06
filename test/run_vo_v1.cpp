@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <sstream>
+#include <iomanip>
 
 // cv
 #include <opencv2/core/core.hpp>
@@ -53,8 +55,10 @@ int main(int argc, char **argv)
 
         // Read image.
         cv::Mat rgb_img = cv::imread(image_paths[img_id]);
-        if (rgb_img.data == nullptr)
-            break;
+        if (rgb_img.data == nullptr){
+            cout << "The image file <<"<<image_paths[img_id]<<"<< is empty "<<endl;
+            assert(0);
+        }
         printf("\n\n=============================================\n");
         printf("=============================================\n");
         printf("=============================================\n");
@@ -64,6 +68,7 @@ int main(int argc, char **argv)
         my_slam::Frame::Ptr frame = my_slam::Frame::createFrame(rgb_img, camera);
         frame->extractKeyPoints();
         frame->computeDescriptors();
+        cout << "Number of keypoints: "<<frame->keypoints_.size()<<endl;
 
         // Add a new frame into vo.
         vector<KeyPoint> keypoints;
@@ -79,6 +84,8 @@ int main(int argc, char **argv)
         {
             my_slam::Frame::Ptr prev_frame = frames.back();
             frame->matchFeatures(prev_frame);
+
+            printf("\nInerst the image %d:\n", img_id);
             if (vo_state == INITIALIZATION)
             { // initiliazation stage
 
@@ -95,7 +102,6 @@ int main(int argc, char **argv)
                     /*Output*/
                     list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
                     false); // print result
-                cout << "DEBUG: Before PnP: test if list_R[1] is the same:" << list_R[1]<<endl;
                 
                 // -- Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
                 vector<double> list_error_epipolar;
@@ -161,7 +167,7 @@ int main(int argc, char **argv)
 
                     
                     // -- Here cam1 is the prev2 image, cam2 is the prev1 image.
-                    const double ERR_EPPI_TRESH = 0.1;
+                    const double ERR_EPPI_TRESH = 5;
                     Mat R = frame2->R_curr_to_prev_, t = frame2->t_curr_to_prev_;
                     const int num_matched_pts = pts_img1.size();
                     vector<int> inliers;
@@ -177,11 +183,9 @@ int main(int argc, char **argv)
 
                     // -- Use triangulation to find these points pos in prev image's frame
                     vector<Point3f> pts3d_in_cam1, pts3d_in_cam2;
-                    cout<<pts_on_np1.size()<<endl;
-                    cout<<pts_on_np2.size()<<endl;
-                    cout<<R<<endl;
-                    cout<<t<<endl;
-                    cout<<inliers.size()<<endl;
+                    printf("In prev frame: num pts = %d, num matches = %d\n",
+                        (int)frame2->keypoints_.size(), (int)frame2->matches_.size());
+                    printf("   num inliers after checking epipolar error: %d \n",(int)inliers.size());
                     doTriangulation(pts_on_np1, pts_on_np2, R, t, inliers, pts3d_in_cam1);
                     for (const Point3f &pt3d : pts3d_in_cam1)
                         pts3d_in_cam2.push_back(transCoord(pt3d, R, t));
@@ -207,7 +211,11 @@ int main(int argc, char **argv)
                         /*Output*/
                         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
                     false); // print result
-                    cout << "DEBUG: PnP: test if list_R[1] is the same:" << list_R[1]<<endl;
+
+                    printf("DEBUG: Printing prev frame1-frame2 inliers number under 3 solutions:\n");
+                    for(int i=0;i<list_matches.size();i++){
+                        cout<<list_matches[i].size()<<endl;
+                    } // RESULT: 只有10几个内点？
 
                     // -- update values
                     int sol_idx_for_inlier=0;
@@ -249,12 +257,27 @@ int main(int argc, char **argv)
             }
         }
         // Display
-        // cv::Mat img_show=rgb_img.clone();
-        // cv::Scalar color(0,255,0);
-        // cv::Scalar color2= cv::Scalar::all(-1);
-        // cv::drawKeypoints(img_show, vo->getCurrentKeypoints(), img_show, color);
-        // cv::imshow ( "rgb_img", img_show );
-        // cv::waitKey (1000);
+        cv::Mat img_show=rgb_img.clone();
+        
+        std::stringstream ss;
+        ss << std::setw(4) << std::setfill('0') << img_id;
+        string str_img_id=ss.str();
+
+        if(img_id==0){
+            cv::Scalar color(0,255,0);
+            cv::Scalar color2= cv::Scalar::all(-1);
+            cv::drawKeypoints(img_show, frame->keypoints_, img_show, color);
+            cv::imshow ( "rgb_img", img_show );
+        }else{
+            my_slam::Frame::Ptr prev_frame = frames.back();
+            string window_name = "Image "+str_img_id  + ", matched keypoints";
+            drawMatches(frame->rgb_img_, frame->keypoints_, 
+                prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
+            cv::namedWindow(window_name, WINDOW_AUTOSIZE);
+            cv::imshow(window_name, img_show);
+        }
+        waitKey(1);
+        imwrite("result/"+ str_img_id + ".png", img_show);
 
         // Save to buff.
         frames.push_back(frame);
@@ -266,8 +289,9 @@ int main(int argc, char **argv)
         cout << "R_curr_to_prev_: " << frame->R_curr_to_prev_ << endl;
         cout << "t_curr_to_prev_: " << frame->t_curr_to_prev_ << endl;
         // Return
-        if (img_id == 5)
+        if (img_id == 10)
             break;
+        cout<<"Finished an image"<<endl;
     }
 }
 
