@@ -17,6 +17,7 @@ namespace my_geometry
 
 // set default feature matching params
 #define _match_ratio 2.0
+#define _lowe_dist_ratio 0.6 /*for method 2*/
 
 using namespace cv;
 
@@ -101,10 +102,11 @@ void matchFeatures(
 {
     matches.clear();
     static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
-    static double MATCH_RATIO = _match_ratio;
+    static double MATCH_RATIO = _match_ratio, DIST_RATIO = _lowe_dist_ratio;
     static int cnt_call_times_=0, METHOD_INDEX=2;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
         MATCH_RATIO = my_basics::Config::get<int>("match_ratio");
+        DIST_RATIO = my_basics::Config::get<int>("lowe_dist_ratio");
         METHOD_INDEX = my_basics::Config::get<int>("feature_match_method_index");
     }
 
@@ -149,7 +151,7 @@ void matchFeatures(
             double dist = knn_matches[i][0].distance ;
             if (dist < min_dis) min_dis = dist; // This is not required. Do this for debug
             if (dist > max_dis) max_dis = dist; // This is not required. Do this for debug
-            if (dist < 0.8 * knn_matches[i][1].distance){
+            if (dist < DIST_RATIO * knn_matches[i][1].distance){
                 matches.push_back(knn_matches[i][0]);
             }
         }

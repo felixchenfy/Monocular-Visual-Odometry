@@ -53,7 +53,10 @@ Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t){
    Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
    return Point3f(p2.at<double>(0,0),p2.at<double>(1,0), p2.at<double>(2,0));
 }
-
+void invRt(Mat &R, Mat &t){
+    Mat T=transRt2T(R,t);
+    getRtFromT(T.inv(),R,t);
+}
 // ---------------- Print ----------------
 
 void print_MatProperty(Mat &M)

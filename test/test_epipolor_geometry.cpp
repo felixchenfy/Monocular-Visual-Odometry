@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     // read in images
     string img_file1, img_file2;
     string folder = "test_data/";
-    int IDX_TEST_CASE = 0;
+    int IDX_TEST_CASE = 1;
     
     if(argc-1==2){
         // bin/test_epipolor_geometry rgb_00000.png rgb_00001.png # inliers = 90+
@@ -99,12 +99,14 @@ int main(int argc, char **argv)
     vector<Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
+    const bool print_res=true, use_homography=false, is_frame_cam2_to_cam1=false;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
-        false); // print result
+        /*settings*/
+        print_res, use_homography, is_frame_cam2_to_cam1);
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
     vector<double> list_error_epipolar;
@@ -136,6 +138,21 @@ int main(int argc, char **argv)
     imwrite(window_name + ".png", Idst);
     waitKey(1);
 
+    // -- I spot some wrong inliers, I'm going to show it.
+    // int cnt=0;
+    // for (const DMatch &d:list_matches[0]){
+    //     Point2f p1=keypoints_1[d.queryIdx].pt;
+    //     Point2f p2=keypoints_2[d.trainIdx].pt;
+    //     if(abs(p1.x-p2.x)>20){
+    //         cout << endl;
+    //         printf("The %dth kpt, p1(%.2f, %.2f), p2(%.2f, %.2f)\n",
+    //             cnt, p1.x, p1.y, p2.x, p2.y);
+    //         double error=computeEpipolarConsError(p1,p2,list_R[0],list_t[0],K);
+    //         printf("Print its epi error:%.6f", error);
+    //         cout<<endl;
+    //     }
+    //     cnt++;
+    // }
     // return
     waitKey();
     cv::destroyAllWindows();

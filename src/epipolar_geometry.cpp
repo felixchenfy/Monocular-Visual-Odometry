@@ -24,7 +24,7 @@ void estiMotionByEssential(
     int method = RANSAC;
     // double prob = 0.999;
     // double threshold = 1.0;
-    double prob = 0.99;
+    double prob = 0.999;
     double threshold = 1.0;
     Mat inliers_mask; //Use print_MatProperty to know its type: 8UC1
     essential_matrix = findEssentialMat(
@@ -44,7 +44,7 @@ void estiMotionByEssential(
     }
 
     // Recover R,t from Essential matrix
-    recoverPose(essential_matrix, pts_in_img1, pts_in_img2, R, t, focal_length, principal_point);
+    recoverPose(essential_matrix, pts_in_img1, pts_in_img2, R, t, focal_length, principal_point, inliers_mask);
     // Normalize t
     t = t / sqrt(t.at<double>(1, 0) * t.at<double>(1, 0) + t.at<double>(2, 0) * t.at<double>(2, 0) +
                  t.at<double>(0, 0) * t.at<double>(0, 0));

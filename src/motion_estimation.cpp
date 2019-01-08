@@ -16,7 +16,9 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
     vector<vector<Point3f>> &sols_pts3d_in_cam1,
-    const bool print_res)
+    const bool print_res,
+    const bool use_homography,
+    const bool is_frame_cam2_to_cam1)
 {
     list_R.clear();
     list_t.clear();
@@ -55,14 +57,16 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> R_h_list, t_h_list, normal_list;
     vector<int> inliers_index_h; // index of the inliers
     Mat homography_matrix;
-    estiMotionByHomography(pts_img1, pts_img2, K,
-                           /*output*/
-                           homography_matrix,
-                           R_h_list, t_h_list, normal_list,
-                           inliers_index_h);
-    removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
+    if (use_homography){
+        estiMotionByHomography(pts_img1, pts_img2, K,
+                            /*output*/
+                            homography_matrix,
+                            R_h_list, t_h_list, normal_list,
+                            inliers_index_h);
+        removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
+    }
     int num_h_solutions = R_h_list.size();
-    if (print_res && DEBUG_PRINT_RESULT)
+    if (print_res && DEBUG_PRINT_RESULT && use_homography)
     {
         printResult_estiMotionByHomography(homography_matrix, // debug
                                            inliers_index_h, R_h_list, t_h_list, normal_list);
@@ -92,7 +96,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         doTriangulation(pts_on_np1, pts_on_np2, list_R[i], list_t[i], list_inliers[i], pts3d_in_cam1);
         // removeWrongTriangulations(list_inliers[i], pts3d_in_cam1);
         sols_pts3d_in_cam1.push_back(pts3d_in_cam1);
-        if (DEBUG_PRINT_RESULT && i == 1)
+        if (i == -9999)
         {
             printf("\n\n----------------------------------------------------\n");
             printf("DEBUGING: print triangulation result of solution %d\n\n", i);
@@ -107,18 +111,26 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
             }
         }
     }
+    // change frame
+    if (is_frame_cam2_to_cam1==false){
+        for(int i=0;i<num_solutions;i++){
+            invRt(list_R[i],list_t[i]);
+        }
+    }
 
     // Debug EpipolarError and TriangulationResult
     if (print_res)
     {
-        // print_EpipolarError_and_TriangulationResult_By_Solution(
-        //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
-        //     sols_pts3d_in_cam1,list_inliers, list_R, list_t, K);
-        print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
+        print_EpipolarError_and_TriangulationResult_By_Solution(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
-            sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
+            sols_pts3d_in_cam1,list_inliers, list_R, list_t, K);
     }
-
+    if (print_res && use_homography)
+    {
+        // print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
+        //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
+        //     sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
+    }
     // Convert the inliers to the DMatch of the original points
     for (int i = 0; i < num_solutions; i++)
     {
@@ -191,7 +203,7 @@ double helperEvaluateEstimationsError(
             printf("\n---------------\n");
             printf("Solution %d, num inliers = %d \n", i, (int)list_matches[i].size());
             print_R_t(list_R[i], list_t[i]);
-            if (i >= 1)
+            if (!list_normal[i].empty())
                 cout << "norm is:" << (list_normal[i]).t() << endl;
             printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
             printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
@@ -375,18 +387,20 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
 {
     cout << "\n---------------------------------------" << endl;
     cout << "Check [Epipoloar error] and [Triangulation result]" << endl;
-    cout << "for each solution" << endl;
+    cout << "for each solution. Printing from back to front." << endl;
     int num_solutions = list_R.size();
     for (int j = 0; j < num_solutions; j++)
     {
         const Mat &R = list_R[j], &t = list_t[j];
         const vector<int> &inliers = list_inliers[j];
         int num_inliers = inliers.size();
-        for (int idx_inlier = 0; idx_inlier < num_inliers; idx_inlier++)
+        const int MAX_TO_PRINT=5;
+        for (int _idx_inlier = 0; _idx_inlier < min(MAX_TO_PRINT, num_inliers); _idx_inlier++)
         {
+            int idx_inlier = num_inliers - 1 - _idx_inlier;
             int idx_pts = inliers[idx_inlier];
             cout << "\n--------------" << endl;
-            printf("Printing the %dth inlier point in solution %d\n", idx_inlier, j);
+            printf("Printing the %dth last inlier point in solution %d\n", _idx_inlier, j);
             printf("which is %dth keypoint\n", idx_pts);
 
             // Print point pos in image frame.
@@ -396,12 +410,13 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
 
             // print epipolar error
             double err_epipolar = computeEpipolarConsError(p1, p2, R, t, K);
-            cout << "===solu " << j << ": epipolar error is " << err_epipolar * 1e6 << endl;
+            cout << "===solu " << j << ": epipolar_error*1e6 is " << err_epipolar * 1e6 << endl;
 
             // print triangulation result
             Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][idx_inlier]); // 3d pos in camera 1
             Mat pts3dc2 = R * pts3dc1 + t;
             Point2f pts2dc1 = cam2pixel(pts3dc1, K);
+            // Point2f pts2dc1 = cam2pixel(sols_pts3d_in_cam1[j][idx_inlier], K);
             Point2f pts2dc2 = cam2pixel(pts3dc2, K);
 
             cout << "-- In img1, pos: " << pts2dc1 << endl;

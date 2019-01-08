@@ -22,12 +22,13 @@ camera_info.cy: 240
 buffsize_of_prev_frames: 1
 
 # Matching descriptos
-feature_match_method_index: 2
+feature_match_method_index: 1
   # method 1: the method in Dr. Xiang Gao's slambook:
   #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
   # method 2: the method in Lowe's 2004 paper:
   #           min dis / second min dis < 0.8
 match_ratio: 2.0 # This is for method 1 used in Dr. Xiang Gao's slambook:
+lowe_dist_ratio: 0.6 # This is for method 2 of Lowe's 2004 SIFT paper
 
 # remove wrong matches
 GRID_SIZE: 16

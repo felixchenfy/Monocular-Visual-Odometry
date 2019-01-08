@@ -22,7 +22,9 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
     vector<vector<Point3f>> &sols_pts3d_in_cam1,
-    const bool print_res = false);
+    const bool print_res = false,
+    const bool use_homography = true,
+    const bool is_frame_cam2_to_cam1=true);
 
 double helperEvaluateEstimationsError(
     const vector<KeyPoint> &keypoints_1,
