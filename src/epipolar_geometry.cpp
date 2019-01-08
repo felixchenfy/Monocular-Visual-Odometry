@@ -22,10 +22,10 @@ void estiMotionByEssential(
 
     // -- Essential matrix
     int method = RANSAC;
-    // double prob = 0.999;
-    // double threshold = 1.0;
     double prob = 0.999;
     double threshold = 1.0;
+    // double prob = 0.99; //This param settings give big error. Tested by image0001 and image0015.
+    // double threshold = 3.0;
     Mat inliers_mask; //Use print_MatProperty to know its type: 8UC1
     essential_matrix = findEssentialMat(
         pts_in_img1, pts_in_img2, focal_length, principal_point,

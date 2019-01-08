@@ -57,7 +57,8 @@ public: // Member functions
     };
     void matchFeatures(Frame::Ptr prev_frame){
       my_geometry::matchFeatures(
-        descriptors_, prev_frame->descriptors_,
+        // descriptors_, prev_frame->descriptors_,
+        prev_frame->descriptors_, descriptors_,
         matches_,
         true // print result
         );

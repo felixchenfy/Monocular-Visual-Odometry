@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         // LOST
     };
     VO_STATE vo_state = INITIALIZATION;
-
+    const int FRAME_FOR_FIRST_ESSENTIAL=14;
     // Iterate through images
     for (int img_id = 0; img_id < (int)image_paths.size(); img_id++)
     {
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
             {
 
                 // Manually skip some images, until the movement is large enough
-                if (img_id < 15){
+                if (img_id < FRAME_FOR_FIRST_ESSENTIAL){
                     frame->T_w_c_ =prev_frame->T_w_c_;
                     frame->R_curr_to_prev_=prev_frame->R_curr_to_prev_;
                     frame->t_curr_to_prev_=prev_frame->t_curr_to_prev_;
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
                 for (const Point3f &p : pts3d_in_cam2)
                     mean_depth += p.z;
                 mean_depth /= num_inlier_pts;
-                mean_depth = mean_depth * 100;
+                // mean_depth = mean_depth * 100;
                 t /= mean_depth;
                 for (Point3f &p : pts3d_in_cam2)
                 {
@@ -196,6 +196,8 @@ int main(int argc, char **argv)
                     prev_frame->keypoints_, frame->keypoints_,
                     frame->matches_, K,
                     dummy_R, dummy_t, inliers_matches);
+                cout << "Number of inliers by E: "<<inliers_matches.size()<<endl;
+                frame->inliers_matches_ = inliers_matches;
 
                 // --  Find the intersection between [DMatches_curr] and [DMatches_prev],
                 // --  and 3d-2d correspondance
@@ -207,7 +209,14 @@ int main(int argc, char **argv)
                     prev_frame->inliers_matches_,
                     prev_frame->inliers_pts3d_,
                     pts_3d, pts_2d);
-
+                
+                // cout <<"DEBUG 3d-2d cor:"<<endl;
+                // int cnt=0;
+                // for(auto m:prev_frame->inliers_matches_)
+                //     cout<<cnt++<<" prev frame: "<<m.trainIdx<<endl;
+                // cnt=0;
+                // for(auto m:frame->inliers_matches_)
+                //     cout<<cnt++<<"curr frame: "<<m.queryIdx<<endl;
                 cout << "Number of 3d-2d pairs: " << pts_3d.size() << endl;
 
                 // -- Solve PnP, get T_cam1_to_cam2
@@ -221,17 +230,13 @@ int main(int argc, char **argv)
                     prev_frame->keypoints_, frame->keypoints_,
                     frame->inliers_matches_, R, t, K,
                     pts_3d_in_curr);
+                frame->inliers_pts3d_ = pts_3d_in_curr;
 
                 // -- Update current camera pos
                 Mat T_curr_to_prev = transRt2T(R, t);
                 frame->T_w_c_ = prev_frame->T_w_c_ * T_curr_to_prev.inv();
                 frame->R_curr_to_prev_ = R;
                 frame->t_curr_to_prev_ = t;
-
-                // -- update inliers
-                frame->inliers_matches_ = inliers_matches;
-                frame->inliers_pts3d_ = pts_3d_in_curr;
-
 
                 // --Update vo state
                 vo_state = vo_state; // still OK
@@ -241,7 +246,7 @@ int main(int argc, char **argv)
 
         // ------------------------Complete-------------------------------
 
-        printf("\n\n-----Printing frame %d results:---------\n", img_id);
+        printf("\n\n--Printing frame %d pose:\n", img_id);
         if (vo_state==OK)
         { // Display image by opencv
             cv::destroyAllWindows();
@@ -259,14 +264,31 @@ int main(int argc, char **argv)
             }
             else
             {
-                my_slam::Frame::Ptr prev_frame = frames.back();
+                my_slam::Frame::Ptr prev_frame = frames[frames.size()-2];// the last 2nd frame
+                
+                // cout<<"DEBUG:";
+                // cout<<frames.size()<<endl;
+                // cout<<prev_frame->rgb_img_.size()<<endl;
+                // cout<<prev_frame->keypoints_.size()<<endl;
+
+                // cout<<frame->rgb_img_.size()<<endl;
+                // cout<<frame->keypoints_.size()<<endl;
+                // cout<<frame->matches_.size()<<endl;
+                // int cnt=0;
+                // for(auto m:frame->matches_){
+                //     cout<<cnt++<<":"<<m.queryIdx<<","<<m.trainIdx<<","<<endl;
+                // }
+
                 string window_name = "Image " + str_img_id + ", matched keypoints";
-                drawMatches(frame->rgb_img_, frame->keypoints_,
-                            prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
+                // drawMatches(frame->rgb_img_, frame->keypoints_,
+                            // prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
+                
+                drawMatches(prev_frame->rgb_img_, prev_frame->keypoints_,
+                            frame->rgb_img_, frame->keypoints_, frame->matches_, img_show);
                 cv::namedWindow(window_name, WINDOW_AUTOSIZE);
                 cv::imshow(window_name, img_show);
             }
-            waitKey(100);
+            waitKey(10);
             imwrite("result/" + str_img_id + ".png", img_show);
         }
         if (ENABLE_PCL_DISPLAY)
@@ -297,10 +319,11 @@ int main(int argc, char **argv)
         // cout << "R_curr_to_prev_: " << frame->R_curr_to_prev_ << endl;
         // cout << "t_curr_to_prev_: " << frame->t_curr_to_prev_ << endl;
 
-        // Return
-        if (img_id == 25)
-            break;
         cout << "Finished an image" << endl;
+
+        // Return
+        if (img_id == FRAME_FOR_FIRST_ESSENTIAL+100)
+            break;
     }
 }
 
