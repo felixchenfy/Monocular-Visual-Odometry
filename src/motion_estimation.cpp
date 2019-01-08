@@ -111,7 +111,21 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
             }
         }
     }
-    // change frame
+
+    // Convert the inliers to the DMatch of the original points
+    for (int i = 0; i < num_solutions; i++)
+    {
+        list_matches.push_back(vector<DMatch>());
+        const vector<int> &inliers = list_inliers[i];
+        for (const int &idx : inliers)
+        {
+            list_matches[i].push_back(
+                DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
+        }
+    }
+
+    // Change frame
+    // Caustion: This should be done after all other algorithms
     if (is_frame_cam2_to_cam1==false){
         for(int i=0;i<num_solutions;i++){
             invRt(list_R[i],list_t[i]);
@@ -131,17 +145,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
         //     sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
-    // Convert the inliers to the DMatch of the original points
-    for (int i = 0; i < num_solutions; i++)
-    {
-        list_matches.push_back(vector<DMatch>());
-        const vector<int> &inliers = list_inliers[i];
-        for (const int &idx : inliers)
-        {
-            list_matches[i].push_back(
-                DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
-        }
-    }
+
 }
 
 double helperEvaluateEstimationsError(
@@ -216,7 +220,8 @@ void helperEstiMotionByEssential(
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
     const Mat &K,
-    Mat &R, Mat &t, vector<int> &inliers_of_matches,
+    Mat &R, Mat &t,
+    vector<DMatch> &inliers_matches,
     const bool print_res)
 {
     vector<Point2f> pts_in_img1, pts_in_img2;
@@ -224,42 +229,74 @@ void helperEstiMotionByEssential(
     Mat essential_matrix;
     vector<int> inliers_index;
     estiMotionByEssential(pts_in_img1, pts_in_img2, K, essential_matrix, R, t, inliers_index);
-    inliers_of_matches.clear();
+    inliers_matches.clear();
     for (int idx : inliers_index)
     {
-        inliers_of_matches.push_back(matches[idx].trainIdx);
+        const DMatch &m=matches[idx];
+        inliers_matches.push_back(
+            DMatch(m.queryIdx,m.trainIdx,m.distance));
     }
 }
 
 // Get the 3d-2d corrsponding points
-// First find curr_dmatch.train that appears also in prev_dmatch.query,
+// First find curr_inliers_matches.train that appears also in prev_dmatch.query,
 void helperFind3Dto2DCorrespondences(
-    const vector<DMatch> &curr_dmatch, const vector<KeyPoint> &curr_kpts,
-    const vector<int> &prev_inliers_of_all_pts, const vector<Point3f> &prev_inliers_pts3d,
+    const vector<DMatch> &curr_inliers_matches, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &prev_inliers_matches, const vector<Point3f> &prev_inliers_pts3d,
     vector<Point3f> &pts_3d, vector<Point2f> &pts_2d)
 {
     pts_3d.clear();
     pts_2d.clear();
-    // Set up a table
+
+    // Set up a table to store the index of pts_3d in prev_frame
     map<int, int> table;
     int cnt_inliers = 0;
-    for (int idx : prev_inliers_of_all_pts)
-    {
-        table[idx] = cnt_inliers++;
+    for(int i=0;i<prev_inliers_matches.size();i++){
+        const DMatch &m=prev_inliers_matches[i];
+        table[m.trainIdx] = i;
     }
 
-    // search curr_dmatch.query in table
-    const int curr_dmatch_size = curr_dmatch.size();
+    // search curr_inliers_matches.query in table
+    const int curr_dmatch_size = curr_inliers_matches.size();
     for (int i = 0; i < curr_dmatch_size; i++)
     {
-        int prev_pt_idx = curr_dmatch[i].queryIdx;
+        int prev_pt_idx = curr_inliers_matches[i].queryIdx;
         if (table.find(prev_pt_idx) != table.end())
         { // if find a correspondance
             pts_3d.push_back(prev_inliers_pts3d[table[prev_pt_idx]]);
-            pts_2d.push_back(curr_kpts[curr_dmatch[i].trainIdx].pt);
+            pts_2d.push_back(curr_kpts[curr_inliers_matches[i].trainIdx].pt);
         }
     }
 }
+
+// Triangulate points
+void helperTriangulatePoints(
+    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &curr_inliers_matches,
+    const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
+    const Mat &K,
+    vector<Point3f> &pts_3d_in_curr
+){
+
+    vector<Point2f> pts_img1, pts_img2;
+    extractPtsFromMatches(prev_kpts, curr_kpts, curr_inliers_matches, pts_img1, pts_img2);
+    
+    vector<Point2f> pts_on_np1, pts_on_np2; // matched points on camera normalized plane
+    for (const Point2f &pt : pts_img1)
+        pts_on_np1.push_back(pixel2camNormPlane(pt, K));
+    for (const Point2f &pt : pts_img2)
+        pts_on_np2.push_back(pixel2camNormPlane(pt, K));
+    const Mat &R = R_curr_to_prev, &t = t_curr_to_prev; //rename
+    vector<int> inliers;
+    for(int i=0;i<pts_on_np1.size();i++)inliers.push_back(i);// all are inliers
+    vector<Point3f> pts_3d_in_prev; // pts 3d pos to compute
+    doTriangulation(pts_on_np1, pts_on_np2, R, t, inliers, pts_3d_in_prev);
+
+    for (const Point3f &pt3d : pts_3d_in_prev)
+        pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
+
+}
+
 
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------

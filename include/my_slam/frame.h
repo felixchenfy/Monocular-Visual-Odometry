@@ -30,8 +30,8 @@ public:
   Mat descriptors_;
   vector<DMatch> matches_; // matches with the previous frame
   // vector<int> inliers_of_matches_; // inliers index with respect to the matches
-  vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
-  // vector<DMatch> inliers_matches; // not used
+  // vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
+  vector<DMatch> inliers_matches_; // inliers matches index with respect to all the points
   vector<Point3f> inliers_pts3d_; // matches with the previous frame
 
   // -- Other commonly used points

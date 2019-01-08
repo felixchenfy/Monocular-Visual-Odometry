@@ -42,8 +42,9 @@ void helperEstiMotionByEssential(
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
     const Mat &K,
-    Mat &R, Mat &t, vector<int> &inliers_of_matches,
-    const bool print_res = false);
+    Mat &R, Mat &t,
+    vector<DMatch> &inliers_matches,
+    const bool print_res=false);
 
 // void helperDoTriangulation(
 //     const vector<KeyPoint> &keypoints_1,
@@ -55,9 +56,18 @@ void helperEstiMotionByEssential(
 
 // Get the 3d-2d corrsponding points
 void helperFind3Dto2DCorrespondences( 
-    const vector<DMatch> &curr_dmatch, const vector<KeyPoint> &curr_kpts,
-    const vector<int> &prev_inliers_of_all_pts, const vector<Point3f> &prev_inliers_pts3d,
+    const vector<DMatch> &curr_inliers_matches, const vector<KeyPoint> &curr_kpts, 
+    const vector<DMatch> &prev_inliers_matches, const vector<Point3f> &prev_inliers_pts3d,
     vector<Point3f> &pts_3d, vector<Point2f> &pts_2d);
+
+// Triangulate points
+void helperTriangulatePoints(
+    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &curr_inliers_matches,
+    const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
+    const Mat &K,
+    vector<Point3f> &pts_3d_in_curr
+);
 
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------
