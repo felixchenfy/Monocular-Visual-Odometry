@@ -115,24 +115,35 @@ int main(int argc, char **argv)
             my_slam::Frame::Ptr prev_frame = frames.back();
             frame->matchFeatures(prev_frame);
 
+            // -- Estimation motion by Essential && Homography matrix and get inlier points
+            vector<Mat> list_R, list_t, list_normal;
+            vector<vector<DMatch>> list_matches; // these are the inliers matches
+            vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
+            const bool print_res = false, is_frame_cam2_to_cam1 = true;
+            const bool compute_homography = true;
+            helperEstimatePossibleRelativePosesByEpipolarGeometry(
+                /*Input*/
+                prev_frame->keypoints_, frame->keypoints_, frame->matches_, K,
+                /*Output*/
+                list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
+                /*settings*/
+                print_res, compute_homography, is_frame_cam2_to_cam1);
+
+            // -- Compute errors of results of E/H estimation:
+            // [epipolar error] and [trigulation error on norm plane]
+            // for the 3 solutions of (E, H1, H2)/
+            // Choosing a good solution might based on these criterias.
+            vector<double> list_error_epipolar;
+            vector<double> list_error_triangulation;
+            helperEvaluateEstimationsError(
+                prev_frame->keypoints_, frame->keypoints_, list_matches,
+                sols_pts3d_in_cam1_by_triang, list_R, list_t, list_normal, K,
+                /*output*/
+                list_error_epipolar, list_error_triangulation,
+                true); // print result
+
             if (vo_state == INITIALIZATION)
             {
-
-                // -- Estimation motion by Essential && Homography matrix and get inlier points
-                const bool use_homography = false; //(Right now, only use the result from Essential matrix)
-                vector<Mat> list_R, list_t, list_normal;
-                vector<vector<DMatch>> list_matches; // these are the inliers matches
-                vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
-                const bool print_res = false, is_frame_cam2_to_cam1 = true;
-                helperEstimatePossibleRelativePosesByEpipolarGeometry(
-                    /*Input*/
-                    prev_frame->keypoints_, frame->keypoints_, frame->matches_, K,
-                    /*Output*/
-                    list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
-                    /*settings*/
-                    print_res, use_homography, is_frame_cam2_to_cam1);
-
-                
                 // Check initialization condition
                 {    
                     // Method 1: manually set an image id
@@ -160,18 +171,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                // -- Compute errors of results of E/H estimation:
-                // [epipolar error] and [trigulation error on norm plane]
-                // for the 3 solutions of (E, H1, H2)/
-                // Choosing a good solution might based on these criterias.
-                vector<double> list_error_epipolar;
-                vector<double> list_error_triangulation;
-                helperEvaluateEstimationsError(
-                    prev_frame->keypoints_, frame->keypoints_, list_matches,
-                    sols_pts3d_in_cam1_by_triang, list_R, list_t, list_normal, K,
-                    /*output*/
-                    list_error_epipolar, list_error_triangulation,
-                    true); // print result
+           
 
                 // -- Choose 1 solution from the 3 solutions.
                 //      Results: R, t, inlier_matches, pts_3d in cam1 and cam2
@@ -217,13 +217,16 @@ int main(int argc, char **argv)
             {
 
                 // -- Estimate Essential matrix to find the inliers
-                vector<DMatch> inliers_matches; // matches, that are inliers
-                Mat dummy_R, dummy_t;
-                helperEstiMotionByEssential(
-                    prev_frame->keypoints_, frame->keypoints_,
-                    frame->matches_, K,
-                    dummy_R, dummy_t, inliers_matches);
-                cout << "Number of inliers by E: "<<inliers_matches.size()<<endl;
+                // vector<DMatch> inliers_matches; // matches, that are inliers
+                // Mat dummy_R, dummy_t;
+                // helperEstiMotionByEssential(
+                //     prev_frame->keypoints_, frame->keypoints_,
+                //     frame->matches_, K,
+                //     dummy_R, dummy_t, inliers_matches);
+                // cout << "Number of inliers by E: "<<inliers_matches.size()<<endl;
+                // frame->inliers_matches_ = inliers_matches;
+
+                vector<DMatch> &inliers_matches=list_matches[0];
                 frame->inliers_matches_ = inliers_matches;
 
                 // --  Find the intersection between [DMatches_curr] and [DMatches_prev],

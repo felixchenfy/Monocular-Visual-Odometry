@@ -17,8 +17,8 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> &list_normal,
     vector<vector<Point3f>> &sols_pts3d_in_cam1,
     const bool print_res,
-    const bool use_homography,
-    const bool is_frame_cam2_to_cam1)
+    const bool compute_homography,
+    const bool is_motion_cam2_to_cam1)
 {
     list_R.clear();
     list_t.clear();
@@ -57,7 +57,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> R_h_list, t_h_list, normal_list;
     vector<int> inliers_index_h; // index of the inliers
     Mat homography_matrix;
-    if (use_homography){
+    if (compute_homography){
         estiMotionByHomography(pts_img1, pts_img2, K,
                             /*output*/
                             homography_matrix,
@@ -66,7 +66,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
     }
     int num_h_solutions = R_h_list.size();
-    if (print_res && DEBUG_PRINT_RESULT && use_homography)
+    if (print_res && DEBUG_PRINT_RESULT && compute_homography)
     {
         printResult_estiMotionByHomography(homography_matrix, // debug
                                            inliers_index_h, R_h_list, t_h_list, normal_list);
@@ -126,7 +126,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
 
     // Change frame
     // Caustion: This should be done after all other algorithms
-    if (is_frame_cam2_to_cam1==false){
+    if (is_motion_cam2_to_cam1==false){
         for(int i=0;i<num_solutions;i++){
             invRt(list_R[i],list_t[i]);
         }
@@ -139,80 +139,13 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
             sols_pts3d_in_cam1,list_inliers, list_R, list_t, K);
     }
-    if (print_res && use_homography)
+    if (print_res && compute_homography)
     {
         // print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
         //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
         //     sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
 
-}
-
-double helperEvaluateEstimationsError(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<vector<DMatch>> &list_matches,
-    const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
-    const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
-    const Mat &K,
-    vector<double> &list_error_epipolar,
-    vector<double> &list_error_triangulation, // the error on the normalized image plane
-    bool print_res)
-{
-    list_error_epipolar.clear();
-    list_error_triangulation.clear();
-    int num_solutions = list_R.size();
-
-    for (int i = 0; i < num_solutions; i++)
-    {
-        const Mat &R = list_R[i], &t = list_t[i];
-        const vector<DMatch> &matches = list_matches[i];
-        const vector<Point3f> &pts3d = sols_pts3d_in_cam1_by_triang[i];
-        vector<Point2f> inlpts1, inlpts2;
-        extractPtsFromMatches(keypoints_1, keypoints_2, matches, inlpts1, inlpts2);
-
-        // epipolar error
-        double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
-
-        // In image frame,  the error between triangulation and real
-        double err_triangulation = 0;
-        int num_inlier_pts = inlpts1.size();
-        for (int idx_inlier = 0; idx_inlier < num_inlier_pts; idx_inlier++)
-        {
-            const Point2f &p1 = inlpts1[idx_inlier], &p2 = inlpts2[idx_inlier];
-            // print triangulation result
-            Mat pts3dc1 = Point3f_to_Mat(pts3d[idx_inlier]); // 3d pos in camera 1
-            Mat pts3dc2 = R * pts3dc1 + t;
-            Point2f pts2dc1 = cam2pixel(pts3dc1, K);
-            Point2f pts2dc2 = cam2pixel(pts3dc2, K);
-            err_triangulation = err_triangulation + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
-            // printf("%dth inlier, err_triangulation = %f\n", idx_inlier, err_triangulation);
-        }
-        if (num_inlier_pts == 0)
-            err_triangulation = 9999999999;
-        else
-            err_triangulation = sqrt(err_triangulation / 2.0 / num_inlier_pts);
-
-        // print
-        list_error_epipolar.push_back(err_epipolar);
-        list_error_triangulation.push_back(err_triangulation);
-    }
-    if (print_res)
-    {
-        printf("\n------------------------------------\n");
-        printf("Print the mean error of each E/H method by using the inlier points.\n");
-        for (int i = 0; i < num_solutions; i++)
-        {
-
-            printf("\n---------------\n");
-            printf("Solution %d, num inliers = %d \n", i, (int)list_matches[i].size());
-            print_R_t(list_R[i], list_t[i]);
-            if (!list_normal[i].empty())
-                cout << "norm is:" << (list_normal[i]).t() << endl;
-            printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
-            printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
-        }
-    }
 }
 
 void helperEstiMotionByEssential(
@@ -296,6 +229,75 @@ void helperTriangulatePoints(
         pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
 
 }
+
+
+double helperEvaluateEstimationsError(
+    const vector<KeyPoint> &keypoints_1,
+    const vector<KeyPoint> &keypoints_2,
+    const vector<vector<DMatch>> &list_matches,
+    const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
+    const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
+    const Mat &K,
+    vector<double> &list_error_epipolar,
+    vector<double> &list_error_triangulation, // the error on the normalized image plane
+    bool print_res)
+{
+    list_error_epipolar.clear();
+    list_error_triangulation.clear();
+    int num_solutions = list_R.size();
+
+    for (int i = 0; i < num_solutions; i++)
+    {
+        const Mat &R = list_R[i], &t = list_t[i];
+        const vector<DMatch> &matches = list_matches[i];
+        const vector<Point3f> &pts3d = sols_pts3d_in_cam1_by_triang[i];
+        vector<Point2f> inlpts1, inlpts2;
+        extractPtsFromMatches(keypoints_1, keypoints_2, matches, inlpts1, inlpts2);
+
+        // epipolar error
+        double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
+
+        // In image frame,  the error between triangulation and real
+        double err_triangulation = 0;
+        int num_inlier_pts = inlpts1.size();
+        for (int idx_inlier = 0; idx_inlier < num_inlier_pts; idx_inlier++)
+        {
+            const Point2f &p1 = inlpts1[idx_inlier], &p2 = inlpts2[idx_inlier];
+            // print triangulation result
+            Mat pts3dc1 = Point3f_to_Mat(pts3d[idx_inlier]); // 3d pos in camera 1
+            Mat pts3dc2 = R * pts3dc1 + t;
+            Point2f pts2dc1 = cam2pixel(pts3dc1, K);
+            Point2f pts2dc2 = cam2pixel(pts3dc2, K);
+            err_triangulation = err_triangulation + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
+            // printf("%dth inlier, err_triangulation = %f\n", idx_inlier, err_triangulation);
+        }
+        if (num_inlier_pts == 0)
+            err_triangulation = 9999999999;
+        else
+            err_triangulation = sqrt(err_triangulation / 2.0 / num_inlier_pts);
+
+        // print
+        list_error_epipolar.push_back(err_epipolar);
+        list_error_triangulation.push_back(err_triangulation);
+    }
+    if (print_res)
+    {
+        printf("\n------------------------------------\n");
+        printf("Print the mean error of each E/H method by using the inlier points.\n");
+        for (int i = 0; i < num_solutions; i++)
+        {
+
+            printf("\n---------------\n");
+            printf("Solution %d, num inliers = %d \n", i, (int)list_matches[i].size());
+            print_R_t(list_R[i], list_t[i]);
+            if (!list_normal[i].empty())
+                cout << "norm is:" << (list_normal[i]).t() << endl;
+            printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
+            printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
+        }
+    }
+}
+
 
 
 // ------------------------------------------------------------------------------

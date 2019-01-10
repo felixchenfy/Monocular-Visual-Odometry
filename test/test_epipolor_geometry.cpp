@@ -99,14 +99,14 @@ int main(int argc, char **argv)
     vector<Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool print_res=true, use_homography=false, is_frame_cam2_to_cam1=false;
+    const bool print_res=true, compute_homography=false, is_frame_cam2_to_cam1=false;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
-        print_res, use_homography, is_frame_cam2_to_cam1);
+        print_res, compute_homography, is_frame_cam2_to_cam1);
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
     vector<double> list_error_epipolar;

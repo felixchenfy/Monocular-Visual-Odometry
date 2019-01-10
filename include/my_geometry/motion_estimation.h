@@ -23,7 +23,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> &list_normal,
     vector<vector<Point3f>> &sols_pts3d_in_cam1,
     const bool print_res = false,
-    const bool use_homography = true,
+    const bool compute_homography = true,
     const bool is_frame_cam2_to_cam1=true);
 
 double helperEvaluateEstimationsError(
@@ -37,7 +37,9 @@ double helperEvaluateEstimationsError(
     vector<double> &list_error_triangulation,// the error on the normalized image plane
     bool print_res);
 
-void helperEstiMotionByEssential(
+// Estimate camera motion by Essential matrix.
+// This utility is part of the helperEstimatePossibleRelativePosesByEpipolarGeometry
+void helperEstiMotionByEssential( 
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
@@ -45,14 +47,6 @@ void helperEstiMotionByEssential(
     Mat &R, Mat &t,
     vector<DMatch> &inliers_matches,
     const bool print_res=false);
-
-// void helperDoTriangulation(
-//     const vector<KeyPoint> &keypoints_1,
-//     const vector<KeyPoint> &keypoints_2,
-//     const vector<DMatch> &matches,
-//     const Mat &K,
-//     Mat &R, Mat &t, vector<int> &inliers_in_kpts2,
-//     const bool print_res = false);
 
 // Get the 3d-2d corrsponding points
 void helperFind3Dto2DCorrespondences( 
