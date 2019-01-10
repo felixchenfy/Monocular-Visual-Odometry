@@ -26,7 +26,9 @@ void setPointColor(pcl::PointXYZRGB &point, uint8_t r, uint8_t g, uint8_t b);
 void setPointPos(pcl::PointXYZRGB &point, float x, float y, float z);
 void setPointPos(pcl::PointXYZRGB &point, double x, double y, double z);
 void setPointPos(pcl::PointXYZRGB &point, cv::Mat p);
-
+void setPointPos(pcl::PointXYZ &point, float x, float y, float z);
+void setPointPos(pcl::PointXYZ &point, double x, double y, double z);
+void setPointPos(pcl::PointXYZ &point, cv::Mat p);
 // initialize the viewer
 boost::shared_ptr<pcl::visualization::PCLVisualizer>
 initPointCloudViewer(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,

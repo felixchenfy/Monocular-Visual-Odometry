@@ -1,8 +1,10 @@
 %YAML:1.0
 
-# Path to the images
+# ===== Path to the images
 dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images
 # dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1
+
+# ===== Camera parameters
 # Camera intrinsics
 # -- fr1 dataset
 # camera_info.fx: 517.3
@@ -10,13 +12,13 @@ dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images
 # camera_info.cx: 325.1
 # camera_info.cy: 249.7
 
-# -- matlab dataset
+# -- New Tsukuba Stereo dataset used in matlab tutorial
 camera_info.fx: 615
 camera_info.fy: 615
 camera_info.cx: 320
 camera_info.cy: 240
 
-# ------------------------ VO Parameters ------------------------ 
+# ===== VO Parameters 
 
 # Store the previous N frames and their features.
 buffsize_of_prev_frames: 1

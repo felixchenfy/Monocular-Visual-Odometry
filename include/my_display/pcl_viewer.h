@@ -30,8 +30,9 @@ class PclViewer
 
     string viewer_name_;
     string point_cloud_name_;
-
     string camera_frame_name_;
+    string camera_traj_name_;
+
     cv::Mat cam_R_vec_;
     cv::Mat cam_t_;
 

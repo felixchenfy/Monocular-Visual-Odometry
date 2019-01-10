@@ -46,15 +46,20 @@ int main(int argc, char **argv)
         config_file);                    // Following algorithms will read from it for setting params.
 
     // Prepare pcl display
-    double dis_scale = 3;
-    double x = 0.5 * dis_scale,
-           y = -1.0 * dis_scale,
-           z = -1.0 * dis_scale;
+    double view_point_dist = 3;
+    double x = 0.5 * view_point_dist,
+           y = -1.0 * view_point_dist,
+           z = -1.0 * view_point_dist;
     double ea_x = -0.5, ea_y = 0, ea_z = 0;
     string viewer_name = "my pcl viewer";
     my_display::PclViewer::Ptr pcl_displayer(
         new my_display::PclViewer(
             viewer_name, x, y, z, ea_x, ea_y, ea_z));
+    
+    // prepare opencv display
+    const string IMAGE_WINDOW_NAME="scene";
+    cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
+    cv::moveWindow(IMAGE_WINDOW_NAME, 500, 50);
 
     // Setup for vo
     deque<my_slam::Frame::Ptr> frames;
@@ -67,6 +72,8 @@ int main(int argc, char **argv)
     };
     VO_STATE vo_state = INITIALIZATION;
     const int FRAME_FOR_FIRST_ESSENTIAL=14;
+    const int LENGHTH_UNIT=20; // num units per meter. (10 for dm, 100 for cm, 1000 for mmm)
+
     // Iterate through images
     for (int img_id = 0; img_id < (int)image_paths.size(); img_id++)
     {
@@ -111,14 +118,6 @@ int main(int argc, char **argv)
             if (vo_state == INITIALIZATION)
             {
 
-                // Manually skip some images, until the movement is large enough
-                if (img_id < FRAME_FOR_FIRST_ESSENTIAL){
-                    frame->T_w_c_ =prev_frame->T_w_c_;
-                    frame->R_curr_to_prev_=prev_frame->R_curr_to_prev_;
-                    frame->t_curr_to_prev_=prev_frame->t_curr_to_prev_;
-                    break;
-                }
-
                 // -- Estimation motion by Essential && Homography matrix and get inlier points
                 const bool use_homography = false; //(Right now, only use the result from Essential matrix)
                 vector<Mat> list_R, list_t, list_normal;
@@ -133,7 +132,35 @@ int main(int argc, char **argv)
                     /*settings*/
                     print_res, use_homography, is_frame_cam2_to_cam1);
 
-                // -- Compute errors:
+                {
+                    // Check if the camera has moved enough distance compared to prev image.
+                    
+                    // Method 1: manually set an image id
+                    const bool VO_INIT_FLAG_MANUAL=img_id >= FRAME_FOR_FIRST_ESSENTIAL;
+
+                    // Method 2: check the distance between inlier points, run vo until there is a large movement.
+                    vector<double> dists_between_kpts;
+                    for (const DMatch &d:list_matches[0]){
+                        Point2f p1=prev_frame->keypoints_[d.queryIdx].pt;
+                        Point2f p2=frame->keypoints_[d.trainIdx].pt;
+                        dists_between_kpts.push_back(calcDist(p1,p2));                        
+                    }
+                    double mean_dist=0;
+                    for(double d:dists_between_kpts)mean_dist+=d;
+                    mean_dist/=dists_between_kpts.size();
+                    const bool VO_INIT_FLAG_KPT_DIST=mean_dist>50;
+
+                    if (VO_INIT_FLAG_KPT_DIST){
+                        cout<<"Large movement detected at frame "<<img_id<<", start PnP"<<endl;
+                        // assert(0);
+                    }else{ // skip this frame
+                        frame->T_w_c_ =prev_frame->T_w_c_;
+                        frame->R_curr_to_prev_=prev_frame->R_curr_to_prev_;
+                        frame->t_curr_to_prev_=prev_frame->t_curr_to_prev_;
+                        break;
+                    }
+                }
+                // -- Compute errors of results of E/H estimation:
                 // [epipolar error] and [trigulation error on norm plane]
                 // for the 3 solutions of (E, H1, H2)/
                 // Choosing a good solution might based on these criterias.
@@ -165,7 +192,7 @@ int main(int argc, char **argv)
                 for (const Point3f &p : pts3d_in_cam2)
                     mean_depth += p.z;
                 mean_depth /= num_inlier_pts;
-                // mean_depth = mean_depth * 100;
+                mean_depth = mean_depth / LENGHTH_UNIT;
                 t /= mean_depth;
                 for (Point3f &p : pts3d_in_cam2)
                 {
@@ -237,6 +264,11 @@ int main(int argc, char **argv)
                 frame->T_w_c_ = prev_frame->T_w_c_ * T_curr_to_prev.inv();
                 frame->R_curr_to_prev_ = R;
                 frame->t_curr_to_prev_ = t;
+                
+                
+                //DEBUG
+                invRt(R,t);
+                cout<<"\nprev_to_curr displaycement: "<<t.t()<<endl;
 
                 // --Update vo state
                 vo_state = vo_state; // still OK
@@ -245,63 +277,52 @@ int main(int argc, char **argv)
         } // This is a dummy loop
 
         // ------------------------Complete-------------------------------
-
-        printf("\n\n--Printing frame %d pose:\n", img_id);
         if (vo_state==OK)
         { // Display image by opencv
-            cv::destroyAllWindows();
             cv::Mat img_show = rgb_img.clone();
             std::stringstream ss;
             ss << std::setw(4) << std::setfill('0') << img_id;
             string str_img_id = ss.str();
-
-            if (img_id == 0)
+            const int CV_WAIT_KEY_TIME=10;
+            if (1 || img_id == 0) // draw keypoints
             {
-                cv::Scalar color(0, 255, 0);
-                cv::Scalar color2 = cv::Scalar::all(-1);
-                cv::drawKeypoints(img_show, frame->keypoints_, img_show, color);
-                cv::imshow("rgb_img", img_show);
+                cv::Scalar color_g(0, 255, 0),color_b(255,0,0),color_r(0, 0, 255);
+                // cv::Scalar color2 = cv::Scalar::all(-1);
+                string window_name="img "+str_img_id;
+                vector<KeyPoint> inliers_kpt;
+                for(auto &m:frame->matches_)
+                    inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
+                cv::drawKeypoints(img_show, frame->keypoints_, img_show, color_g);
+                cv::drawKeypoints(img_show, inliers_kpt, img_show, color_r);
+                // cv::destroyAllWindows();
+                // cv::imshow(window_name, img_show);
+                cv::imshow(IMAGE_WINDOW_NAME, img_show);
+                waitKey(CV_WAIT_KEY_TIME);
             }
-            else
+            if(0 && img_id!=0) // draw matches
             {
                 my_slam::Frame::Ptr prev_frame = frames[frames.size()-2];// the last 2nd frame
-                
-                // cout<<"DEBUG:";
-                // cout<<frames.size()<<endl;
-                // cout<<prev_frame->rgb_img_.size()<<endl;
-                // cout<<prev_frame->keypoints_.size()<<endl;
-
-                // cout<<frame->rgb_img_.size()<<endl;
-                // cout<<frame->keypoints_.size()<<endl;
-                // cout<<frame->matches_.size()<<endl;
-                // int cnt=0;
-                // for(auto m:frame->matches_){
-                //     cout<<cnt++<<":"<<m.queryIdx<<","<<m.trainIdx<<","<<endl;
-                // }
-
-                string window_name = "Image " + str_img_id + ", matched keypoints";
-                // drawMatches(frame->rgb_img_, frame->keypoints_,
-                            // prev_frame->rgb_img_, prev_frame->keypoints_, frame->matches_, img_show);
-                
+                string window_name = "Image " + str_img_id + ", matched keypoints";                
                 drawMatches(prev_frame->rgb_img_, prev_frame->keypoints_,
                             frame->rgb_img_, frame->keypoints_, frame->matches_, img_show);
                 cv::namedWindow(window_name, WINDOW_AUTOSIZE);
                 cv::imshow(window_name, img_show);
+                waitKey(CV_WAIT_KEY_TIME);
             }
-            waitKey(10);
             imwrite("result/" + str_img_id + ".png", img_show);
         }
-        if (ENABLE_PCL_DISPLAY)
+        printf("\n\n--Printing frame %d pose:\n", img_id);
+        if (1 && ENABLE_PCL_DISPLAY)
         {
             Mat R, R_vec, t;
             getRtFromT(frame->T_w_c_, R, t);
             Rodrigues(R, R_vec);
 
-            cout << endl;
-            cout << "R_world_to_camera:\n"
-                 << R << endl;
-            cout << "t_world_to_camera:\n"
-                 << t.t() << endl;
+            // cout << endl;
+            // cout << "R_world_to_camera:\n"
+            //      << R << endl;
+            // cout << "t_world_to_camera:\n"
+            //      << t.t() << endl;
 
             pcl_displayer->updateCameraPose(R_vec, t);
             // pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
@@ -322,9 +343,10 @@ int main(int argc, char **argv)
         cout << "Finished an image" << endl;
 
         // Return
-        if (img_id == FRAME_FOR_FIRST_ESSENTIAL+100)
+        if (img_id == FRAME_FOR_FIRST_ESSENTIAL+150)
             break;
     }
+    cv::destroyAllWindows();
 }
 
 bool checkInputArguments(int argc, char **argv)

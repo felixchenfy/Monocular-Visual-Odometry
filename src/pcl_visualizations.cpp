@@ -30,6 +30,20 @@ void setPointPos(pcl::PointXYZRGB &point, cv::Mat p)
 {
     setPointPos(point, p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
+void setPointPos(pcl::PointXYZ &point, float x, float y, float z)
+{
+    point.x = x;
+    point.y = y;
+    point.z = z;
+}
+void setPointPos(pcl::PointXYZ &point, double x, double y, double z)
+{
+    setPointPos(point, (float)x, float(y), float(z));
+}
+void setPointPos(pcl::PointXYZ &point, cv::Mat p)
+{
+    setPointPos(point, p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
+}
 
 // initialize the viewer
 boost::shared_ptr<pcl::visualization::PCLVisualizer>
@@ -41,8 +55,8 @@ initPointCloudViewer(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,
 
     // Add a RGB point cloud
     const int POINT_SIZE = 3;
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
-    viewer->addPointCloud<pcl::PointXYZRGB>(cloud, rgb, cloud_name);
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> color_setting(cloud);
+    viewer->addPointCloud<pcl::PointXYZRGB>(cloud, color_setting, cloud_name);
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_SIZE, cloud_name);
 
     // Add Coordinate system
