@@ -132,9 +132,9 @@ int main(int argc, char **argv)
                     /*settings*/
                     print_res, use_homography, is_frame_cam2_to_cam1);
 
-                {
-                    // Check if the camera has moved enough distance compared to prev image.
-                    
+                
+                // Check initialization condition
+                {    
                     // Method 1: manually set an image id
                     const bool VO_INIT_FLAG_MANUAL=img_id >= FRAME_FOR_FIRST_ESSENTIAL;
 
@@ -151,8 +151,7 @@ int main(int argc, char **argv)
                     const bool VO_INIT_FLAG_KPT_DIST=mean_dist>50;
 
                     if (VO_INIT_FLAG_KPT_DIST){
-                        cout<<"Large movement detected at frame "<<img_id<<", start PnP"<<endl;
-                        // assert(0);
+                        cout<<"Large movement detected at frame "<<img_id<<". Start initialization"<<endl;
                     }else{ // skip this frame
                         frame->T_w_c_ =prev_frame->T_w_c_;
                         frame->R_curr_to_prev_=prev_frame->R_curr_to_prev_;
@@ -160,6 +159,7 @@ int main(int argc, char **argv)
                         break;
                     }
                 }
+
                 // -- Compute errors of results of E/H estimation:
                 // [epipolar error] and [trigulation error on norm plane]
                 // for the 3 solutions of (E, H1, H2)/
@@ -325,7 +325,12 @@ int main(int argc, char **argv)
             //      << t.t() << endl;
 
             pcl_displayer->updateCameraPose(R_vec, t);
-            // pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
+            unsigned char r = 255, g = 0, b = 0;
+            pcl_displayer->deletePoints();
+            for(const Point3f &pt3d: frame->inliers_pts3d_){
+                Mat kpt_3d_pos_in_world = R * Point3f_to_Mat(pt3d) + t;
+                pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
+            }
 
             pcl_displayer->update();
             pcl_displayer->spinOnce(100);
@@ -333,8 +338,7 @@ int main(int argc, char **argv)
                 break;
         }
         // Save to buff.
-        if (frames.size() > 10)
-            frames.pop_front();
+        if (frames.size() > 10) frames.pop_front();
 
         // Print
         // cout << "R_curr_to_prev_: " << frame->R_curr_to_prev_ << endl;

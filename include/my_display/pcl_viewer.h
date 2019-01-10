@@ -47,6 +47,7 @@ class PclViewer
   public:
     void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t);
     void addPoint(const cv::Mat pt_3d_pos_in_world, uchar r, uchar g, uchar b);
+    void deletePoints();
     void update();
     void spinOnce(unsigned int millisecond);
     bool wasStopped();

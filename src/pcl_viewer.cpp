@@ -77,7 +77,9 @@ void PclViewer::addPoint(const cv::Mat pt_3d_pos_in_world, uchar r, uchar g, uch
     setPointColor(point, r, g, b);
     cloud_ptr_keypoints_->points.push_back(point);
 }
-
+void PclViewer::deletePoints(){
+    cloud_ptr_keypoints_->points.clear();
+}
 void PclViewer::update()
 {
     static int cnt_frame = 0;
