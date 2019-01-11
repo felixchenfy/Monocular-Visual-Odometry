@@ -45,8 +45,15 @@ class VisualOdometry
     VOState vo_state_;
     deque<my_slam::Frame::Ptr> frames_; // store the previous frames
     
+    // Initiliazation
+    Frame::Ptr init_frame_;
+    vector<KeyPoint> init_frame_keypoints_;
+    Mat init_frame_descriptors_;
+
+
     // Frame
     Frame::Ptr curr_;
+    Frame::Ptr ref_;
 
     // Map
     Map::Ptr map_;
