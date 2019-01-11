@@ -144,7 +144,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img,
     }
     else if (0 && img_id != 0) // draw matches
     {
-        my_slam::Frame::Ptr prev_frame = vo->frames_[vo->frames_.size() - 2]; // the last 2nd frame
+        my_slam::Frame::Ptr prev_frame = vo->keyframes_[vo->keyframes_.size() - 2]; // the last 2nd frame
         drawMatches(prev_frame->rgb_img_, prev_frame->keypoints_,
                     frame->rgb_img_, frame->keypoints_, frame->matches_, img_show);
     }

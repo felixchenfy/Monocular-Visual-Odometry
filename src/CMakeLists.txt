@@ -24,6 +24,7 @@ add_library( my_slam SHARED
     frame.cpp
     vo.cpp
     vo_addFrame.cpp
+    vo_motions.cpp
     map.cpp
     mappoint.cpp
     motion_funcs.cpp

@@ -23,16 +23,21 @@ Mat Point3f_to_Mat(const Point3f &p);
 Point3f Mat_to_Point3f(const Mat &p);
 Mat Point2f_to_Mat(const Point2f &p);
 
-// ---------------- Math ----------------
-Mat skew(const Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
+// ---------------- Transformations ----------------
+Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t);
+void invRt(Mat &R, Mat &t);
 Mat transRt2T(const Mat &R, const Mat &t);
 Mat transRt2T_3x4(const Mat &R, const Mat &t);
 void getRtFromT(const Mat &T, Mat &R, Mat &t);
-Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t);
-void invRt(Mat &R, Mat &t);
+
+Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4);
+
+// ---------------- Math ----------------
+Mat skew(const Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
 double calcDist(const Point2f &p1, const Point2f &p2);
 double calcMeanDepth(const vector<Point3f> &pts_3d);
 double scalePointPos(Point3f &p, double scale);
+double calcMatNorm(const Mat &mat);
 
 // ---------------- Print ----------------
 void print_MatProperty(cv::Mat &M); // print data type and size

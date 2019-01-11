@@ -33,59 +33,62 @@ namespace my_slam
 class VisualOdometry
 {
 
-  public: // Member variables
-    typedef shared_ptr<VisualOdometry> Ptr;
+public: // Member variables
+  typedef shared_ptr<VisualOdometry> Ptr;
 
-    enum VOState
-    {
-        BLANK,
-        INITIALIZATION,
-        OK,
-        LOST
-    };
-    VOState vo_state_;
-    deque<my_slam::Frame::Ptr> frames_; // store the previous frames
-    
-    // Initiliazation
-    Frame::Ptr init_frame_;
-    vector<KeyPoint> init_frame_keypoints_;
-    Mat init_frame_descriptors_;
+  enum VOState
+  {
+    BLANK,
+    INITIALIZATION,
+    OK,
+    LOST
+  };
+  VOState vo_state_;
+  deque<my_slam::Frame::Ptr> keyframes_; // store the previous frames
 
+  // Initiliazation
+  Frame::Ptr init_frame_;
+  vector<KeyPoint> init_frame_keypoints_;
+  Mat init_frame_descriptors_;
 
-    // Frame
-    Frame::Ptr curr_;
-    Frame::Ptr ref_;
+  // Frame
+  Frame::Ptr curr_;
+  Frame::Ptr ref_;
 
-    // Map
-    Map::Ptr map_;
+  // Map
+  Map::Ptr map_;
 
-    // Map features
-    vector<KeyPoint> keypoints_curr_;
-    Mat descriptors_curr_;
-    vector<Point3f> matched_pts_3d_in_map_;
-    vector<int> matched_pts_2d_idx_;
+  // Map features
+  vector<KeyPoint> keypoints_curr_;
+  Mat descriptors_curr_;
+  vector<Point3f> matched_pts_3d_in_map_;
+  vector<int> matched_pts_2d_idx_;
 
-    // Debug
-    bool DEBUG_STOP_PROGRAM_;
+  // Debug
+  bool DEBUG_STOP_PROGRAM_;
 
-  public: // Constructor
-    VisualOdometry();
-    void addFrame(my_slam::Frame::Ptr frame);
+public: // Constructor
+  VisualOdometry();
+  void addFrame(my_slam::Frame::Ptr frame);
 
-  public: // Functions
-    void matchFeatures();
-    void getMappointsInCurrentView(
+public: // Functions
+  // void matchFeatures();
+
+  void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
-      Mat &candidate_descriptors_in_map
-    );
-  
-  public: // Initialization
-    bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
-  public: // Tracking
-    void find3Dto2DCorrespondences()
+      Mat &candidate_descriptors_in_map);
 
-       
+  void pushPointsToMap(
+      const vector<Point3f> &inliers_pts3d_in_curr,
+      const Mat &T_w_curr,
+      const Mat &descriptors,
+      const vector<DMatch> &inlier_matches);
 
+public: // Initialization
+  bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
+
+public: // Tracking
+  // void find3Dto2DCorrespondences()
 };
 
 } // namespace my_slam

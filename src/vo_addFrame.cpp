@@ -7,7 +7,7 @@ namespace my_slam
 void VisualOdometry::addFrame(Frame::Ptr frame)
 {
     // Settings
-    const int VO_LENGHTH_UNIT = 100; // num units per meter. (10 for dm, 100 for cm, 1000 for mmm)
+    const int VO_UNITS_PER_METER = 20; // num units per meter. (10 for dm, 100 for cm, 1000 for mmm)
     const int FRAME_FOR_FIRST_ESSENTIAL = 14;
 
     // Renamed vars
@@ -37,6 +37,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             init_frame_ = curr_;
             init_frame_keypoints_ = curr_->keypoints_;
             init_frame_descriptors_ = curr_->descriptors_.clone();
+            keyframes_.push_back(curr_);
         }
         else if (vo_state_ == INITIALIZATION)
         {
@@ -103,7 +104,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // -- Normalize the mean depth of points to be 1m
             double mean_depth=calcMeanDepth(pts3d_in_cam2);
-            mean_depth = mean_depth / VO_LENGHTH_UNIT;
+            mean_depth = mean_depth / VO_UNITS_PER_METER;
             t /= mean_depth;
             for (Point3f &p : pts3d_in_cam2)
                 scalePointPos(p, 1/mean_depth);
@@ -114,10 +115,18 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             curr_->inlier_matches_ = inlier_matches;
             curr_->inliers_pts3d_ = pts3d_in_cam2;
 
+
+            // -- Push points to local map
+            pushPointsToMap(
+                curr_->inliers_pts3d_,
+                curr_->T_w_c_,
+                curr_->descriptors_,
+                curr_->inlier_matches_
+            );
             // --Update vo state
             vo_state_ = OK;
-
-            ref_ = curr_;
+            keyframes_.push_back(curr_);
+            cout << "Inilialiation success !!!"<<endl;
         }
         else if (vo_state_ == OK)
         {
@@ -125,30 +134,15 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // Push previous curr_'s keypoints to a local map
             // Match features (Simulate the matching process)
 
-
-            // -- Insert prev frame inlier_matches' keypoints into the local map
-            map_->map_points_.clear();
-            const vector<DMatch> &prev_inlier_matches = ref_->inlier_matches_;
-            for (int i = 0; i < prev_inlier_matches.size(); i++)
-            {
-                int pt_idx = prev_inlier_matches[i].trainIdx;
-                MapPoint::Ptr map_point(new MapPoint(
-                    Point3f_to_Mat(ref_->inliers_pts3d_[i]),
-                    ref_->descriptors_.row(pt_idx).clone()));
-                map_->insertMapPoint(map_point);
-            }
-
             // -- From the local map, find the keypoints that fall into the current view
             vector<MapPoint::Ptr> candidate_mappoints_in_map;
             Mat candidate_descriptors_in_map;
             getMappointsInCurrentView(candidate_mappoints_in_map, candidate_descriptors_in_map);
     
-            // -- Compare descriptors to find matches
+            // -- Compare descriptors to find matches, and extract 3d 2d correspondance
             my_geometry::matchFeatures(candidate_descriptors_in_map, curr_->descriptors_, curr_->matches_);
             cout << "Number of 3d-2d pairs: " << curr_->matches_.size() << endl;
-            
-            // Triangulate
-            vector<Point3f> pts_3d; 
+                        vector<Point3f> pts_3d; 
             vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
             for(int i=0;i<curr_->matches_.size();i++){
                 DMatch &dm=curr_->matches_[i];
@@ -166,51 +160,79 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             Mat pnp_inliers_mask ;
             solvePnPRansac(pts_3d, pts_2d, K, Mat(), R_vec, t,
                 useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
+            Rodrigues(R_vec, R);            
             
-            print_MatProperty(pnp_inliers_mask);            
-            Rodrigues(R_vec, R);
+            // DEBUG
+            print_MatProperty(pnp_inliers_mask);       
+
+            // -- Update current camera pos
+            curr_->T_w_c_ = transRt2T(R, t).inv();
+
+            // -- add a keyframe
+            Frame::Ptr prev_prev_keyframe;
+            prev_prev_keyframe = keyframes_[keyframes_.size()-2];
+            Mat T_key_to_curr = prev_prev_keyframe->T_w_c_.inv()*curr_->T_w_c_;
+            if(calcMatNorm(T_key_to_curr.t()) > 0.05*VO_UNITS_PER_METER){
+                keyframes_.push_back(curr_);
+            }
+                 
 
             // ---------------------下面的需要进行更改－－－－－－－－－－－－－－－－－
+            // - Triangulate new points
+            prev_prev_keyframe = keyframes_[keyframes_.size()-2];
+            my_geometry::matchFeatures(prev_prev_keyframe->descriptors_, curr_->descriptors_, curr_->matches_);
             
-            // --Triangulate points
-            // my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
+            // -- Use Essential matrix to find the inliers
+            vector<DMatch> inlier_matches; // matches, that are inliers
+            Mat dummy_R, dummy_t;
+            helperEstiMotionByEssential(
+                prev_prev_keyframe->keypoints_, curr_->keypoints_,
+                curr_->matches_, K,
+                dummy_R, dummy_t, inlier_matches);
+            cout << "Number of inliers with prev prev keyframe: " << inlier_matches.size() << endl;
+            curr_->inlier_matches_ = inlier_matches;
+
+            // / --Triangulate points
+            Mat R_curr_to_key, t_curr_to_key;
+            calcMotionFromFrame1to2(curr_, prev_prev_keyframe, R_curr_to_key, t_curr_to_key);
+
             vector<Point3f> pts_3d_in_curr;
             helperTriangulatePoints(
-                ref_->keypoints_, curr_->keypoints_,
-                curr_->inlier_matches_, R, t, K,
+                prev_prev_keyframe->keypoints_, curr_->keypoints_,
+                curr_->inlier_matches_, R_curr_to_key, t_curr_to_key, K,
                 pts_3d_in_curr);
             curr_->inliers_pts3d_ = pts_3d_in_curr;
 
-            // -- Update current camera pos
-            Mat T_curr_to_prev = transRt2T(R, t);
-            curr_->T_w_c_ = ref_->T_w_c_ * T_curr_to_prev.inv();
-
-            //DEBUG
-            invRt(R, t);
-            cout << "\nprev_to_curr displaycement: " << t.t() << endl;
+            // -- Push points into local map            
+            pushPointsToMap(
+                curr_->inliers_pts3d_,
+                curr_->T_w_c_,
+                curr_->descriptors_,
+                curr_->inlier_matches_
+            );
 
             // --Update vo state
             vo_state_ = vo_state_; // still OK
-            ref_ = curr_;
         }
         break;
     }
 
-    // Print
+    // Print relative motion
     if (vo_state_ == OK)
     {
-        Frame::Ptr tmp_ref=frames_.back();
-        cout<<tmp_ref->T_w_c_<<endl;
-        Mat R, t, T = computeT_FromFrame1to2(tmp_ref, curr_);
-        getRtFromT(T, R, t);
+        static Mat T_w_to_prev=Mat::eye(4, 4, CV_64F);
+        const Mat &T_w_to_curr = curr_->T_w_c_;
+        Mat T_prev_to_curr = T_w_to_prev.inv() * T_w_to_curr;
+        Mat R, t;
+        getRtFromT(T_prev_to_curr, R, t);
         cout << "R_prev_to_curr: " << R << endl;
         cout << "t_prev_to_curr: " << t.t() << endl;
     }
 
     // Save to buff.
-    frames_.push_back(curr_);
-    if (frames_.size() > 10)
-        frames_.pop_front();
+    // keyframes_.push_back(curr_);
+    // if (keyframes_.size() > 10)
+        // keyframes_.pop_front();
 
     cout<<"\nEnd of a frame"<<endl;
 }

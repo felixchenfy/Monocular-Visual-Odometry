@@ -19,6 +19,20 @@ Mat Point2f_to_Mat(const Point2f &p)
     return (Mat_<double>(2, 1) << p.x, p.y);
 }
 
+// ---------------- Transformations ----------------
+
+Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4){
+    const Mat &T=T4x4;
+    double p[4]={p3x1.x,p3x1.y,p3x1.z,1};
+    double res[3]={0,0,0};
+    for(int row=0;row<3;row++){
+        for(int j=0; j<4; j++)
+            res[row]+=T.at<double>(row,j)*p[j];
+    }
+    return Point3f(res[0],res[1],res[2]);
+}
+
+
 // ---------------- Math ----------------
 
 Mat skew(const Mat &t)
@@ -82,7 +96,16 @@ double scalePointPos(Point3f &p, double scale){
     p.y *= scale;
     p.z *= scale;
 }
-
+double calcMatNorm(const Mat &mat){
+    double sum=0;
+    for(int i=0;i<mat.rows;i++){
+        for(int j=0;j<mat.cols;j++){
+            sum=sum+mat.at<double>(i,j)*mat.at<double>(i,j);
+        }
+    }
+    double norm=sqrt(sum);
+    return norm;
+}
 // ---------------- Print ----------------
 
 void print_MatProperty(Mat &M)

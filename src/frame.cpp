@@ -16,4 +16,16 @@ Frame::Ptr Frame::createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, doub
     return frame;
 }
 
+// bool Frame::isInFrame ( const Vector3d& pt_world )
+// {
+//     Vector3d p_cam = camera_->world2camera( pt_world, T_c_w_ );
+//     // cout<<"P_cam = "<<p_cam.transpose()<<endl;
+//     if ( p_cam(2,0)<0 ) return false;
+//     Vector2d pixel = camera_->world2pixel( pt_world, T_c_w_ );
+//     // cout<<"P_pixel = "<<pixel.transpose()<<endl<<endl;
+//     return pixel(0,0)>0 && pixel(1,0)>0 
+//         && pixel(0,0)<color_.cols 
+//         && pixel(1,0)<color_.rows;
+// }
+
 }
