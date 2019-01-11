@@ -191,6 +191,29 @@ void removeDuplicatedMatches(vector<cv::DMatch> &matches)
     res.swap(matches);
 }
 
+
+
+// --------------------- Other assistant functions ---------------------
+double computeMeanDistBetweenKeypoints(
+    const vector<KeyPoint> &kpts1, const vector<KeyPoint> &kpts2, const vector<DMatch> &matches)
+{
+
+    vector<double> dists_between_kpts;
+    for (const DMatch &d : matches)
+    {
+        Point2f p1 = kpts1[d.queryIdx].pt;
+        Point2f p2 = kpts2[d.trainIdx].pt;
+        dists_between_kpts.push_back(calcDist(p1, p2));
+    }
+    double mean_dist = 0;
+    for (double d : dists_between_kpts)
+        mean_dist += d;
+    mean_dist /= dists_between_kpts.size();
+    return mean_dist;
+}
+
+// --------------------- datatype transform ---------------------
+
 vector<DMatch> inliers2DMatches(const vector<int> inliers){
     vector<DMatch> matches;
     for(auto idx:inliers){

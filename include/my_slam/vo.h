@@ -78,6 +78,13 @@ class VisualOdometry
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &candidate_descriptors_in_map
     );
+  
+  public: // Initialization
+    bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
+  public: // Tracking
+    void find3Dto2DCorrespondences()
+
+       
 
 };
 

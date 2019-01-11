@@ -20,7 +20,12 @@
 #include <map>
 #include <deque>
 
+// my
+#include "my_basics/opencv_funcs.h"
+
+
 using namespace std; 
 using namespace cv;
+using namespace my_basics;
 
 #endif

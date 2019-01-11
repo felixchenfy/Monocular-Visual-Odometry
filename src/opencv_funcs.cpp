@@ -8,11 +8,16 @@ Mat Point3f_to_Mat(const Point3f &p)
 {
     return (Mat_<double>(3, 1) << p.x, p.y, p.z);
 }
+
+Point3f Mat_to_Point3f(const Mat &p){
+    return Point3f(p.at<double>(0,0), p.at<double>(1,0), p.at<double>(2,0));
+}
+
+
 Mat Point2f_to_Mat(const Point2f &p)
 {
     return (Mat_<double>(2, 1) << p.x, p.y);
 }
-
 
 // ---------------- Math ----------------
 
@@ -41,22 +46,43 @@ Mat transRt2T_3x4(const Mat &R, const Mat &t)
 }
 void getRtFromT(const Mat &T, Mat &R, Mat &t)
 {
-    R = (Mat_<double>(3, 3) << 
-        T.at<double>(0, 0), T.at<double>(0, 1), T.at<double>(0, 2),
+    R = (Mat_<double>(3, 3) << T.at<double>(0, 0), T.at<double>(0, 1), T.at<double>(0, 2),
          T.at<double>(1, 0), T.at<double>(1, 1), T.at<double>(1, 2),
          T.at<double>(2, 0), T.at<double>(2, 1), T.at<double>(2, 2));
     t = (Mat_<double>(3, 1) << T.at<double>(0, 3),
          T.at<double>(1, 3),
          T.at<double>(2, 3));
 }
-Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t){
-   Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
-   return Point3f(p2.at<double>(0,0),p2.at<double>(1,0), p2.at<double>(2,0));
+Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t)
+{
+    Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
+    return Point3f(p2.at<double>(0, 0), p2.at<double>(1, 0), p2.at<double>(2, 0));
 }
-void invRt(Mat &R, Mat &t){
-    Mat T=transRt2T(R,t);
-    getRtFromT(T.inv(),R,t);
+void invRt(Mat &R, Mat &t)
+{
+    Mat T = transRt2T(R, t);
+    getRtFromT(T.inv(), R, t);
 }
+
+double calcDist(const Point2f &p1, const Point2f &p2)
+{
+    double dx = p1.x - p2.x, dy = p1.y - p2.y;
+    return sqrt(dx * dx + dy * dy);
+}
+double calcMeanDepth(const vector<Point3f> &pts_3d)
+{
+    double mean_depth = 0;
+    for (const Point3f &p : pts_3d)
+        mean_depth += p.z;
+    mean_depth /= pts_3d.size();
+    return mean_depth;
+}
+double scalePointPos(Point3f &p, double scale){
+    p.x *= scale;
+    p.y *= scale;
+    p.z *= scale;
+}
+
 // ---------------- Print ----------------
 
 void print_MatProperty(Mat &M)

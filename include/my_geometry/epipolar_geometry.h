@@ -52,7 +52,6 @@ double computeEpipolarConsError(
 double computeEpipolarConsError( // mean square error of a vector of points
     const vector<Point2f> &pts1, const vector<Point2f> &pts2,
     const Mat &R, const Mat &t, const Mat &K);
-double calcDist(const Point2f &p1, const Point2f &p2);
 double calcError(const Point2f &p1, const Point2f &p2);
 
 // ---------------- datatype conversion ----------------

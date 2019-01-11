@@ -28,11 +28,13 @@ public:
   Mat rgb_img_;
   vector<KeyPoint> keypoints_;
   Mat descriptors_;
+  
   vector<DMatch> matches_; // matches with the previous frame
-  // vector<int> inliers_of_matches_; // inliers index with respect to the matches
-  // vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
   vector<DMatch> inlier_matches_; // inliers matches index with respect to all the points
   vector<Point3f> inliers_pts3d_; // matches with the previous frame
+
+  // vector<int> inliers_of_matches_; // inliers index with respect to the matches
+  // vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
 
   // -- Other commonly used points
   // vector<Point2f> pts_matched_;

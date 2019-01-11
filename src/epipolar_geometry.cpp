@@ -238,11 +238,6 @@ double calcError(const Point2f &p1, const Point2f &p2)
     double dx = p1.x - p2.x, dy = p1.y - p2.y;
     return dx * dx + dy * dy;
 }
-double calcDist(const Point2f &p1, const Point2f &p2)
-{
-    double dx = p1.x - p2.x, dy = p1.y - p2.y;
-    return sqrt(dx * dx + dy * dy);
-}
 
 // ---------------- datatype conversion ----------------
 
