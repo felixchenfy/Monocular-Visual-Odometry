@@ -1,20 +1,31 @@
 
 /*This script is currently not used*/
 
+#ifndef BASICS_H
+#define BASICS_H
+
+#include "stdio.h"
+#include "iostream"
+#include <string>
 #include <vector>
+#include <deque>
 #include <algorithm>
+
+#include <sstream>
+#include <iomanip>
+
 using namespace std;
 
-// Please sort v1 and v2 first, then this functions returns the intersection of two vector.
-vector<int> getIntersection(vector<int> v1, vector<int> v2)
+namespace my_basics
 {
-    int comb_len = v1.size() + v2.size();
-    std::vector<int> v(comb_len);
-    std::vector<int>::iterator it;
-    it = std::set_intersection(
-        v1.begin(), v1.end(),
-        v2.begin(), v2.end(),
-        v.begin());
-    v.resize(it - v.begin());
-    return v;
-}
+
+// Convert int to string, and fill it with zero before the number to make it specified width
+string int2str(int num, int width, char char_to_fill='0');
+
+// Please sort v1 and v2 first, then this functions returns the intersection of two vector.
+vector<int> getIntersection(vector<int> v1, vector<int> v2);
+
+
+} // namespace my_basics
+
+#endif

@@ -1,6 +1,7 @@
 
 
 add_library(my_basics SHARED
+    basics.cpp
     config.cpp
     eigen_funcs.cpp
     opencv_funcs.cpp
@@ -21,6 +22,8 @@ add_library(my_geometry SHARED
 
 add_library( my_slam SHARED
     frame.cpp
+    vo.cpp
+    vo_addFrame.cpp
     # --------------not used ---------
     # visual_odometry.cpp
     # map.cpp

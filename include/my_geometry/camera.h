@@ -18,11 +18,12 @@ class Camera /*This is defined but not acctually used*/
 public:
   typedef std::shared_ptr<Camera> Ptr;
   double fx_, fy_, cx_, cy_;
+  Mat K_;
 
 public:
   Camera(double fx, double fy, double cx, double cy) : fx_(fx), fy_(fy), cx_(cx), cy_(cy)
   {
-    Mat K = (Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
+    K_ = (Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
   }
   Camera(Mat K)
   {
@@ -30,6 +31,7 @@ public:
     fy_ = K.at<double>(1, 1);
     cx_ = K.at<double>(0, 2);
     cy_ = K.at<double>(1, 2);
+    K_=K;
   }
 
 };
