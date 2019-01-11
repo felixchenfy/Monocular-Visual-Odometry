@@ -10,16 +10,16 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     const int VO_INIT_LENGHTH_UNIT = 100; // num units per meter. (10 for dm, 100 for cm, 1000 for mmm)
     const int FRAME_FOR_FIRST_ESSENTIAL = 14;
 
-    // Vars
+    // Renamed vars
     const int img_id = frame->id_;
-    const Mat &K=frame->camera_->K_;
+    const Mat &K = frame->camera_->K_;
+
+    // Vars
 
     // Start
     for (int vo_null_loop = 0; vo_null_loop == 0; vo_null_loop++)
     {
         printf("\n\n=============================================\n");
-        printf("=============================================\n");
-        printf("=============================================\n");
         printf("Start processing the %dth image.\n", img_id);
 
         // Init a frame. Extract keypoints and descriptors.
@@ -38,8 +38,59 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             break;
         }
 
-        // Match features
+        // Set previous and current frame
         my_slam::Frame::Ptr prev_frame = frames_.back();
+        curr_ = frame;
+
+        // Push previous frame's keypoints to a local map
+        if (vo_state_ == INITIALIZATION)
+        {
+        }
+        else
+        { // Match features (Simulate the matching process)
+
+            // Insert inlier_matches' keypoints into the local map
+            // map_->map_points_.clear();
+            // const vector<DMatch> &prev_inlier_matches = prev_frame->inlier_matches_;
+            // for (int i = 0; i < prev_inlier_matches.size(); i++)
+            // {
+            //     int pt_idx = prev_inlier_matches[i].trainIdx;
+            //     MapPoint::Ptr map_point(new MapPoint(
+            //         Point3f_to_Mat(prev_frame->inliers_pts3d_[i]),
+            //         prev_frame->descriptors_.row(pt_idx).clone()));
+            //     map_->insertMapPoint(map_point);
+            // }
+
+            // From the local map, find the keypoints that fall into the current view
+            // vector<MapPoint::Ptr> candidate_mappoints_in_map;
+            // Mat candidate_descriptors_in_map;
+            // getMappointsInCurrentView(candidate_mappoints_in_map, candidate_descriptors_in_map);
+
+            // TESTING: Use these matched keypoints to make up a fake prev_frame
+            vector<KeyPoint> tmp_kpts;
+            Mat tmp_descriptors;
+            vector<DMatch> tmp_matches;
+            vector<DMatch> tmp_inlier_matches;
+            for (int i = 0; i < prev_frame->inlier_matches_.size(); i++)
+            {
+                int pt_idx = prev_frame->inlier_matches_[i].trainIdx;
+                tmp_kpts.push_back(prev_frame->keypoints_[pt_idx]);
+                tmp_descriptors.push_back(prev_frame->descriptors_.row(pt_idx).clone());
+
+                DMatch tmp_dmatch = prev_frame->matches_[i];
+                tmp_dmatch.trainIdx = i;
+                tmp_matches.push_back(tmp_dmatch);
+
+                DMatch tmp_inlier_dmatch = prev_frame->inlier_matches_[i];
+                tmp_inlier_dmatch.trainIdx = i;
+                tmp_inlier_matches.push_back(tmp_inlier_dmatch);
+            }
+            prev_frame->keypoints_ = tmp_kpts;
+            prev_frame->descriptors_ = tmp_descriptors;
+            prev_frame->matches_ = tmp_matches;
+            prev_frame->inlier_matches_ = tmp_inlier_matches;
+        }
+        // Match features
         frame->matchFeatures(prev_frame);
 
         // -- Estimation motion by Essential && Homography matrix and get inlier points
@@ -136,7 +187,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             frame->T_w_c_ = prev_frame->T_w_c_ * T_curr_to_prev.inv();
             frame->R_curr_to_prev_ = R;
             frame->t_curr_to_prev_ = t;
-            frame->inliers_matches_ = inlier_matches;
+            frame->inlier_matches_ = inlier_matches;
             frame->inliers_pts3d_ = pts3d_in_cam2;
 
             // --Update vo state
@@ -147,35 +198,35 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         {
 
             // -- Estimate Essential matrix to find the inliers
-            // vector<DMatch> inliers_matches; // matches, that are inliers
+            // vector<DMatch> inlier_matches; // matches, that are inliers
             // Mat dummy_R, dummy_t;
             // helperEstiMotionByEssential(
             //     prev_frame->keypoints_, frame->keypoints_,
             //     frame->matches_, K,
-            //     dummy_R, dummy_t, inliers_matches);
-            // cout << "Number of inliers by E: "<<inliers_matches.size()<<endl;
-            // frame->inliers_matches_ = inliers_matches;
+            //     dummy_R, dummy_t, inlier_matches);
+            // cout << "Number of inliers by E: "<<inlier_matches.size()<<endl;
+            // frame->inlier_matches_ = inlier_matches;
 
-            vector<DMatch> &inliers_matches = list_matches[0];
-            frame->inliers_matches_ = inliers_matches;
+            vector<DMatch> &inlier_matches = list_matches[0];
+            frame->inlier_matches_ = inlier_matches;
 
             // --  Find the intersection between [DMatches_curr] and [DMatches_prev],
             // --  and 3d-2d correspondance
             vector<Point3f> pts_3d; // a point's 3d pos in cam1 frame
             vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel frame
             helperFind3Dto2DCorrespondences(
-                frame->inliers_matches_,
+                frame->inlier_matches_,
                 frame->keypoints_,
-                prev_frame->inliers_matches_,
+                prev_frame->inlier_matches_,
                 prev_frame->inliers_pts3d_,
                 pts_3d, pts_2d);
 
             // cout <<"DEBUG 3d-2d cor:"<<endl;
             // int cnt=0;
-            // for(auto m:prev_frame->inliers_matches_)
+            // for(auto m:prev_frame->inlier_matches_)
             //     cout<<cnt++<<" prev frame: "<<m.trainIdx<<endl;
             // cnt=0;
-            // for(auto m:frame->inliers_matches_)
+            // for(auto m:frame->inlier_matches_)
             //     cout<<cnt++<<"curr frame: "<<m.queryIdx<<endl;
             cout << "Number of 3d-2d pairs: " << pts_3d.size() << endl;
 
@@ -188,7 +239,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             vector<Point3f> pts_3d_in_curr;
             helperTriangulatePoints(
                 prev_frame->keypoints_, frame->keypoints_,
-                frame->inliers_matches_, R, t, K,
+                frame->inlier_matches_, R, t, K,
                 pts_3d_in_curr);
             frame->inliers_pts3d_ = pts_3d_in_curr;
 

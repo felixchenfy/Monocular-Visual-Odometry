@@ -31,7 +31,7 @@ public:
   vector<DMatch> matches_; // matches with the previous frame
   // vector<int> inliers_of_matches_; // inliers index with respect to the matches
   // vector<int> inliers_of_all_pts_; // inliers index with respect to all the points
-  vector<DMatch> inliers_matches_; // inliers matches index with respect to all the points
+  vector<DMatch> inlier_matches_; // inliers matches index with respect to all the points
   vector<Point3f> inliers_pts3d_; // matches with the previous frame
 
   // -- Other commonly used points
@@ -48,7 +48,7 @@ public:
   ~Frame() {}
   static Frame::Ptr createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp = -1);
 
-public: // Member functions
+public: // Below are deprecated. These were used in the two-frame-matching vo.
    void extractKeyPoints() { 
       my_geometry::extractKeyPoints(rgb_img_, keypoints_);
     }

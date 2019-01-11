@@ -24,10 +24,8 @@ add_library( my_slam SHARED
     frame.cpp
     vo.cpp
     vo_addFrame.cpp
-    # --------------not used ---------
-    # visual_odometry.cpp
-    # map.cpp
-    # mappoint.cpp
+    map.cpp
+    mappoint.cpp
 )
 
 target_link_libraries( my_basics

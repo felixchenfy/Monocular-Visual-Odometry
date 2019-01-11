@@ -19,6 +19,8 @@
 
 #include "my_slam/common_include.h"
 #include "my_slam/frame.h"
+#include "my_slam/map.h"
+#include "my_slam/mappoint.h"
 
 using namespace std;
 using namespace cv;
@@ -43,6 +45,19 @@ class VisualOdometry
     VOState vo_state_;
     deque<my_slam::Frame::Ptr> frames_; // store the previous frames
     
+    // Frame
+    Frame::Ptr curr_;
+
+    // Map
+    Map::Ptr map_;
+
+    // Map features
+    vector<KeyPoint> keypoints_curr_;
+    Mat descriptors_curr_;
+    vector<Point3f> matched_pts_3d_in_map_;
+    vector<int> matched_pts_2d_idx_;
+
+    // Debug
     bool DEBUG_STOP_PROGRAM_;
 
   public: // Constructor
@@ -50,6 +65,12 @@ class VisualOdometry
     void addFrame(my_slam::Frame::Ptr frame);
 
   public: // Functions
+    void matchFeatures();
+    void getMappointsInCurrentView(
+      vector<MapPoint::Ptr> &candidate_mappoints_in_map,
+      Mat &candidate_descriptors_in_map
+    );
+
 };
 
 } // namespace my_slam

@@ -155,7 +155,7 @@ void helperEstiMotionByEssential(
     const vector<DMatch> &matches,
     const Mat &K,
     Mat &R, Mat &t,
-    vector<DMatch> &inliers_matches,
+    vector<DMatch> &inlier_matches,
     const bool print_res)
 {
     vector<Point2f> pts_in_img1, pts_in_img2;
@@ -163,20 +163,20 @@ void helperEstiMotionByEssential(
     Mat essential_matrix;
     vector<int> inliers_index;
     estiMotionByEssential(pts_in_img1, pts_in_img2, K, essential_matrix, R, t, inliers_index);
-    inliers_matches.clear();
+    inlier_matches.clear();
     for (int idx : inliers_index)
     {
         const DMatch &m=matches[idx];
-        inliers_matches.push_back(
+        inlier_matches.push_back(
             DMatch(m.queryIdx,m.trainIdx,m.distance));
     }
 }
 
 // Get the 3d-2d corrsponding points
-// First find curr_inliers_matches.train that appears also in prev_dmatch.query,
+// First find curr_inlier_matches.train that appears also in prev_dmatch.query,
 void helperFind3Dto2DCorrespondences(
-    const vector<DMatch> &curr_inliers_matches, const vector<KeyPoint> &curr_kpts,
-    const vector<DMatch> &prev_inliers_matches, const vector<Point3f> &prev_inliers_pts3d,
+    const vector<DMatch> &curr_inlier_matches, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &prev_inlier_matches, const vector<Point3f> &prev_inliers_pts3d,
     vector<Point3f> &pts_3d, vector<Point2f> &pts_2d)
 {
     pts_3d.clear();
@@ -185,20 +185,20 @@ void helperFind3Dto2DCorrespondences(
     // Set up a table to store the index of pts_3d in prev_frame
     map<int, int> table;
     int cnt_inliers = 0;
-    for(int i=0;i<prev_inliers_matches.size();i++){
-        const DMatch &m=prev_inliers_matches[i];
+    for(int i=0;i<prev_inlier_matches.size();i++){
+        const DMatch &m=prev_inlier_matches[i];
         table[m.trainIdx] = i;
     }
 
-    // search curr_inliers_matches.query in table
-    const int curr_dmatch_size = curr_inliers_matches.size();
+    // search curr_inlier_matches.query in table
+    const int curr_dmatch_size = curr_inlier_matches.size();
     for (int i = 0; i < curr_dmatch_size; i++)
     {
-        int prev_pt_idx = curr_inliers_matches[i].queryIdx;
+        int prev_pt_idx = curr_inlier_matches[i].queryIdx;
         if (table.find(prev_pt_idx) != table.end())
         { // if find a correspondance
             pts_3d.push_back(prev_inliers_pts3d[table[prev_pt_idx]]);
-            pts_2d.push_back(curr_kpts[curr_inliers_matches[i].trainIdx].pt);
+            pts_2d.push_back(curr_kpts[curr_inlier_matches[i].trainIdx].pt);
         }
     }
 }
@@ -206,14 +206,14 @@ void helperFind3Dto2DCorrespondences(
 // Triangulate points
 void helperTriangulatePoints(
     const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
-    const vector<DMatch> &curr_inliers_matches,
+    const vector<DMatch> &curr_inlier_matches,
     const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
     const Mat &K,
     vector<Point3f> &pts_3d_in_curr
 ){
 
     vector<Point2f> pts_img1, pts_img2;
-    extractPtsFromMatches(prev_kpts, curr_kpts, curr_inliers_matches, pts_img1, pts_img2);
+    extractPtsFromMatches(prev_kpts, curr_kpts, curr_inlier_matches, pts_img1, pts_img2);
     
     vector<Point2f> pts_on_np1, pts_on_np2; // matched points on camera normalized plane
     for (const Point2f &pt : pts_img1)

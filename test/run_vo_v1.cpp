@@ -43,29 +43,33 @@ bool drawResultByPcl(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, co
 
 int main(int argc, char **argv)
 {
-    // Read in image filenames and camera prameters.
+    // -- Read in image filenames and camera prameters.
     assert(checkInputArguments(argc, argv));
-    const string config_file = argv[1];
-    bool print_res = false;
-    vector<string> image_paths = my_basics::readImagePaths(config_file, 150, print_res);
-    cv::Mat K = my_basics::readCameraIntrinsics(config_file); // camera intrinsics
-    my_geometry::Camera::Ptr camera(                          // init a camera class with common transformations
-        new my_geometry::Camera(K));
-    my_basics::Config::setParameterFile( // just to remind to set this config file.
-        config_file);                    // Following algorithms will read from it for setting params.
+    const string CONFIG_FILE = argv[1];
+    const bool PRINT_RES = false;
 
-    // Prepare Pcl display
+    vector<string> image_paths = my_basics::readImagePaths(CONFIG_FILE, 150, PRINT_RES);
+    
+    cv::Mat K = my_basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
+
+    // Init a camera class to store K, and might be used to provide common transformations
+    my_geometry::Camera::Ptr camera( new my_geometry::Camera(K));
+
+    // Just to remind to set this config file. Following algorithms will read from it for setting params.
+    my_basics::Config::setParameterFile( CONFIG_FILE);                    
+
+    // -- Prepare Pcl display
     my_display::PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
 
-    // Prepare opencv display
+    // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
     cv::moveWindow(IMAGE_WINDOW_NAME, 500, 50);
 
-    // Setup for vo
+    // -- Setup for vo
     my_slam::VisualOdometry::Ptr vo(new my_slam::VisualOdometry);
 
 
-    // Iterate through images
+    // -- Iterate through images
     for (int img_id = 0; img_id < (int)image_paths.size(); img_id++)
     {
 
