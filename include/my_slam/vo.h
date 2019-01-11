@@ -21,6 +21,7 @@
 #include "my_slam/frame.h"
 #include "my_slam/map.h"
 #include "my_slam/mappoint.h"
+#include "my_slam/motion_funcs.h"
 
 using namespace std;
 using namespace cv;

@@ -14,11 +14,11 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     curr_ = frame;
     const int img_id = curr_->id_;
     const Mat &K = curr_->camera_->K_;
-
     // Vars
 
     // Start
-    while(1){
+    while (1)
+    {
         printf("\n\n=============================================\n");
         printf("Start processing the %dth image.\n", img_id);
 
@@ -28,20 +28,20 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         cout << "Number of keypoints: " << curr_->keypoints_.size() << endl;
 
         // vo_state_: BLANK -> INITIALIZATION
-        // static Mat 
+        // static Mat
         if (vo_state_ == BLANK)
         {
             curr_->T_w_c_ = Mat::eye(4, 4, CV_64F);
-            curr_->R_curr_to_prev_ = Mat::eye(3, 3, CV_64F);
-            curr_->t_curr_to_prev_ = Mat::zeros(3, 1, CV_64F);
+            // curr_->R_curr_to_prev_ = Mat::eye(3, 3, CV_64F);
+            // curr_->t_curr_to_prev_ = Mat::zeros(3, 1, CV_64F);
             vo_state_ = INITIALIZATION;
 
             // Update initialization parameters
-            init_frame_=curr_;
-            init_frame_keypoints_=curr_->keypoints_;
-            init_frame_descriptors_=curr_->descriptors_.clone();
-
-        }else if (vo_state_ == INITIALIZATION)
+            init_frame_ = curr_;
+            init_frame_keypoints_ = curr_->keypoints_;
+            init_frame_descriptors_ = curr_->descriptors_.clone();
+        }
+        else if (vo_state_ == INITIALIZATION)
         {
             // Match features
             my_geometry::matchFeatures(init_frame_descriptors_, curr_->descriptors_, curr_->matches_);
@@ -93,13 +93,13 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             if (VO_INIT_FLAG_KPT_DIST)
             {
-                cout << "Large movement detected at curr_ " << img_id << ". Start initialization" << endl;
+                cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             }
             else
             { // skip this curr_
                 curr_->T_w_c_ = init_frame_->T_w_c_;
-                curr_->R_curr_to_prev_ = init_frame_->R_curr_to_prev_;
-                curr_->t_curr_to_prev_ = init_frame_->t_curr_to_prev_;
+                // curr_->R_curr_to_prev_ = init_frame_->R_curr_to_prev_;
+                // curr_->t_curr_to_prev_ = init_frame_->t_curr_to_prev_;
                 break;
             }
 
@@ -134,20 +134,20 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // -- Update current camera pos
             Mat T_curr_to_prev = transRt2T(R, t);
             curr_->T_w_c_ = init_frame_->T_w_c_ * T_curr_to_prev.inv();
-            curr_->R_curr_to_prev_ = R;
-            curr_->t_curr_to_prev_ = t;
+            // curr_->R_curr_to_prev_ = R;
+            // curr_->t_curr_to_prev_ = t;
             curr_->inlier_matches_ = inlier_matches;
             curr_->inliers_pts3d_ = pts3d_in_cam2;
 
             // --Update vo state
             vo_state_ = OK;
 
-            ref_=curr_;
+            ref_ = curr_;
         }
         else if (vo_state_ == OK)
         {
 
- // Push previous curr_'s keypoints to a local map
+            // Push previous curr_'s keypoints to a local map
             // Match features (Simulate the matching process)
 
             // Insert inlier_matches' keypoints into the local map
@@ -197,7 +197,6 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             ref_->matches_ = tmp_matches;
             ref_->inlier_matches_ = tmp_inlier_matches;
 
-        
             // Match features
             curr_->matchFeatures(ref_);
 
@@ -250,8 +249,6 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // -- Update current camera pos
             Mat T_curr_to_prev = transRt2T(R, t);
             curr_->T_w_c_ = ref_->T_w_c_ * T_curr_to_prev.inv();
-            curr_->R_curr_to_prev_ = R;
-            curr_->t_curr_to_prev_ = t;
 
             //DEBUG
             invRt(R, t);
@@ -259,20 +256,29 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // --Update vo state
             vo_state_ = vo_state_; // still OK
-            frames_.push_back(curr_);
-            ref_=curr_;
+            ref_ = curr_;
         }
         break;
     }
 
     // Print
-    // cout << "R_curr_to_prev_: " << curr_->R_curr_to_prev_ << endl;
-    // cout << "t_curr_to_prev_: " << curr_->t_curr_to_prev_ << endl;
+    
+    if (vo_state_ == OK)
+    {
+        Frame::Ptr tmp_ref=frames_.back();
+        cout<<tmp_ref->T_w_c_<<endl;
+        Mat R, t, T = computeT_FromFrame1to2(tmp_ref, curr_);
+        getRtFromT(T, R, t);
+        cout << "R_prev_to_curr: " << R << endl;
+        cout << "t_prev_to_curr: " << t.t() << endl;
+    }
 
     // Save to buff.
-    // frames_.push_back(curr_);
-    // if (frames_.size() > 10)
-    //     frames_.pop_front();
+    frames_.push_back(curr_);
+    if (frames_.size() > 10)
+        frames_.pop_front();
+        
+    cout<<"\nEnd of a frame"<<endl;
 }
 
 } // namespace my_slam

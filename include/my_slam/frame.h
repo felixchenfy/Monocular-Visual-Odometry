@@ -40,8 +40,8 @@ public:
   // pose
   my_geometry::Camera::Ptr camera_;
   Mat T_w_c_; // transform from camera to world
-  Mat R_curr_to_prev_;
-  Mat t_curr_to_prev_;
+  // Mat R_curr_to_prev_;
+  // Mat t_curr_to_prev_;
 
 public:
   Frame() {}
@@ -63,7 +63,11 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
         true // print result
         );
     }
+  public: // helper functions
+ 
 };
+
+
 
 } // namespace my_slam
 

@@ -69,3 +69,12 @@ The setence below in .yaml gives an error:
 Error: "Bad format of floating-point constant in function icvProcessSpecialDouble".
 Solution:
 > suffix: ".png"
+
+## Smart pointer
+I met a bug of "Segmentation fault" due to Smart pointer.
+(Not explicitly tested, but it seems its due to this matter.
+ Althought it looks strange and unreasonable.)
+	pointer p1=xxx, p2=xxx
+	pointer p3=p1
+	p1=p2 // After this, p1's originally pointed data will be destroyed
+	cout << p3 // This gives an error
