@@ -88,6 +88,18 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     }
     int num_solutions = list_R.size();
 
+    // Convert the inliers to the DMatch of the original points
+    for (int i = 0; i < num_solutions; i++)
+    {
+        list_matches.push_back(vector<DMatch>());
+        const vector<int> &inliers = list_inliers[i];
+        for (const int &idx : inliers)
+        {
+            list_matches[i].push_back(
+                DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
+        }
+    }
+
     // Triangulation for all 3 solutions
     // return: vector<vector<Point3f>> sols_pts3d_in_cam1;
     for (int i = 0; i < num_solutions; i++)
@@ -112,17 +124,6 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         }
     }
 
-    // Convert the inliers to the DMatch of the original points
-    for (int i = 0; i < num_solutions; i++)
-    {
-        list_matches.push_back(vector<DMatch>());
-        const vector<int> &inliers = list_inliers[i];
-        for (const int &idx : inliers)
-        {
-            list_matches[i].push_back(
-                DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
-        }
-    }
 
     // Change frame
     // Caustion: This should be done after all other algorithms

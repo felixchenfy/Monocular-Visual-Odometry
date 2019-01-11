@@ -22,3 +22,6 @@ vector A = B; // This is a memory copy. Later if change B, A won't change.
 deque is basically same as vector, but:  
 supports two-ends constant-time insert and delete, while vector only supports one end.
 
+
+# Euler Angle of cv::Rodrigues(input, output)
+Axis of r_vec: x, y, z
