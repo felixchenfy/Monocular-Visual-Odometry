@@ -54,6 +54,7 @@ public: // Member variables
   // Frame
   Frame::Ptr curr_;
   Frame::Ptr ref_;
+  Mat prev_T_w_c_; // pos of previous frame
 
   // Map
   Map::Ptr map_;

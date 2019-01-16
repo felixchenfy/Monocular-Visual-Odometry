@@ -20,6 +20,7 @@ namespace my_basics
 
 // ---------------- datatype conversion ----------------
 Mat Point3f_to_Mat(const Point3f &p);
+Mat Point3f_to_Mat4x1(const Point3f &p);
 Point3f Mat_to_Point3f(const Mat &p);
 Mat Point2f_to_Mat(const Point2f &p);
 

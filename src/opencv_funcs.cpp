@@ -8,6 +8,9 @@ Mat Point3f_to_Mat(const Point3f &p)
 {
     return (Mat_<double>(3, 1) << p.x, p.y, p.z);
 }
+Mat Point3f_to_Mat4x1(const Point3f &p){
+    return (Mat_<double>(4, 1) << p.x, p.y, p.z, 1);
+}
 
 Point3f Mat_to_Point3f(const Mat &p){
     return Point3f(p.at<double>(0,0), p.at<double>(1,0), p.at<double>(2,0));

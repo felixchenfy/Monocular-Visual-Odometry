@@ -119,11 +119,11 @@ my_display::PclViewer::Ptr setUpPclDisplay()
     double x = 0.5 * view_point_dist,
            y = -1.0 * view_point_dist,
            z = -1.0 * view_point_dist;
-    double ea_x = -0.5, ea_y = 0, ea_z = 0;
+    double rotaxis_x = -0.5, rotaxis_y = 0, rotaxis_z = 0;
     string viewer_name = "my pcl viewer";
     my_display::PclViewer::Ptr pcl_displayer(
         new my_display::PclViewer(
-            viewer_name, x, y, z, ea_x, ea_y, ea_z));
+            viewer_name, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
     return pcl_displayer;
 }
 

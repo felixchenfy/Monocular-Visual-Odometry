@@ -40,7 +40,7 @@ class PclViewer
     // ----------------- constructor -----------------
     PclViewer(const string &viewer_name,
       double x = 1.0, double y = -1.0, double z = -1.0, 
-      double ea_x = -0.5, double ea_y = 0, double ea_z = 0
+      double rotaxis_x = -0.5, double rotaxis_y = 0, double rotaxis_z = 0
     );
     void createViewer(const string &viewer_name);
 

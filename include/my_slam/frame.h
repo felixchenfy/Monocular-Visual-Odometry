@@ -4,11 +4,13 @@
 #define FRAME_H
 
 #include "my_slam/common_include.h"
+#include "my_basics/opencv_funcs.h"
 #include "my_geometry/camera.h"
 #include "my_geometry/feature_match.h"
-
 using namespace std;
 using namespace cv;
+using namespace my_basics;
+using namespace my_geometry;
 
 namespace my_slam
 {
@@ -65,7 +67,8 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
         true // print result
         );
     }
-  public: // helper functions
+  bool isInFrame ( const Point3f& p_world);
+  bool isInFrame ( const Mat& p_world);
  
 };
 

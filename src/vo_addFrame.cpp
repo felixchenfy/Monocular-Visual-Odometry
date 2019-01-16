@@ -130,6 +130,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         }
         else if (vo_state_ == OK)
         {
+            // curr_->T_w_c_ =prev_T_w_c_; // give an initial estimation of the current pos
+            // 爲什麼我加了這句以後，在第5帧左右会出错？
 
             // Push previous curr_'s keypoints to a local map
             // Match features (Simulate the matching process)
@@ -233,7 +235,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     // keyframes_.push_back(curr_);
     // if (keyframes_.size() > 10)
         // keyframes_.pop_front();
-
+    prev_T_w_c_=frame->T_w_c_;
     cout<<"\nEnd of a frame"<<endl;
 }
 

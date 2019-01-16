@@ -22,7 +22,7 @@ namespace my_display
 // constructor
 PclViewer::PclViewer(const string &viewer_name,
                      double x, double y, double z,
-                     double ea_x, double ea_y, double ea_z)
+                     double rotaxis_x, double rotaxis_y, double rotaxis_z)
 {
     // Set names
     viewer_name_ = viewer_name;
@@ -44,7 +44,7 @@ PclViewer::PclViewer(const string &viewer_name,
     viewer_->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_SIZE, camera_traj_name_);
 
     // Set viewer angle
-    setViewerPose(*viewer_, x, y, z, ea_x, ea_y, ea_z);
+    setViewerPose(*viewer_, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z);
 }
 
 void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
