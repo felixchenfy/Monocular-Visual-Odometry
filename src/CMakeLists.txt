@@ -14,9 +14,9 @@ add_library(my_display SHARED
 )
 
 add_library(my_geometry SHARED
+    camera.cpp
     feature_match.cpp
     epipolar_geometry.cpp
-    camera.cpp
     motion_estimation.cpp
 )
 

@@ -11,12 +11,22 @@ void Config::setParameterFile( const std::string& filename )
 
     /* !!! In OpenCV 4.0, I have to use "new" to get the FileStorage.new */
     /* !!! In OpenCV 3.2, There is no need to use new.  */
+
+    // 4.0
     cv::FileStorage *fs=new cv::FileStorage( filename, cv::FileStorage::READ );
     if ( fs->isOpened() == false ){
             std::cerr<<"Parameter file "<<filename<<" does not exist."<<std::endl;
             return;
         }
     config_->file_ = *fs;
+
+    // 3.2
+    // cv::FileStorage fs=cv::FileStorage( filename, cv::FileStorage::READ );
+    // if ( fs.isOpened() == false ){
+    //         std::cerr<<"Parameter file "<<filename<<" does not exist."<<std::endl;
+    //         return;
+    //     }
+    // config_->file_ = fs;
 
 }
 
