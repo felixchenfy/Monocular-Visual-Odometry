@@ -26,7 +26,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const bool compute_homography = true,
     const bool is_frame_cam2_to_cam1=true);
 
-double helperEvaluateEstimationsError(
+int helperEvaluateEstimationsError(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,

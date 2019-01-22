@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         // bin/test_epipolor_geometry rgb_00000.png rgb_00001.png # inliers = 90+
         // bin/test_epipolor_geometry rgb_00003.png rgb_00004.png # inliers = 35
         // bin/test_epipolor_geometry rgb_00004.png rgb_00005.png # inliers = 90+
-        // bin/test_epipolor_geometry image0001.jpg image0002.jpg # inliers = 90+
+        // bin/test_epipolor_geometry image0001.jpg image0015.jpg # inliers = 90+
         IDX_TEST_CASE=-1;
         img_file1 = argv[1];
         img_file2 = argv[2];
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     vector<Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool print_res=true, compute_homography=false, is_frame_cam2_to_cam1=false;
+    const bool print_res=true, compute_homography=true, is_frame_cam2_to_cam1=true;
     helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,

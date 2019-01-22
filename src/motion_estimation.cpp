@@ -57,12 +57,13 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<Mat> R_h_list, t_h_list, normal_list;
     vector<int> inliers_index_h; // index of the inliers
     Mat homography_matrix;
-    if (compute_homography){
+    if (compute_homography)
+    {
         estiMotionByHomography(pts_img1, pts_img2, K,
-                            /*output*/
-                            homography_matrix,
-                            R_h_list, t_h_list, normal_list,
-                            inliers_index_h);
+                               /*output*/
+                               homography_matrix,
+                               R_h_list, t_h_list, normal_list,
+                               inliers_index_h);
         removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
     }
     int num_h_solutions = R_h_list.size();
@@ -124,12 +125,13 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         }
     }
 
-
     // Change frame
     // Caustion: This should be done after all other algorithms
-    if (is_motion_cam2_to_cam1==false){
-        for(int i=0;i<num_solutions;i++){
-            invRt(list_R[i],list_t[i]);
+    if (is_motion_cam2_to_cam1 == false)
+    {
+        for (int i = 0; i < num_solutions; i++)
+        {
+            invRt(list_R[i], list_t[i]);
         }
     }
 
@@ -138,7 +140,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     {
         print_EpipolarError_and_TriangulationResult_By_Solution(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
-            sols_pts3d_in_cam1,list_inliers, list_R, list_t, K);
+            sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
     if (print_res && compute_homography)
     {
@@ -146,7 +148,6 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
         //     sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
-
 }
 
 void helperEstiMotionByEssential(
@@ -166,9 +167,9 @@ void helperEstiMotionByEssential(
     inlier_matches.clear();
     for (int idx : inliers_index)
     {
-        const DMatch &m=matches[idx];
+        const DMatch &m = matches[idx];
         inlier_matches.push_back(
-            DMatch(m.queryIdx,m.trainIdx,m.distance));
+            DMatch(m.queryIdx, m.trainIdx, m.distance));
     }
 }
 
@@ -185,8 +186,9 @@ void helperFind3Dto2DCorrespondences(
     // Set up a table to store the index of pts_3d in prev_frame
     map<int, int> table;
     int cnt_inliers = 0;
-    for(int i=0;i<prev_inlier_matches.size();i++){
-        const DMatch &m=prev_inlier_matches[i];
+    for (int i = 0; i < prev_inlier_matches.size(); i++)
+    {
+        const DMatch &m = prev_inlier_matches[i];
         table[m.trainIdx] = i;
     }
 
@@ -209,12 +211,12 @@ void helperTriangulatePoints(
     const vector<DMatch> &curr_inlier_matches,
     const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
     const Mat &K,
-    vector<Point3f> &pts_3d_in_curr
-){
+    vector<Point3f> &pts_3d_in_curr)
+{
 
     vector<Point2f> pts_img1, pts_img2;
     extractPtsFromMatches(prev_kpts, curr_kpts, curr_inlier_matches, pts_img1, pts_img2);
-    
+
     vector<Point2f> pts_on_np1, pts_on_np2; // matched points on camera normalized plane
     for (const Point2f &pt : pts_img1)
         pts_on_np1.push_back(pixel2camNormPlane(pt, K));
@@ -222,17 +224,16 @@ void helperTriangulatePoints(
         pts_on_np2.push_back(pixel2camNormPlane(pt, K));
     const Mat &R = R_curr_to_prev, &t = t_curr_to_prev; //rename
     vector<int> inliers;
-    for(int i=0;i<pts_on_np1.size();i++)inliers.push_back(i);// all are inliers
+    for (int i = 0; i < pts_on_np1.size(); i++)
+        inliers.push_back(i);       // all are inliers
     vector<Point3f> pts_3d_in_prev; // pts 3d pos to compute
     doTriangulation(pts_on_np1, pts_on_np2, R, t, inliers, pts_3d_in_prev);
 
     for (const Point3f &pt3d : pts_3d_in_prev)
         pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
-
 }
 
-
-double helperEvaluateEstimationsError(
+int helperEvaluateEstimationsError(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,
@@ -259,7 +260,7 @@ double helperEvaluateEstimationsError(
         double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
 
         // In image frame,  the error between triangulation and real
-        double err_triangulation = 0;
+        double err_triangulation = 0; // more correctly called: symmetric transfer error
         int num_inlier_pts = inlpts1.size();
         for (int idx_inlier = 0; idx_inlier < num_inlier_pts; idx_inlier++)
         {
@@ -277,10 +278,46 @@ double helperEvaluateEstimationsError(
         else
             err_triangulation = sqrt(err_triangulation / 2.0 / num_inlier_pts);
 
-        // print
+        // Store the error
         list_error_epipolar.push_back(err_epipolar);
         list_error_triangulation.push_back(err_triangulation);
     }
+
+    // -- Choose a good solution
+    int idx_best_result;
+    if (num_solutions == 1)
+    {
+        idx_best_result = 0;
+    }
+    else
+    {
+
+        // Choose the best H to compare it with K
+        idx_best_result = 1; // Set the 1st one in H as the best result
+        if (num_solutions > 3)
+        { // 1 K, 2 H
+            int i = idx_best_result;
+            double largest_norm_z = abs(list_normal[i].at<double>(2, 0));
+            // Loop through the result ones
+            for (; i < num_solutions; i++)
+            {
+                double ith_norm_z = abs(list_normal[i].at<double>(2, 0));
+                if (ith_norm_z > largest_norm_z)
+                {
+                    largest_norm_z = ith_norm_z;
+                    idx_best_result = i;
+                }
+            }
+        }
+
+        // Compare H and K by triangulation error (symmetric transfer error)
+        double error_K = list_error_triangulation[0];
+        double error_H = list_error_triangulation[idx_best_result];
+        if (error_K < error_H)
+            idx_best_result = 0;
+    }
+
+    // -- Print out result
     if (print_res)
     {
         printf("\n------------------------------------\n");
@@ -296,10 +333,13 @@ double helperEvaluateEstimationsError(
             printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
             printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
         }
+        
+        printf("\n------------------------------------\n");
+        cout << "The best solution among K and H is: " << idx_best_result << endl;
+
     }
+    return idx_best_result;
 }
-
-
 
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------
@@ -434,7 +474,7 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
         const Mat &R = list_R[j], &t = list_t[j];
         const vector<int> &inliers = list_inliers[j];
         int num_inliers = inliers.size();
-        const int MAX_TO_PRINT=5;
+        const int MAX_TO_PRINT = 5;
         for (int _idx_inlier = 0; _idx_inlier < min(MAX_TO_PRINT, num_inliers); _idx_inlier++)
         {
             int idx_inlier = num_inliers - 1 - _idx_inlier;

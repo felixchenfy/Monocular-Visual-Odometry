@@ -41,7 +41,7 @@ double scalePointPos(Point3f &p, double scale);
 double calcMatNorm(const Mat &mat);
 
 // ---------------- Print ----------------
-void print_MatProperty(cv::Mat &M); // print data type and size
+void print_MatProperty(const cv::Mat &M); // print data type and size
 void print_R_t(const Mat &R, const Mat &t);
 string cvMatType2str(int cvMatType);
 

@@ -111,7 +111,7 @@ double calcMatNorm(const Mat &mat){
 }
 // ---------------- Print ----------------
 
-void print_MatProperty(Mat &M)
+void print_MatProperty(const Mat &M)
 {
     string ty = cvMatType2str(M.type());
     printf("Mat: type = %s, size = %dx%d \n", ty.c_str(), M.rows, M.cols);
