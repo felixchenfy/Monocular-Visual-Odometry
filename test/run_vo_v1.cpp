@@ -38,8 +38,7 @@ const string IMAGE_WINDOW_NAME = "window name";
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
 my_display::PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo,
-                     my_display::PclViewer::Ptr pcl_displayer);
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_display::PclViewer::Ptr pcl_displayer);
 
 int main(int argc, char **argv)
 {
@@ -87,7 +86,7 @@ int main(int argc, char **argv)
 
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
-        bool pcl_draw_good = drawResultByPcl(rgb_img, frame, vo, pcl_displayer);
+        bool pcl_draw_good = drawResultByPcl(vo, pcl_displayer);
 
         // Return
         cout << "Finished an image" << endl;
@@ -158,11 +157,11 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img,
     return true;
 }
 
-bool drawResultByPcl(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo,
-                     my_display::PclViewer::Ptr pcl_displayer)
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_display::PclViewer::Ptr pcl_displayer)
 {
 
     Mat R, R_vec, t;
+    my_slam::Frame::Ptr frame = vo->curr_;
     getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
 
@@ -173,6 +172,7 @@ bool drawResultByPcl(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, co
     //      << t.t() << endl;
 
     pcl_displayer->updateCameraPose(R_vec, t);
+
     unsigned char r = 255, g = 0, b = 0;
     pcl_displayer->deletePoints();
     for (const Point3f &pt3d : frame->inliers_pts3d_)

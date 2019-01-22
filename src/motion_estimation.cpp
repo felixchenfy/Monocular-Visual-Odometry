@@ -252,11 +252,11 @@ int helperEvalErrorsAndChooseEH(
 {
     vector<double> list_error_epipolar;
     vector<double> list_error_triangulation;
-    vector<double> list_score;
+    vector<double> list_mean_score;
     double score_ratio;
     int num_solutions = list_R.size();
 
-    const double TF = 3.84, TH = 5.99; // Param for computing score. Here F(fundmental)==E(essential)
+    const double TF = 3.84, TH = 5.99; // Param for computing mean_score. Here F(fundmental)==E(essential)
 
     for (int i = 0; i < num_solutions; i++)
     {
@@ -269,7 +269,7 @@ int helperEvalErrorsAndChooseEH(
         // epipolar error
         double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
 
-        // param for score
+        // param for mean_score
         double TM;
         if (i == 0)
             TM = TF;
@@ -278,7 +278,7 @@ int helperEvalErrorsAndChooseEH(
 
         // In image frame,  the error between triangulation and real
         double err_triangulation = 0; // more correctly called: symmetric transfer error
-        double score = 0;             // f_rc(d2)+f_cr(d2) from ORB-SLAM
+        double mean_score = 0;             // f_rc(d2)+f_cr(d2) from ORB-SLAM
         int num_inlier_pts = inlpts1.size();
         for (int idx_inlier = 0; idx_inlier < num_inlier_pts; idx_inlier++)
         {
@@ -290,18 +290,20 @@ int helperEvalErrorsAndChooseEH(
             Point2f pts2dc2 = cam2pixel(pts3dc2, K);
             double dist1 = calcErrorSquare(p1, pts2dc1), dist2 = calcErrorSquare(p2, pts2dc2);
             err_triangulation += dist1 + dist2;
-            score += computeScoreForEH(dist1, TM) + computeScoreForEH(dist2, TM);
+            mean_score += computeScoreForEH(dist1, TM) + computeScoreForEH(dist2, TM);
             // printf("%dth inlier, err_triangulation = %f\n", idx_inlier, err_triangulation);
         }
-        if (num_inlier_pts == 0)
+        if (num_inlier_pts == 0){
             err_triangulation = 9999999999;
-        else
+            mean_score = 0;
+        }else{
             err_triangulation = sqrt(err_triangulation / 2.0 / num_inlier_pts);
-
+            mean_score /= num_inlier_pts;
+        }
         // Store the error
         list_error_epipolar.push_back(err_epipolar);
         list_error_triangulation.push_back(err_triangulation);
-        list_score.push_back(score);
+        list_mean_score.push_back(mean_score);
     }
 
     // -- Choose a good solution
@@ -342,8 +344,8 @@ int helperEvalErrorsAndChooseEH(
         else
         {
 
-            double score_E = list_score[0];
-            double score_H = list_score[idx_best_result];
+            double score_E = list_mean_score[0];
+            double score_H = list_mean_score[idx_best_result];
             score_ratio = score_H / (score_H + score_E);
             if (score_E > score_H)
                 idx_best_result = 0;
@@ -365,7 +367,7 @@ int helperEvalErrorsAndChooseEH(
                 cout << "norm is:" << (list_normal[i]).t() << endl;
             printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
             printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
-            printf("-- Score = %f \n", list_score[i]);
+            printf("-- Score = %f \n", list_mean_score[i]);
         }
 
         printf("\n------------------------------------\n");

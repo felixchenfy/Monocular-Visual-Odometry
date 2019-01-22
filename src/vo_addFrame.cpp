@@ -58,24 +58,19 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 /*settings*/
                 print_res, compute_homography, is_frame_cam2_to_cam1);
 
-            // -- Compute errors of results of E/H estimation:
-            // [epipolar error] and [trigulation error on norm plane]
-            // for the 3 solutions of (E, H1, H2).
-            // Choosing a good solution might based on these criterias.
+            // -- Compute errors of results of E/H estimation and choose the best one
+            // Three things to compute: [epipolar error] and [trigulation error on norm plane] and [score]
+            //      for the 3 solutions of (E, H1, H2).
             int idx_best_solution = helperEvalErrorsAndChooseEH(
                 init_frame_keypoints_, curr_->keypoints_, list_matches,
                 sols_pts3d_in_cam1_by_triang, list_R, list_t, list_normal, K,
                 true); // print result
 
             // -- Check initialization condition
-            // Method 1: manually set an image id
-            const bool VO_INIT_FLAG_MANUAL = img_id >= FRAME_FOR_FIRST_ESSENTIAL;
-
-            // Method 2: check the distance between inlier points, run vo until there is a large movement.
+            // Check the distance between inlier points, run vo until there is a large movement.
             const bool VO_INIT_FLAG = checkIfVoGoodToInit(
                 init_frame_keypoints_, curr_->keypoints_, list_matches[0]);
-
-            if (VO_INIT_FLAG)
+            if ( VO_INIT_FLAG )
             {
                 cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             }
@@ -87,12 +82,9 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // -- Choose 1 solution from the 3 solutions.
             //      Results: R, t, inlier_matches, pts_3d in cam1 and cam2
-            // Currently, I'll just simply choose the result from essential matrix.
-            const int SOL_IDX = 0; // 0 corresponds to Essential matrix
-            // Need to read papers such as ORB-SLAM2.
-            vector<DMatch> &inlier_matches = list_matches[SOL_IDX];
-            Mat &R = list_R[SOL_IDX], &t = list_t[SOL_IDX];
-            vector<Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[SOL_IDX];
+            vector<DMatch> &inlier_matches = list_matches[idx_best_solution];
+            Mat &R = list_R[idx_best_solution], &t = list_t[idx_best_solution];
+            vector<Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[idx_best_solution];
             vector<Point3f> pts3d_in_cam2;
             for (const Point3f &p1 : pts3d_in_cam1)
                 pts3d_in_cam2.push_back(transCoord(p1, R, t));
@@ -160,13 +152,10 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
             Rodrigues(R_vec, R);            
             
-            // DEBUG
-            print_MatProperty(pnp_inliers_mask);       
-
             // -- Update current camera pos
             curr_->T_w_c_ = transRt2T(R, t).inv();
 
-            // -- add a keyframe
+            // -- Insert a keyframe is motion is large 
             Frame::Ptr prev_prev_keyframe;
             prev_prev_keyframe = keyframes_[keyframes_.size()-2];
             Mat T_key_to_curr = prev_prev_keyframe->T_w_c_.inv()*curr_->T_w_c_;
