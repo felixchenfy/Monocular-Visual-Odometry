@@ -233,20 +233,30 @@ void helperTriangulatePoints(
         pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
 }
 
-int helperEvaluateEstimationsError(
+double computeScoreForEH(double d2, double TM)
+{
+    double TAO = 5.99; // Same as TH
+    if (d2 < TM)
+        return TAO - d2;
+    else
+        return 0;
+}
+int helperEvalErrorsAndChooseEH(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,
     const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
     const Mat &K,
-    vector<double> &list_error_epipolar,
-    vector<double> &list_error_triangulation, // the error on the normalized image plane
     bool print_res)
 {
-    list_error_epipolar.clear();
-    list_error_triangulation.clear();
+    vector<double> list_error_epipolar;
+    vector<double> list_error_triangulation;
+    vector<double> list_score;
+    double score_ratio;
     int num_solutions = list_R.size();
+
+    const double TF = 3.84, TH = 5.99; // Param for computing score. Here F(fundmental)==E(essential)
 
     for (int i = 0; i < num_solutions; i++)
     {
@@ -259,8 +269,16 @@ int helperEvaluateEstimationsError(
         // epipolar error
         double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
 
+        // param for score
+        double TM;
+        if (i == 0)
+            TM = TF;
+        else
+            TM = TH;
+
         // In image frame,  the error between triangulation and real
         double err_triangulation = 0; // more correctly called: symmetric transfer error
+        double score = 0;             // f_rc(d2)+f_cr(d2) from ORB-SLAM
         int num_inlier_pts = inlpts1.size();
         for (int idx_inlier = 0; idx_inlier < num_inlier_pts; idx_inlier++)
         {
@@ -270,7 +288,9 @@ int helperEvaluateEstimationsError(
             Mat pts3dc2 = R * pts3dc1 + t;
             Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             Point2f pts2dc2 = cam2pixel(pts3dc2, K);
-            err_triangulation = err_triangulation + calcError(p1, pts2dc1) + calcError(p2, pts2dc2);
+            double dist1 = calcErrorSquare(p1, pts2dc1), dist2 = calcErrorSquare(p2, pts2dc2);
+            err_triangulation += dist1 + dist2;
+            score += computeScoreForEH(dist1, TM) + computeScoreForEH(dist2, TM);
             // printf("%dth inlier, err_triangulation = %f\n", idx_inlier, err_triangulation);
         }
         if (num_inlier_pts == 0)
@@ -281,6 +301,7 @@ int helperEvaluateEstimationsError(
         // Store the error
         list_error_epipolar.push_back(err_epipolar);
         list_error_triangulation.push_back(err_triangulation);
+        list_score.push_back(score);
     }
 
     // -- Choose a good solution
@@ -311,10 +332,22 @@ int helperEvaluateEstimationsError(
         }
 
         // Compare H and K by triangulation error (symmetric transfer error)
-        double error_K = list_error_triangulation[0];
-        double error_H = list_error_triangulation[idx_best_result];
-        if (error_K < error_H)
-            idx_best_result = 0;
+        if (0)
+        {
+            double error_E = list_error_triangulation[0];
+            double error_H = list_error_triangulation[idx_best_result];
+            if (error_E < error_H)
+                idx_best_result = 0;
+        }
+        else
+        {
+
+            double score_E = list_score[0];
+            double score_H = list_score[idx_best_result];
+            score_ratio = score_H / (score_H + score_E);
+            if (score_E > score_H)
+                idx_best_result = 0;
+        }
     }
 
     // -- Print out result
@@ -332,11 +365,12 @@ int helperEvaluateEstimationsError(
                 cout << "norm is:" << (list_normal[i]).t() << endl;
             printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
             printf("-- Triangulation error = %f \n", list_error_triangulation[i]);
+            printf("-- Score = %f \n", list_score[i]);
         }
-        
-        printf("\n------------------------------------\n");
-        cout << "The best solution among K and H is: " << idx_best_result << endl;
 
+        printf("\n------------------------------------\n");
+        cout << "The score_ratio is " << score_ratio << endl;
+        cout << "The best solution among K and H is: " << idx_best_result << endl;
     }
     return idx_best_result;
 }

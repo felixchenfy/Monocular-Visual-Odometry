@@ -109,15 +109,11 @@ int main(int argc, char **argv)
         print_res, compute_homography, is_frame_cam2_to_cam1);
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
-    vector<double> list_error_epipolar;
-    vector<double> list_error_triangulation;
-    helperEvaluateEstimationsError(
+    int idx_best_solution = helperEvalErrorsAndChooseEH(
         keypoints_1, keypoints_2, list_matches,
         sols_pts3d_in_cam1_by_triang,
         list_R, list_t, list_normal,
         K,
-        /*output*/
-        list_error_epipolar, list_error_triangulation,
         true); // print result
 
     // plot image

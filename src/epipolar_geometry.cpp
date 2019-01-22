@@ -233,7 +233,7 @@ void removeWrongTriangulations(
 }
 
 
-double calcError(const Point2f &p1, const Point2f &p2)
+double calcErrorSquare(const Point2f &p1, const Point2f &p2)
 {
     double dx = p1.x - p2.x, dy = p1.y - p2.y;
     return dx * dx + dy * dy;

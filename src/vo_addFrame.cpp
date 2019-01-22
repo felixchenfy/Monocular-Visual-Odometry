@@ -62,13 +62,9 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // [epipolar error] and [trigulation error on norm plane]
             // for the 3 solutions of (E, H1, H2).
             // Choosing a good solution might based on these criterias.
-            vector<double> list_error_epipolar;
-            vector<double> list_error_triangulation;
-            helperEvaluateEstimationsError(
+            int idx_best_solution = helperEvalErrorsAndChooseEH(
                 init_frame_keypoints_, curr_->keypoints_, list_matches,
                 sols_pts3d_in_cam1_by_triang, list_R, list_t, list_normal, K,
-                /*output*/
-                list_error_epipolar, list_error_triangulation,
                 true); // print result
 
             // -- Check initialization condition

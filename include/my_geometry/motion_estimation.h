@@ -26,15 +26,13 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const bool compute_homography = true,
     const bool is_frame_cam2_to_cam1=true);
 
-int helperEvaluateEstimationsError(
+int helperEvalErrorsAndChooseEH(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,
     const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
     const Mat &K,
-    vector<double> &list_error_epipolar,
-    vector<double> &list_error_triangulation,// the error on the normalized image plane
     bool print_res);
 
 // Estimate camera motion by Essential matrix.
