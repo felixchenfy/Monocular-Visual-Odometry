@@ -68,7 +68,7 @@ int main()
 
         // Display
         pcl_displayer->updateCameraPose(R_vec, t);
-        pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
+        // pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b); // This function is deprecated
         pcl_displayer->update();
         pcl_displayer->spinOnce(150);
         if (pcl_displayer->wasStopped())

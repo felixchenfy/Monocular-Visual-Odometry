@@ -37,8 +37,8 @@ bool checkInputArguments(int argc, char **argv);
 const string IMAGE_WINDOW_NAME = "window name";
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
-my_display::PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_display::PclViewer::Ptr pcl_displayer);
+PclViewer::Ptr setUpPclDisplay();
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, PclViewer::Ptr pcl_displayer);
 
 int main(int argc, char **argv)
 {
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     my_basics::Config::setParameterFile( CONFIG_FILE);                    
 
     // -- Prepare Pcl display
-    my_display::PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
+    PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
 
     // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
@@ -112,7 +112,7 @@ bool checkInputArguments(int argc, char **argv)
     return true;
 }
 
-my_display::PclViewer::Ptr setUpPclDisplay()
+PclViewer::Ptr setUpPclDisplay()
 {
     double view_point_dist = 3;
     double x = 0.5 * view_point_dist,
@@ -120,8 +120,8 @@ my_display::PclViewer::Ptr setUpPclDisplay()
            z = -1.0 * view_point_dist;
     double rotaxis_x = -0.5, rotaxis_y = 0, rotaxis_z = 0;
     string viewer_name = "my pcl viewer";
-    my_display::PclViewer::Ptr pcl_displayer(
-        new my_display::PclViewer(
+    PclViewer::Ptr pcl_displayer(
+        new PclViewer(
             viewer_name, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
     return pcl_displayer;
 }
@@ -157,7 +157,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img,
     return true;
 }
 
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_display::PclViewer::Ptr pcl_displayer)
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, PclViewer::Ptr pcl_displayer)
 {
 
     Mat R, R_vec, t;
@@ -174,13 +174,20 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_display::PclViewe
     pcl_displayer->updateCameraPose(R_vec, t);
 
     unsigned char r = 255, g = 0, b = 0;
-    pcl_displayer->deletePoints();
-    for (const Point3f &pt3d : frame->inliers_pts3d_)
-    {
-        Mat kpt_3d_pos_in_world = R * Point3f_to_Mat(pt3d) + t;
-        pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
-    }
 
+    // ------------------------------- Update points ----------------------------------------
+    // Draw current newly inserted points
+    // r = 255;
+    // g = 0;
+    // b = 0;
+    // pcl_displayer->deletePoints();
+    // for (const Point3f &pt3d : frame->inliers_pts3d_)
+    // {
+    //     Mat kpt_3d_pos_in_world = R * Point3f_to_Mat(pt3d) + t;
+    //     pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
+    // }
+
+    // -----------------------------------------------------------------------
     pcl_displayer->update();
     pcl_displayer->spinOnce(100);
     if (pcl_displayer->wasStopped())

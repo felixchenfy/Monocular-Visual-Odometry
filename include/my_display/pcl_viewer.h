@@ -29,9 +29,7 @@ class PclViewer
     typedef shared_ptr<PclViewer> Ptr;
 
     string viewer_name_;
-    string point_cloud_name_;
     string camera_frame_name_;
-    string camera_traj_name_;
 
     cv::Mat cam_R_vec_;
     cv::Mat cam_t_;
@@ -46,8 +44,6 @@ class PclViewer
 
   public:
     void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t);
-    void addPoint(const cv::Mat pt_3d_pos_in_world, uchar r, uchar g, uchar b);
-    void deletePoints();
     void update();
     void spinOnce(unsigned int millisecond);
     bool wasStopped();
