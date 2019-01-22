@@ -30,8 +30,9 @@ public:
   Mat rgb_img_;
   vector<KeyPoint> keypoints_;
   Mat descriptors_;
-  
-  vector<DMatch> matches_; // matches with the previous frame
+  vector<vector<unsigned char>> kpts_colors_; // rgb colors
+
+  vector<DMatch> matches_;        // matches with the previous frame
   vector<DMatch> inlier_matches_; // inliers matches index with respect to all the points
   vector<Point3f> inliers_pts3d_; // matches with the previous frame
 
@@ -53,26 +54,32 @@ public:
   static Frame::Ptr createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp = -1);
 
 public: // Below are deprecated. These were used in the two-frame-matching vo.
-   void extractKeyPoints() { 
-      my_geometry::extractKeyPoints(rgb_img_, keypoints_);
+  void extractKeyPoints()
+  {
+    my_geometry::extractKeyPoints(rgb_img_, keypoints_);
+  }
+  void computeDescriptors()
+  {
+    my_geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
+    kpts_colors_.clear();
+    for (KeyPoint kpt : keypoints_)
+    {
+      int x = floor(kpt.pt.x), y = floor(kpt.pt.y);
+      kpts_colors_.push_back(getPixelAt(rgb_img_, x, y));
     }
-    void computeDescriptors(){
-      my_geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
-    };
-    void matchFeatures(Frame::Ptr prev_frame){
-      my_geometry::matchFeatures(
+  };
+  void matchFeatures(Frame::Ptr prev_frame)
+  {
+    my_geometry::matchFeatures(
         // descriptors_, prev_frame->descriptors_,
         prev_frame->descriptors_, descriptors_,
         matches_,
         true // print result
-        );
-    }
-  bool isInFrame ( const Point3f& p_world);
-  bool isInFrame ( const Mat& p_world);
- 
+    );
+  }
+  bool isInFrame(const Point3f &p_world);
+  bool isInFrame(const Mat &p_world);
 };
-
-
 
 } // namespace my_slam
 

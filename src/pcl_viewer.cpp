@@ -109,7 +109,9 @@ void deletePoints(CloudPtr &cloud)
     cloud->points.clear();
 }
 
-// void PclViewer::updatePtsMap();
+// void PclViewer::updatePtsMap(vector<Mat> &pts3d){
+
+// }
 // void PclViewer::updatePtsInView();
 // void PclViewer::updatePtsCurr();
 

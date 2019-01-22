@@ -12,6 +12,7 @@
 
 #include "my_basics/io.h"
 #include "my_basics/config.h"
+#include "my_basics/opencv_funcs.h"
 
 #include "my_geometry/camera.h"
 #include "my_geometry/feature_match.h"
@@ -64,7 +65,8 @@ public: // Member variables
   Mat descriptors_curr_;
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
-
+  vector<Mat> newly_inserted_pts3d_;
+  
   // Debug
   bool DEBUG_STOP_PROGRAM_;
 
@@ -79,10 +81,10 @@ public: // Functions
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &candidate_descriptors_in_map);
 
-  void pushPointsToMap(
+  vector<Mat> pushPointsToMap(
       const vector<Point3f> &inliers_pts3d_in_curr,
       const Mat &T_w_curr,
-      const Mat &descriptors,
+      const Mat &descriptors,const vector<vector<unsigned char>> &kpts_colors,
       const vector<DMatch> &inlier_matches);
 
 public: // Initialization

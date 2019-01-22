@@ -45,21 +45,34 @@ bool VisualOdometry::checkIfVoGoodToInit(
     return mean_dist > 50;
 }
 
-void VisualOdometry::pushPointsToMap(
+vector<Mat> VisualOdometry::pushPointsToMap(
     const vector<Point3f> &inliers_pts3d_in_curr,
     const Mat &T_w_curr,
-    const Mat &descriptors,
+    const Mat &descriptors, const vector<vector<unsigned char>> &kpts_colors,
     const vector<DMatch> &inlier_matches)
 {
+    vector<Mat> newly_inserted_pts3d;
+
+    for (int i = 0; i < inlier_matches.size(); i++)
+    {
+        newly_inserted_pts3d.push_back(
+            Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr))
+        );
+    }
 
     for (int i = 0; i < inlier_matches.size(); i++)
     {
         int pt_idx = inlier_matches[i].trainIdx;
+        const vector<unsigned char> &rgb = kpts_colors[pt_idx];
+
         MapPoint::Ptr map_point(new MapPoint(
-            Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr)),
-            descriptors.row(pt_idx).clone()));
+            newly_inserted_pts3d[i],
+            descriptors.row(pt_idx).clone(),
+            rgb[0],rgb[1],rgb[2] 
+        ));
         map_->insertMapPoint(map_point);
     }
+    return newly_inserted_pts3d;
 }
 
 } // namespace my_slam

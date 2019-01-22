@@ -14,7 +14,9 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     curr_ = frame;
     const int img_id = curr_->id_;
     const Mat &K = curr_->camera_->K_;
-    // Vars
+    
+    // Reset some vars for display
+    newly_inserted_pts3d_.clear();
 
     // Start
     while (1)
@@ -105,12 +107,15 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
 
             // -- Push points to local map
-            pushPointsToMap(
+            vector<Mat> newly_inserted_pts3d = pushPointsToMap(
                 curr_->inliers_pts3d_,
                 curr_->T_w_c_,
                 curr_->descriptors_,
+                curr_->kpts_colors_,
                 curr_->inlier_matches_
             );
+            newly_inserted_pts3d_ = newly_inserted_pts3d; // update vo param for display
+
             // --Update vo state
             vo_state_ = OK;
             keyframes_.push_back(curr_);
@@ -195,6 +200,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 curr_->inliers_pts3d_,
                 curr_->T_w_c_,
                 curr_->descriptors_,
+                curr_->kpts_colors_,
                 curr_->inlier_matches_
             );
 

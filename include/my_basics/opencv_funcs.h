@@ -18,6 +18,9 @@ using namespace cv;
 namespace my_basics
 {
 
+// ---------------- image operation ----------------
+vector<unsigned char> getPixelAt(const Mat &image, int x, int y);
+
 // ---------------- datatype conversion ----------------
 Mat Point3f_to_Mat(const Point3f &p);
 Mat Point3f_to_Mat4x1(const Point3f &p);
@@ -45,5 +48,5 @@ void print_MatProperty(const cv::Mat &M); // print data type and size
 void print_R_t(const Mat &R, const Mat &t);
 string cvMatType2str(int cvMatType);
 
-}
+} // namespace my_basics
 #endif

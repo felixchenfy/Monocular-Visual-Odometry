@@ -186,7 +186,8 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, PclViewer::Ptr pcl_d
     //     Mat kpt_3d_pos_in_world = R * Point3f_to_Mat(pt3d) + t;
     //     pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
     // }
-
+    // updatePOints(vo->newly_inserted_pts3d_);
+    
     // -----------------------------------------------------------------------
     pcl_displayer->update();
     pcl_displayer->spinOnce(100);

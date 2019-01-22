@@ -4,6 +4,23 @@
 namespace my_basics
 {
 
+
+// ---------------- image operation ----------------
+vector<unsigned char> getPixelAt(const Mat &image, int x, int y)
+{
+    vector<unsigned char> rgb;
+    const unsigned char *row_ptr = image.ptr<unsigned char>(y);
+    const unsigned char *data_ptr = &row_ptr[x * image.channels()];
+    for (int c = 0; c != image.channels(); c++)
+    {
+        rgb.push_back(data_ptr[c]); // data为I(x,y)第c个通道的值
+    }
+    return rgb;
+}
+
+
+// ---------------- datatype conversion ----------------
+
 Mat Point3f_to_Mat(const Point3f &p)
 {
     return (Mat_<double>(3, 1) << p.x, p.y, p.z);

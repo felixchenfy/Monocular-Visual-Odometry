@@ -16,10 +16,14 @@ public: // Variables
     static unsigned long factory_id_;    // factory id
     unsigned long id_;
     Mat pos_;
+    unsigned char r_;
+    unsigned char g_;
+    unsigned char b_;
     Mat descriptor_; // Descriptor for matching 
 
 public: // Constructor
-    MapPoint (const Mat& pos,  const Mat& descriptor);
+    MapPoint (const Mat& pos,  const Mat& descriptor, 
+        unsigned char r=0, unsigned char g=0, unsigned char b=0);
 
 public: // Functions
 
