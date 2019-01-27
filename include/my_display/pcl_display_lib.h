@@ -3,8 +3,8 @@
 
 
 
-#ifndef PCL_VISUALIZATIONS_H
-#define PCL_VISUALIZATIONS_H
+#ifndef pcl_display_LIB_H
+#define pcl_display_LIB_H
 
 #include <memory>
 #include <string>

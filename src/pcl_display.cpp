@@ -1,6 +1,6 @@
 
-#include "my_display/pcl_viewer.h"
-#include "my_display/pcl_visualizations.h"
+#include "my_display/pcl_display.h"
+#include "my_display/pcl_display_lib.h"
 
 using namespace std;
 using namespace cv;

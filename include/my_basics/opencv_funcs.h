@@ -20,6 +20,7 @@ namespace my_basics
 
 // ---------------- image operation ----------------
 vector<unsigned char> getPixelAt(const Mat &image, int x, int y);
+unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb);
 
 // ---------------- datatype conversion ----------------
 Mat Point3f_to_Mat(const Point3f &p);

@@ -4,14 +4,14 @@
 The reason I made this class:
 PCL compiles really really slow. 
 If I include pcl libraries in my "main.cpp", it will be tooooo slow to compile and debug.
-So I encapsulate the essential functions, and include pcl libraries only in "pcl_viewer.cpp".
+So I encapsulate the essential functions, and include pcl libraries only in "pcl_display.cpp".
 In this way, there is no compiling but only linking to pcl when compiling "main.cpp".
 Instead of 15+ seconds, the linking only takes like a 3 seconds.
 */
 
 
-#ifndef PCL_VIEWER_H
-#define PCL_VIEWER_H
+#ifndef pcl_display_H
+#define pcl_display_H
 
 #include <memory>
 #include <string>

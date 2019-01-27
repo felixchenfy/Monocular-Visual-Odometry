@@ -18,6 +18,9 @@ vector<unsigned char> getPixelAt(const Mat &image, int x, int y)
     return rgb;
 }
 
+unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb){
+    return image.at<Vec3b>(row, col)[idx_rgb];
+}
 
 // ---------------- datatype conversion ----------------
 

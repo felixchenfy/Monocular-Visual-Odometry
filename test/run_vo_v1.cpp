@@ -24,7 +24,7 @@
 #include "my_slam/vo.h"
 
 // display
-#include "my_display/pcl_viewer.h"
+#include "my_display/pcl_display.h"
 using namespace my_display;
 
 using namespace std;
