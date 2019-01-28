@@ -70,8 +70,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // -- Push points to local map
             curr_->T_w_c_ = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv();
-            pushPointsToMap(curr_->inliers_pts3d_, curr_->T_w_c_,
-                curr_->descriptors_,curr_->kpts_colors_,curr_->inlier_matches_);
+            pushCurrPointsToMap();
 
             // --Update vo state
             vo_state_ = OK;
@@ -151,13 +150,9 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                     pts_3d_in_curr);
                 curr_->inliers_pts3d_ = pts_3d_in_curr;
 
-                // -- Push points into local map
-                pushPointsToMap(
-                    curr_->inliers_pts3d_,
-                    curr_->T_w_c_,
-                    curr_->descriptors_,
-                    curr_->kpts_colors_,
-                    curr_->inlier_matches_);
+                // -- Push points into local map !!! CHANGE FUNC
+                pushCurrPointsToMap();
+                optimizeMap();
 
                 keyframes_.push_back(curr_);
             }

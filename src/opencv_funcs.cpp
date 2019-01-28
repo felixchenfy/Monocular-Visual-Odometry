@@ -100,6 +100,9 @@ void getRtFromT(const Mat &T, Mat &R, Mat &t)
     // R = T(cv::Rect(0,0,3,3)).clone(); 
     // t = T(cv::Rect(3,0,1,3)).clone(); // x, y, width, height
 }
+Mat getPosFromT(const Mat &T){
+    return T(cv::Rect(3,0,1,3)).clone();
+}
 Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t)
 {
     Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
@@ -139,6 +142,12 @@ double calcMatNorm(const Mat &mat){
     double norm=sqrt(sum);
     return norm;
 }
+void normalize(Mat &mat){
+    double len = calcMatNorm(mat);
+    mat /= len;
+}
+
+
 // ---------------- Print ----------------
 
 void print_MatProperty(const Mat &M)

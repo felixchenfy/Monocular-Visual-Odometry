@@ -16,11 +16,12 @@ public: // Variables
     static unsigned long factory_id_;    // factory id
     unsigned long id_;
     Mat pos_;
+    Point3f norm_; // Normal of viewing direction 
     vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
 
 public: // Constructor
-    MapPoint (const Mat& pos,  const Mat& descriptor, 
+    MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,
         unsigned char r=0, unsigned char g=0, unsigned char b=0);
 
 public: // Functions

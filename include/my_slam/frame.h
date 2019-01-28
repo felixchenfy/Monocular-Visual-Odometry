@@ -79,6 +79,8 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   }
   bool isInFrame(const Point3f &p_world);
   bool isInFrame(const Mat &p_world);
+  Mat getCamCenter();
+  
 };
 
 } // namespace my_slam

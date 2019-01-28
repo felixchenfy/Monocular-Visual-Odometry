@@ -56,7 +56,7 @@ public: // Member variables
   Frame::Ptr curr_;
   Frame::Ptr ref_;
   Frame::Ptr newest_frame_; // temporarily store the newest frame
-  Mat prev_T_w_c_; // pos of previous frame
+  Mat prev_T_w_c_;          // pos of previous frame
 
   // Map
   Map::Ptr map_;
@@ -66,7 +66,7 @@ public: // Member variables
   Mat descriptors_curr_;
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
-  
+
   // Debug
   bool DEBUG_STOP_PROGRAM_;
 
@@ -75,27 +75,21 @@ public: // Constructor
   void addFrame(my_slam::Frame::Ptr frame);
 
 public: // Functions
-  // void matchFeatures();
-
-  void getMappointsInCurrentView(
-      vector<MapPoint::Ptr> &candidate_mappoints_in_map,
-      Mat &candidate_descriptors_in_map);
-
-  vector<Mat> pushPointsToMap(
-      const vector<Point3f> &inliers_pts3d_in_curr,
-      const Mat &T_w_curr,
-      const Mat &descriptors,const vector<vector<unsigned char>> &kpts_colors,
-      const vector<DMatch> &inlier_matches);
-
 public: // Initialization
-
-  void estimateMotionAnd3DPoints(Mat &R, Mat &t, 
-      vector<DMatch> &inlier_matches, vector<Point3f> &pts3d_in_curr);
+  void estimateMotionAnd3DPoints(Mat &R, Mat &t,
+                                 vector<DMatch> &inlier_matches, vector<Point3f> &pts3d_in_curr);
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
 
 public: // Tracking
   // void find3Dto2DCorrespondences()
   bool checkInsertingKeyframe(Frame::Ptr curr, Frame::Ptr ref);
+  void optimizeMap();
+
+public: // Mapping
+  void getMappointsInCurrentView(
+      vector<MapPoint::Ptr> &candidate_mappoints_in_map,
+      Mat &candidate_descriptors_in_map);
+  vector<Mat> pushCurrPointsToMap();
 };
 
 } // namespace my_slam

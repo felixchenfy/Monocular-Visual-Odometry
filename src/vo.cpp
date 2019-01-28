@@ -45,14 +45,19 @@ bool VisualOdometry::checkIfVoGoodToInit(
     return mean_dist > 70;
 }
 
-vector<Mat> VisualOdometry::pushPointsToMap(
-    const vector<Point3f> &inliers_pts3d_in_curr,
-    const Mat &T_w_curr,
-    const Mat &descriptors, const vector<vector<unsigned char>> &kpts_colors,
-    const vector<DMatch> &inlier_matches)
+vector<Mat> VisualOdometry::pushCurrPointsToMap()
 {
-    vector<Mat> newly_inserted_pts3d;
+    // -- Input
+    const vector<Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
+    const Mat &T_w_curr = curr_->T_w_c_;
+    const Mat &descriptors = curr_->descriptors_;
+    const vector<vector<unsigned char>> &kpts_colors= curr_->kpts_colors_;
+    const vector<DMatch> &inlier_matches = curr_->inlier_matches_;
 
+    // -- Output
+    vector<Mat> newly_inserted_pts3d;
+    
+    // -- Start
     for (int i = 0; i < inlier_matches.size(); i++)
     {
         newly_inserted_pts3d.push_back(
@@ -64,9 +69,14 @@ vector<Mat> VisualOdometry::pushPointsToMap(
         int pt_idx = inlier_matches[i].trainIdx;
         const vector<unsigned char> &rgb = kpts_colors[pt_idx];
 
-        MapPoint::Ptr map_point(new MapPoint(
-            newly_inserted_pts3d[i],
+        const Mat &p_world = newly_inserted_pts3d[i];
+        Mat norm =  p_world - curr_->getCamCenter();
+        my_basics::normalize(norm);
+
+        MapPoint::Ptr map_point(new MapPoint( // createMapPoint
+            p_world,
             descriptors.row(pt_idx).clone(),
+            norm,
             rgb[0], rgb[1], rgb[2]));
         map_->insertMapPoint(map_point);
     }
@@ -122,6 +132,51 @@ bool VisualOdometry::checkInsertingKeyframe(Frame::Ptr curr, Frame::Ptr ref){
     bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;
 
     return res;
+}
+
+// ------------------- Mapping -------------------
+void VisualOdometry::optimizeMap()
+{
+    static const double default_erase = 0.1;
+    static double map_point_erase_ratio = default_erase;
+
+    // remove the hardly seen and no visible points 
+    for ( auto iter = map_->map_points_.begin(); iter != map_->map_points_.end(); )
+    {
+        if ( !curr_->isInFrame(iter->second->pos_) )
+        {
+            iter = map_->map_points_.erase(iter);
+            continue;
+        }
+
+        // float match_ratio = float(iter->second->matched_times_)/iter->second->visible_times_;
+        // if ( match_ratio < map_point_erase_ratio )
+        // {
+        //     iter = map_->map_points_.erase(iter);
+        //     continue;
+        // }
+        
+        // double angle = getViewAngle( curr_, iter->second );
+        // if ( angle > M_PI/6. )
+        // {
+        //     iter = map_->map_points_.erase(iter);
+        //     continue;
+        // }
+        // if ( iter->second->good_ == false )
+        // {
+        //     // TODO try triangulate this map point 
+        // }
+        iter++;
+    }
+    
+    if ( map_->map_points_.size() > 1000 )  
+    {
+        // TODO map is too large, remove some one 
+        map_point_erase_ratio += 0.05;
+    }
+    else 
+        map_point_erase_ratio = default_erase;
+    cout<<"map points: "<<map_->map_points_.size()<<endl;
 }
 
 

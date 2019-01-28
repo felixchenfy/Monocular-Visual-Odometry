@@ -28,5 +28,8 @@ bool Frame::isInFrame(const Point3f &p_world)
 bool Frame::isInFrame ( const Mat& p_world){
     return isInFrame(Mat_to_Point3f(p_world));   
 }
+Mat Frame::getCamCenter(){
+    return getPosFromT(T_w_c_);
+}
 
 } // namespace my_slam

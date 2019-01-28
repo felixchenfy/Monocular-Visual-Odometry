@@ -34,7 +34,7 @@ void invRt(Mat &R, Mat &t);
 Mat transRt2T(const Mat &R, const Mat &t);
 Mat transRt2T_3x4(const Mat &R, const Mat &t);
 void getRtFromT(const Mat &T, Mat &R, Mat &t);
-
+Mat getPosFromT(const Mat &T);
 Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4);
 
 // ---------------- Math ----------------
@@ -43,6 +43,7 @@ double calcDist(const Point2f &p1, const Point2f &p2);
 double calcMeanDepth(const vector<Point3f> &pts_3d);
 double scalePointPos(Point3f &p, double scale);
 double calcMatNorm(const Mat &mat);
+void normalize(Mat &mat);
 
 // ---------------- Print ----------------
 void print_MatProperty(const cv::Mat &M); // print data type and size
