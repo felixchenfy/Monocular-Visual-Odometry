@@ -16,7 +16,7 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
 void matchFeatures(
     const cv::Mat &descriptors_1, const cv::Mat &descriptors_2,
     vector<cv::DMatch> &matches,
-    const bool PRINT_RES = true,
+    const bool PRINT_RES = false,
     const bool SET_PARAM_BY_YAML = true);
 
 // Remove duplicate matches.

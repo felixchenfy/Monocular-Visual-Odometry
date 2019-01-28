@@ -88,17 +88,17 @@ int main(int argc, char **argv)
         vo->addFrame(frame);
 
         // Display
-        bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
         bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
+        bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
 
         // Return
         cout << "Finished an image" << endl;
         if (img_id == 150)
             break;
-        if (vo->DEBUG_STOP_PROGRAM_)
-        {
-            break;
-        }
+        // if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_==VisualOdometry::OK)
+        // {
+        //     break;
+        // }
     }
     holdOnPclViewer(pcl_displayer);
     cv::destroyAllWindows();
@@ -169,36 +169,39 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     pcl_displayer->updateCameraPose(R_vec, t);
 
     // ------------------------------- Update points ----------------------------------------
-    vector<Point3f> vec_pos;
-    vector<vector<unsigned char>> vec_color;
-    unsigned char r, g, b;
-    vector<unsigned char> color(3, 0);
-
-    // -- Draw map points
-    vec_pos.clear();
-    vec_color.clear();
-    for (auto &iter_map_point : vo->map_->map_points_)
+    if (0)
     {
-        const MapPoint::Ptr &p = iter_map_point.second;
-        vec_pos.push_back(Mat_to_Point3f(p->pos_));
-        vec_color.push_back(p->color_);
-    }
-    pcl_displayer->updateMapPoints(vec_pos, vec_color);
+        vector<Point3f> vec_pos;
+        vector<vector<unsigned char>> vec_color;
+        unsigned char r, g, b;
+        vector<unsigned char> color(3, 0);
 
-    // -- Draw newly inserted points with specified color
-    vec_pos.clear();
-    vec_color.clear();
-    color[0] = 255;
-    color[1] = 0;
-    color[2] = 0;
-    // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
-    for (const Point3f &pt3d : frame->inliers_pts3d_)
-    {
-        vec_pos.push_back(transCoord(pt3d, R, t));
-        vec_color.push_back(color);
-    }
-    pcl_displayer->updateCurrPoints(vec_pos, vec_color);
+        // -- Draw map points
+        vec_pos.clear();
+        vec_color.clear();
+        for (auto &iter_map_point : vo->map_->map_points_)
+        {
+            const MapPoint::Ptr &p = iter_map_point.second;
+            vec_pos.push_back(Mat_to_Point3f(p->pos_));
+            vec_color.push_back(p->color_);
+        }
+        pcl_displayer->updateMapPoints(vec_pos, vec_color);
 
+        // -- Draw newly inserted points with specified color
+        vec_pos.clear();
+        vec_color.clear();
+        color[0] = 255;
+        color[1] = 0;
+        color[2] = 0;
+        // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
+        // for (const Point3f &pt3d : frame->inliers_pts3d_)
+        for (const Point3f &pt3d : vo->keyframes_.back()->inliers_pts3d_)
+        {
+            vec_pos.push_back(transCoord(pt3d, R, t));
+            vec_color.push_back(color);
+        }
+        pcl_displayer->updateCurrPoints(vec_pos, vec_color);
+    }
     // -----------------------------------------------------------------------
     // -- Update and display
     pcl_displayer->update();

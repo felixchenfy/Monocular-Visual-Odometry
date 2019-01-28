@@ -47,10 +47,10 @@ public: // Member variables
   VOState vo_state_;
   deque<my_slam::Frame::Ptr> keyframes_; // store the previous frames
 
-  // Initiliazation
-  Frame::Ptr init_frame_;
-  vector<KeyPoint> init_frame_keypoints_;
-  Mat init_frame_descriptors_;
+  // // Initiliazation
+  // Frame::Ptr init_frame_;
+  // vector<KeyPoint> init_frame_keypoints_;
+  // Mat init_frame_descriptors_;
 
   // Frame
   Frame::Ptr curr_;
@@ -66,7 +66,6 @@ public: // Member variables
   Mat descriptors_curr_;
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
-  vector<Mat> newly_inserted_pts3d_;
   
   // Debug
   bool DEBUG_STOP_PROGRAM_;
@@ -89,6 +88,10 @@ public: // Functions
       const vector<DMatch> &inlier_matches);
 
 public: // Initialization
+
+  void estimateMotionAnd3DPoints(Mat &R, Mat &t, 
+      vector<DMatch> &inlier_matches, vector<Point3f> &pts3d_in_curr);
+
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
 
 public: // Tracking
