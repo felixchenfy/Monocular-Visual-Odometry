@@ -8,13 +8,21 @@ namespace my_basics
 // ---------------- image operation ----------------
 vector<unsigned char> getPixelAt(const Mat &image, int x, int y)
 {
-    vector<unsigned char> rgb;
-    const unsigned char *row_ptr = image.ptr<unsigned char>(y);
-    const unsigned char *data_ptr = &row_ptr[x * image.channels()];
-    for (int c = 0; c != image.channels(); c++)
-    {
-        rgb.push_back(data_ptr[c]); // data为I(x,y)第c个通道的值
+    unsigned char bgr[3]={0,0,0};
+    
+    if(0){
+        const unsigned char *row_ptr = image.ptr<unsigned char>(y);
+        const unsigned char *data_ptr = &row_ptr[x * image.channels()];
+        for (int c = 0; c != image.channels(); c++)
+        {
+            bgr[c]=data_ptr[c];
+        }
+    }else{
+        for (int c=0;c<=3;c++){
+            bgr[c]=image.at<Vec3b>(y, x)[c];        
+        }
     }
+    vector<unsigned char> rgb{bgr[2],bgr[1],bgr[0]};
     return rgb;
 }
 

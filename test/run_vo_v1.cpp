@@ -30,6 +30,7 @@ using namespace my_display;
 using namespace std;
 using namespace cv;
 using namespace my_geometry;
+using namespace my_slam;
 
 // functions for this script
 bool checkInputArguments(int argc, char **argv);
@@ -38,7 +39,7 @@ const string IMAGE_WINDOW_NAME = "window name";
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
 PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, PclViewer::Ptr pcl_displayer);
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
 
 int main(int argc, char **argv)
 {
@@ -48,14 +49,14 @@ int main(int argc, char **argv)
     const bool PRINT_RES = false;
 
     vector<string> image_paths = my_basics::readImagePaths(CONFIG_FILE, 150, PRINT_RES);
-    
+
     cv::Mat K = my_basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
 
     // Init a camera class to store K, and might be used to provide common transformations
-    my_geometry::Camera::Ptr camera( new my_geometry::Camera(K));
+    my_geometry::Camera::Ptr camera(new my_geometry::Camera(K));
 
     // Just to remind to set this config file. Following algorithms will read from it for setting params.
-    my_basics::Config::setParameterFile( CONFIG_FILE);                    
+    my_basics::Config::setParameterFile(CONFIG_FILE);
 
     // -- Prepare Pcl display
     PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
@@ -66,7 +67,6 @@ int main(int argc, char **argv)
 
     // -- Setup for vo
     my_slam::VisualOdometry::Ptr vo(new my_slam::VisualOdometry);
-
 
     // -- Iterate through images
     for (int img_id = 0; img_id < (int)image_paths.size(); img_id++)
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
-        bool pcl_draw_good = drawResultByPcl(vo, pcl_displayer);
+        bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
 
         // Return
         cout << "Finished an image" << endl;
@@ -119,10 +119,8 @@ PclViewer::Ptr setUpPclDisplay()
            y = -1.0 * view_point_dist,
            z = -1.0 * view_point_dist;
     double rotaxis_x = -0.5, rotaxis_y = 0, rotaxis_z = 0;
-    string viewer_name = "my pcl viewer";
     PclViewer::Ptr pcl_displayer(
-        new PclViewer(
-            viewer_name, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
+        new PclViewer(x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
     return pcl_displayer;
 }
 
@@ -157,38 +155,51 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img,
     return true;
 }
 
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, PclViewer::Ptr pcl_displayer)
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer)
 {
 
+    // -- Update camera pose
     Mat R, R_vec, t;
-    my_slam::Frame::Ptr frame = vo->curr_;
     getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
-
     // cout << endl;
     // cout << "R_world_to_camera:\n"
     //      << R << endl;
     // cout << "t_world_to_camera:\n"
     //      << t.t() << endl;
-
     pcl_displayer->updateCameraPose(R_vec, t);
 
-    unsigned char r = 255, g = 0, b = 0;
-
     // ------------------------------- Update points ----------------------------------------
-    // Draw current newly inserted points
-    // r = 255;
-    // g = 0;
-    // b = 0;
-    // pcl_displayer->deletePoints();
-    // for (const Point3f &pt3d : frame->inliers_pts3d_)
-    // {
-    //     Mat kpt_3d_pos_in_world = R * Point3f_to_Mat(pt3d) + t;
-    //     pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b);
-    // }
-    // updatePOints(vo->newly_inserted_pts3d_);
-    
+    vector<Point3f> vec_pos;
+    vector<vector<unsigned char>> vec_color;
+    unsigned char r, g, b;
+    vector<unsigned char> color(3, 0);
+
+    // -- Draw map points
+    vec_pos.clear();
+    vec_color.clear();
+    for (auto &iter_map_point : vo->map_->map_points_)
+    {
+        const MapPoint::Ptr &p = iter_map_point.second;
+        vec_pos.push_back(Mat_to_Point3f(p->pos_));
+        vec_color.push_back(p->color_);
+    }
+    pcl_displayer->updateMapPoints(vec_pos, vec_color);
+
+    // -- Draw newly inserted points with specified color
+    vec_pos.clear();
+    vec_color.clear();
+    color[0] = 255;
+    color[1] = 0;
+    color[2] = 0;
+    for (const Point3f &pt3d : frame->inliers_pts3d_)
+    {
+        vec_pos.push_back(transCoord(pt3d, R, t));
+        vec_color.push_back(color);
+    }
+
     // -----------------------------------------------------------------------
+    // -- Update and display
     pcl_displayer->update();
     pcl_displayer->spinOnce(100);
     if (pcl_displayer->wasStopped())

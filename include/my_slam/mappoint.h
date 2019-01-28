@@ -16,9 +16,7 @@ public: // Variables
     static unsigned long factory_id_;    // factory id
     unsigned long id_;
     Mat pos_;
-    unsigned char r_;
-    unsigned char g_;
-    unsigned char b_;
+    vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
 
 public: // Constructor

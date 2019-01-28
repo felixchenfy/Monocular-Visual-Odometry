@@ -19,6 +19,7 @@ Instead of 15+ seconds, the linking only takes like a 3 seconds.
 
 using namespace std;
 typedef unsigned char uchar;
+
 namespace my_display
 {
 class PclViewer
@@ -36,13 +37,16 @@ class PclViewer
 
   public:
     // ----------------- constructor -----------------
-    PclViewer(const string &viewer_name,
+    PclViewer( 
       double x = 1.0, double y = -1.0, double z = -1.0, 
       double rotaxis_x = -0.5, double rotaxis_y = 0, double rotaxis_z = 0
     );
-    void createViewer(const string &viewer_name);
 
   public:
+    void updateMapPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+    void updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+    void updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+
     void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t);
     void update();
     void spinOnce(unsigned int millisecond);

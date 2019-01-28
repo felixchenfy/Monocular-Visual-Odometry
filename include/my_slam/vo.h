@@ -55,6 +55,7 @@ public: // Member variables
   // Frame
   Frame::Ptr curr_;
   Frame::Ptr ref_;
+  Frame::Ptr newest_frame_; // temporarily store the newest frame
   Mat prev_T_w_c_; // pos of previous frame
 
   // Map

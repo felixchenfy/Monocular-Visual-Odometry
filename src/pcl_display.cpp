@@ -1,6 +1,7 @@
 
 #include "my_display/pcl_display.h"
 #include "my_display/pcl_display_lib.h"
+#include <unordered_map>
 
 using namespace std;
 using namespace cv;
@@ -14,59 +15,41 @@ namespace my_display_private
 
 ViewerPtr viewer_;
 
-CloudPtr pc_cam_traj_ptr;
-string pc_cam_traj_name = "pc_cam_traj_name";
-
-CloudPtr pc_pts_map_ptr;
-string pc_pts_map_name = "pc_pts_map_name";
-
-CloudPtr pc_pts_in_view_ptr;
-string pc_pts_in_view_name = "pc_pts_in_view_name";
-
-CloudPtr pc_pts_curr_ptr;
-string pc_pts_curr_name = "pc_pts_curr_name";
-
-// Store the above 4 into 1 array
 const int NUM_PC = 4;
-CloudPtr pc_array_ptr[NUM_PC] = {pc_cam_traj_ptr, pc_pts_map_ptr, pc_pts_in_view_ptr, pc_pts_curr_ptr};
-string pc_array_name[NUM_PC] = {pc_cam_traj_name, pc_pts_map_name, pc_pts_in_view_name, pc_pts_curr_name};
+string pc_cam_traj = "pc_cam_traj";
+string pc_pts_map = "pc_pts_map";
+string pc_pts_in_view = "pc_pts_in_view";
+string pc_pts_curr = "pc_pts_curr";
+vector<string> point_clouds_names = {pc_cam_traj, pc_pts_map, pc_pts_in_view, pc_pts_curr};
+unordered_map<string, CloudPtr> point_clouds;
+
+void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
 } // namespace my_display_private
+
+// --------------------- Class definition -----------------------
 
 namespace my_display
 {
 using namespace my_display_private;
 
-void addPointCloud(ViewerPtr &viewer, CloudPtr &cloud, string cloud_name, int POINT_SIZE = 3)
-{
-    cloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> color_setting(cloud);
-    viewer->addPointCloud<pcl::PointXYZRGB>(cloud, color_setting, pc_cam_traj_name);
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_SIZE, pc_cam_traj_name);
-}
-
-// --------------------- Class definition -----------------------
-
 // constructor
-PclViewer::PclViewer(const string &viewer_name,
-                     double x, double y, double z,
+PclViewer::PclViewer(double x, double y, double z,
                      double rotaxis_x, double rotaxis_y, double rotaxis_z)
 {
     // Set names
-    viewer_name_ = viewer_name;
-    camera_frame_name_ = "Coord: camera";
+    viewer_name_ = "viewer_name_";
+    camera_frame_name_ = "camera_frame_name_";
 
     // Set viewer
-    pc_pts_curr_ptr.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
-    viewer_ = initPointCloudViewer(
-        pc_pts_curr_ptr, viewer_name_, pc_pts_curr_name, camera_frame_name_);
+    viewer_ = initPointCloudViewer(viewer_name_, camera_frame_name_);
     viewer_->addCoordinateSystem(1.0, "fixed world frame");
 
-    // Add another point cloud for showing camera's trajectory
-    for (int i = 0; i < NUM_PC; i++)
-    {
-        addPointCloud(viewer_, pc_array_ptr[i], pc_array_name[i]);
-    }
+    // Add point clouds to viewer, and stored the cloud ptr into the hash
+    point_clouds[pc_cam_traj] = addPointCloud(viewer_, pc_cam_traj, 3); // last param is point size
+    point_clouds[pc_pts_map] = addPointCloud(viewer_, pc_pts_map, 4);
+    point_clouds[pc_pts_in_view] = addPointCloud(viewer_, pc_pts_in_view, 8);
+    point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 6);
 
     // Set viewer angle
     setViewerPose(*viewer_, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z);
@@ -89,7 +72,7 @@ void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
         setPointPos(point, t);
         unsigned char r = 255, g = 255, b = 255;
         setPointColor(point, r, g, b);
-        pc_cam_traj_ptr->points.push_back(point);
+        point_clouds[pc_cam_traj]->points.push_back(point);
     }
     cam_R_vec_ = R_vec.clone();
     cam_t_ = t.clone();
@@ -97,23 +80,54 @@ void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
 
 // -- Insert points ---------------------------------------------------------------------
 
-void addPoint(CloudPtr &cloud, const cv::Mat pt_3d_pos_in_world, uchar r, uchar g, uchar b)
-{
-    pcl::PointXYZRGB point;
-    setPointPos(point, pt_3d_pos_in_world);
-    setPointColor(point, r, g, b);
-    pc_pts_curr_ptr->points.push_back(point);
-}
-void deletePoints(CloudPtr &cloud)
+void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
 {
     cloud->points.clear();
+    assert(vec_pos.size() == vec_color.size());
+    int N = vec_pos.size();
+    pcl::PointXYZRGB point;
+    for (int i = 0; i < N; i++)
+    {
+        point.x = vec_pos[i].x;
+        point.y = vec_pos[i].y;
+        point.z = vec_pos[i].z;
+        point.r = vec_color[i][0];
+        point.g = vec_color[i][1];
+        point.b = vec_color[i][2];
+        cloud->points.push_back(point);
+    }
 }
 
-// void PclViewer::updatePtsMap(vector<Mat> &pts3d){
+void PclViewer::updateMapPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
+{
+    CloudPtr cloud = point_clouds[pc_pts_map];
+    resetPoints(cloud, vec_pos, vec_color);
+}
+void PclViewer::updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
+{
+    CloudPtr cloud = point_clouds[pc_pts_curr];
+    resetPoints(cloud, vec_pos, vec_color);
+}
+void PclViewer::updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
+{
+    CloudPtr cloud = point_clouds[pc_pts_in_view];
+    resetPoints(cloud, vec_pos, vec_color);
+}
 
+// // Add point to cloud by name. Not used
+// void addPointToCloud(const string &cloud_name, const cv::Mat &pt_3d_pos_in_world, uchar r, uchar g, uchar b)
+// {
+//     pcl::PointXYZRGB point;
+//     setPointPos(point, pt_3d_pos_in_world);
+//     setPointColor(point, r, g, b);
+//     assert(point_clouds.find(cloud_name)!=point_clouds.end());
+//     point_clouds[cloud_name]->points.push_back(point);
 // }
-// void PclViewer::updatePtsInView();
-// void PclViewer::updatePtsCurr();
+// void deletePointsOfCloud(const string &cloud_name)
+// {
+//     assert(point_clouds.find(cloud_name)!=point_clouds.end());
+//     point_clouds[cloud_name]->points.clear();
+// }
 
 // -- Update ---------------------------------------------------------------------
 
@@ -126,9 +140,11 @@ void PclViewer::update()
     viewer_->addCoordinateSystem(1.0, T_affine, camera_frame_name_, 0);
 
     // Update point
-    for (int i = 0; i < NUM_PC; i++)
+    for (auto cloud_info : point_clouds)
     {
-        viewer_->updatePointCloud(pc_array_ptr[i], pc_array_name[i]);
+        string name = cloud_info.first;
+        CloudPtr cloud = cloud_info.second;
+        viewer_->updatePointCloud(cloud, name);
     }
 
     // Update text
