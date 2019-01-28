@@ -119,16 +119,18 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // -- Insert a keyframe is motion is large
             Frame::Ptr frame_for_tri;
-            frame_for_tri = keyframes_[keyframes_.size() - 2];
+            frame_for_tri = keyframes_[keyframes_.size() - 1];
             Mat T_key_to_curr = frame_for_tri->T_w_c_.inv() * curr_->T_w_c_;
-            if (calcMatNorm(T_key_to_curr.t()) > 0.05)
+            double MIN_DIST_BETWEEN_KEYFRAME=0.05;
+            double moved_dist = calcMatNorm(T_key_to_curr(cv::Rect(3,0,1,3)));
+            cout << "Moving dist: "<< moved_dist <<endl;
+            if (moved_dist > MIN_DIST_BETWEEN_KEYFRAME)
             {
-                keyframes_.push_back(curr_);
                 cout << "!!! INSERT KEYFRAME: " << img_id << " !!!" << endl;
 
                 // ---------------------下面的需要进行更改－－－－－－－－－－－－－－－－－
                 // - Triangulate new points
-                frame_for_tri = keyframes_[keyframes_.size() - 2]; // frame_for_triangulation
+                // frame_for_tri = keyframes_[keyframes_.size() - 1]; // frame_for_triangulation
                 my_geometry::matchFeatures(frame_for_tri->descriptors_, curr_->descriptors_, curr_->matches_);
 
                 // -- Use Essential matrix to find the inliers
@@ -159,7 +161,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                     curr_->descriptors_,
                     curr_->kpts_colors_,
                     curr_->inlier_matches_);
-                
+
+                keyframes_.push_back(curr_);
             }
 
             // --Update vo state

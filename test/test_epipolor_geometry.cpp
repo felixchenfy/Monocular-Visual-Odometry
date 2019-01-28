@@ -26,20 +26,21 @@ int main(int argc, char **argv)
     // camera intrinsics
     Mat K_fr1 = (Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
     Mat K_fr2 = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1); // fr2 dataset
-    Mat K_mtb = (Mat_<double>(3, 3) << 615, 0, 320, 0, 615, 240, 0, 0, 1); // fr2 dataset
+    Mat K_mtb = (Mat_<double>(3, 3) << 615, 0, 320, 0, 615, 240, 0, 0, 1);         // fr2 dataset
     Mat K;
 
     // read in images
     string img_file1, img_file2;
     string folder = "test_data/";
     int IDX_TEST_CASE = 1;
-    
-    if(argc-1==2){
+
+    if (argc - 1 == 2)
+    {
         // bin/test_epipolor_geometry rgb_00000.png rgb_00001.png # inliers = 90+
         // bin/test_epipolor_geometry rgb_00003.png rgb_00004.png # inliers = 35
         // bin/test_epipolor_geometry rgb_00004.png rgb_00005.png # inliers = 90+
         // bin/test_epipolor_geometry image0001.jpg image0015.jpg # inliers = 90+
-        IDX_TEST_CASE=-1;
+        IDX_TEST_CASE = -1;
         img_file1 = argv[1];
         img_file2 = argv[2];
         K = K_mtb;
@@ -50,20 +51,20 @@ int main(int argc, char **argv)
         img_file1 = "fr1_1_1.png";
         img_file2 = "fr1_1_2.png";
         K = K_fr1;
-    }   
+    }
     else if (IDX_TEST_CASE == 2) // keypoints are almost on the same plane.
     {
         img_file1 = "fr1_2_1.png";
         img_file2 = "fr1_2_1.png";
         K = K_fr1;
     }
-     else if (IDX_TEST_CASE == 3) // keypoints are almost on the same plane.
+    else if (IDX_TEST_CASE == 3) // keypoints are almost on the same plane.
     {
         img_file1 = "fr2_1_1.png";
         img_file2 = "fr2_1_2.png";
         K = K_fr2;
     }
-    
+
     Mat img_1 = imread(folder + img_file1);
     Mat img_2 = imread(folder + img_file2);
 
@@ -99,22 +100,23 @@ int main(int argc, char **argv)
     vector<Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
     vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool print_res=true, compute_homography=true, is_frame_cam2_to_cam1=true;
-    helperEstimatePossibleRelativePosesByEpipolarGeometry(
+    const bool print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
+    int best_sol = helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
         print_res, compute_homography, is_frame_cam2_to_cam1);
+    cout << "Best solution is: " << best_sol << endl;
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
-    int idx_best_solution = helperEvalErrorsAndChooseEH(
+    helperEvalEppiAndTriangErrors(
         keypoints_1, keypoints_2, list_matches,
         sols_pts3d_in_cam1_by_triang,
         list_R, list_t, list_normal,
         K,
-        true); // print result
+        false); // print result
 
     // plot image
     Mat Idst;

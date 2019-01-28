@@ -103,10 +103,10 @@ int main(int argc, char **argv)
 
         // Return
         cout << "Finished an image" << endl;
-        if (img_id == 10)
+        if (img_id == 100)
             break;
-        if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_ == VisualOdometry::OK)
-            break;
+        // if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_ == VisualOdometry::OK)
+            // break;
     }
     holdOnPclViewer(pcl_displayer);
     cv::destroyAllWindows();

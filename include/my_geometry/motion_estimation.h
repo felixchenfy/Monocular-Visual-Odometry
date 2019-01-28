@@ -13,7 +13,10 @@ using namespace my_basics;
 
 namespace my_geometry
 {
-void helperEstimatePossibleRelativePosesByEpipolarGeometry(
+// This is a giant function, which computes: E21/H21, all their decompositions, all corresponding triangulation results,
+//      Then, choose between E/H based on ORB-SLAM2 paper. 
+//      If choose H, then choose the one with largest norm z in camera direction.
+int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
@@ -26,7 +29,8 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const bool compute_homography = true,
     const bool is_frame_cam2_to_cam1=true);
 
-int helperEvalErrorsAndChooseEH(
+// Compute Eppipolar_Constraint and Triangulation error
+void helperEvalEppiAndTriangErrors(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,
@@ -61,6 +65,12 @@ void helperTriangulatePoints(
     vector<Point3f> &pts_3d_in_curr
 );
 
+
+double checkEssentialScore(const Mat &E21, const Mat &K, const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2, 
+    vector<int> &inliers_index, double sigma=1.0);
+
+double checkHomographyScore(const Mat &H21,const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2, 
+    vector<int> &inliers_index, double sigma=1.0);
 
 // ------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------

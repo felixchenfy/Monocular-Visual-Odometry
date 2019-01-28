@@ -97,6 +97,8 @@ void getRtFromT(const Mat &T, Mat &R, Mat &t)
     t = (Mat_<double>(3, 1) << T.at<double>(0, 3),
          T.at<double>(1, 3),
          T.at<double>(2, 3));
+    // R = T(cv::Rect(0,0,3,3)).clone(); 
+    // t = T(cv::Rect(3,0,1,3)).clone(); // x, y, width, height
 }
 Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t)
 {
