@@ -56,7 +56,7 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
 
     // -- Output
     vector<Mat> newly_inserted_pts3d;
-    
+
     // -- Start
     for (int i = 0; i < inlier_matches.size(); i++)
     {
@@ -156,12 +156,12 @@ void VisualOdometry::optimizeMap()
         //     continue;
         // }
         
-        // double angle = getViewAngle( curr_, iter->second );
-        // if ( angle > M_PI/6. )
-        // {
-        //     iter = map_->map_points_.erase(iter);
-        //     continue;
-        // }
+        double angle = getViewAngle( curr_, iter->second );
+        if ( angle > M_PI/6. )
+        {
+            iter = map_->map_points_.erase(iter);
+            continue;
+        }
         // if ( iter->second->good_ == false )
         // {
         //     // TODO try triangulate this map point 
@@ -177,6 +177,14 @@ void VisualOdometry::optimizeMap()
     else 
         map_point_erase_ratio = default_erase;
     cout<<"map points: "<<map_->map_points_.size()<<endl;
+}
+
+double VisualOdometry::getViewAngle ( Frame::Ptr frame, MapPoint::Ptr point )
+{
+    Mat n = point->pos_ - frame->getCamCenter();
+    my_basics::normalize(n);
+    Mat vector_dot_product = n.t()*point->norm_;
+    return acos( vector_dot_product.at<double>(0,0) );
 }
 
 

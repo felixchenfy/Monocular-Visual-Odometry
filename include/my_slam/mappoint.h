@@ -16,7 +16,7 @@ public: // Variables
     static unsigned long factory_id_;    // factory id
     unsigned long id_;
     Mat pos_;
-    Point3f norm_; // Normal of viewing direction 
+    Mat norm_; // Normal of viewing direction 
     vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
 

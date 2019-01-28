@@ -41,7 +41,6 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
 
 PclViewer::Ptr setUpPclDisplay();
 bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
-void holdOnPclViewer(PclViewer::Ptr pcl_displayer);
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
 
 const bool DEBUG_MODE=false;
@@ -61,7 +60,7 @@ int main(int argc, char **argv)
         for(string &filename:tmp)filename=folder+filename;
         image_paths = tmp;
     }else{
-        image_paths = my_basics::readImagePaths(CONFIG_FILE, 150, PRINT_RES);
+        image_paths = my_basics::readImagePaths(CONFIG_FILE, PRINT_RES);
     }
     cv::Mat K = my_basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
 
@@ -105,12 +104,14 @@ int main(int argc, char **argv)
 
         // Return
         cout << "Finished an image" << endl;
-        if (img_id == 100)
-            break;
+        // if (img_id == 100)
+        //     break;
         // if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_ == VisualOdometry::OK)
             // break;
     }
-    holdOnPclViewer(pcl_displayer);
+    // Wait for user close
+    while (!pcl_displayer->wasStopped())
+        pcl_displayer->spinOnce(10);
     cv::destroyAllWindows();
 }
 
@@ -160,7 +161,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
                     img_show);
     }
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    waitKey(50);
+    waitKey(20);
 
     // save to file
     string str_img_id = my_basics::int2str(img_id, 4);
@@ -225,18 +226,8 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         return true;
 }
 
-void holdOnPclViewer(PclViewer::Ptr pcl_displayer)
-{
-
-    while (!pcl_displayer->wasStopped())
-    {
-        // pcl_displayer->update();
-        pcl_displayer->spinOnce(10);
-    }
-}
-
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer){
-    while (!pcl_displayer->checkKeyPressed())
+    while (0 && !pcl_displayer->checkKeyPressed())
     {
         pcl_displayer->spinOnce(10);
     }

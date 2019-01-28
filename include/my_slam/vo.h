@@ -90,6 +90,7 @@ public: // Mapping
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &candidate_descriptors_in_map);
   vector<Mat> pushCurrPointsToMap();
+  double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 };
 
 } // namespace my_slam
