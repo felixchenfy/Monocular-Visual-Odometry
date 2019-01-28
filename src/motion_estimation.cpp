@@ -109,7 +109,7 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
         doTriangulation(pts_on_np1, pts_on_np2, list_R[i], list_t[i], list_inliers[i], pts3d_in_cam1);
         // removeWrongTriangulations(list_inliers[i], pts3d_in_cam1);
         sols_pts3d_in_cam1.push_back(pts3d_in_cam1);
-        if (i == -9999)
+        if (0 && i == 0)
         {
             printf("\n\n----------------------------------------------------\n");
             printf("DEBUGING: print triangulation result of solution %d\n\n", i);
@@ -126,27 +126,22 @@ void helperEstimatePossibleRelativePosesByEpipolarGeometry(
     }
 
     // Change frame
-    // Caustion: This should be done after all other algorithms
+    // Caution: This should be done after all other algorithms
     if (is_motion_cam2_to_cam1 == false)
-    {
         for (int i = 0; i < num_solutions; i++)
-        {
             invRt(list_R[i], list_t[i]);
-        }
-    }
 
     // Debug EpipolarError and TriangulationResult
-    if (print_res)
+    if (print_res && !compute_homography)
     {
         print_EpipolarError_and_TriangulationResult_By_Solution(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
             sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
-    }
-    if (print_res && compute_homography)
+    }else if (print_res && compute_homography)
     {
-        // print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
-        //     pts_img1, pts_img2, pts_on_np1, pts_on_np2,
-        //     sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
+        print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
+            pts_img1, pts_img2, pts_on_np1, pts_on_np2,
+            sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
 }
 

@@ -35,7 +35,7 @@ void setPointPos(PointXYZ &point, cv::Mat p);
 
 // initialize the viewer
 boost::shared_ptr<visualization::PCLVisualizer>
-initPointCloudViewer(const string &viewer_name, const string &camera_frame_name);
+initPointCloudViewer(const string &viewer_name, const string &camera_frame_name, const double LEN_COORD_AXIS=1.0);
 
 // Add a cloud to the viewer, and returned the cloud ptr.
 PointCloud<PointXYZRGB>::Ptr addPointCloud(

@@ -192,7 +192,6 @@ void doTriangulation(
 
     // triangulartion
     Mat pts4d_in_world;
-
     cv::triangulatePoints(
         T_cam1_to_world, T_cam2_to_world,
         inlier_pts_on_np1, inlier_pts_on_np2, pts4d_in_world);
@@ -203,11 +202,12 @@ void doTriangulation(
     {
         Mat x = pts4d_in_world.col(i);
         x /= x.at<float>(3, 0); // 归一化
-        Point3f p(
+        Point3f pt3d_in_world(
             x.at<float>(0, 0),
             x.at<float>(1, 0),
             x.at<float>(2, 0));
-        pts3d_in_world.push_back(p);
+        pts3d_in_world.push_back(pt3d_in_world);
+        // pts3d_in_world.push_back( preTranslatePoint3f(pt3d_in_world, transRt2T(R_cam2_to_cam1,t_cam2_to_cam1).inv())); // This is wrong
         // if(i<3)cout<<"in tri, i="<<i<<","<<"p="<<p<<endl;
     }
 

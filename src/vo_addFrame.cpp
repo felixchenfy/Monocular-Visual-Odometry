@@ -7,7 +7,6 @@ namespace my_slam
 void VisualOdometry::addFrame(Frame::Ptr frame)
 {
     // Settings
-    const int VO_UNITS_PER_METER = 20; // num units per meter. (10 for dm, 100 for cm, 1000 for mmm)
     const int FRAME_FOR_FIRST_ESSENTIAL = 14;
 
     // Renamed vars
@@ -61,7 +60,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // -- Normalize the mean depth of points to be 1m
             const int num_inlier_pts = curr_->inliers_pts3d_.size();
-            double mean_depth = calcMeanDepth(curr_->inliers_pts3d_) / VO_UNITS_PER_METER;
+            double mean_depth = calcMeanDepth(curr_->inliers_pts3d_);
             t_curr_to_prev /= mean_depth;
             for (Point3f &p : curr_->inliers_pts3d_)
                 scalePointPos(p, 1 / mean_depth);
@@ -122,7 +121,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             Frame::Ptr frame_for_tri;
             frame_for_tri = keyframes_[keyframes_.size() - 2];
             Mat T_key_to_curr = frame_for_tri->T_w_c_.inv() * curr_->T_w_c_;
-            if (calcMatNorm(T_key_to_curr.t()) > 0.05 * VO_UNITS_PER_METER)
+            if (calcMatNorm(T_key_to_curr.t()) > 0.05)
             {
                 keyframes_.push_back(curr_);
                 cout << "!!! INSERT KEYFRAME: " << img_id << " !!!" << endl;

@@ -43,15 +43,25 @@ PclViewer::Ptr setUpPclDisplay();
 bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
 void holdOnPclViewer(PclViewer::Ptr pcl_displayer);
 
+const bool DEBUG_MODE=false;
+
 int main(int argc, char **argv)
 {
     // -- Read in image filenames and camera prameters.
     assert(checkInputArguments(argc, argv));
     const string CONFIG_FILE = argv[1];
     const bool PRINT_RES = false;
-
-    vector<string> image_paths = my_basics::readImagePaths(CONFIG_FILE, 150, PRINT_RES);
-
+    vector<string> image_paths;
+    if(DEBUG_MODE){
+        string folder="/home/feiyu/Desktop/slam/code/project/my2/test_data/";
+        vector<string> tmp{
+            "image0001.jpg", "image0013.jpg", "image0015.jpg"
+        };
+        for(string &filename:tmp)filename=folder+filename;
+        image_paths = tmp;
+    }else{
+        image_paths = my_basics::readImagePaths(CONFIG_FILE, 150, PRINT_RES);
+    }
     cv::Mat K = my_basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
 
     // Init a camera class to store K, and might be used to provide common transformations
@@ -93,12 +103,10 @@ int main(int argc, char **argv)
 
         // Return
         cout << "Finished an image" << endl;
-        if (img_id == 150)
+        if (img_id == 10)
             break;
-        // if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_==VisualOdometry::OK)
-        // {
-        //     break;
-        // }
+        if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_ == VisualOdometry::OK)
+            break;
     }
     holdOnPclViewer(pcl_displayer);
     cv::destroyAllWindows();
@@ -118,7 +126,7 @@ bool checkInputArguments(int argc, char **argv)
 
 PclViewer::Ptr setUpPclDisplay()
 {
-    double view_point_dist = 3;
+    double view_point_dist = 0.3;
     double x = 0.5 * view_point_dist,
            y = -1.0 * view_point_dist,
            z = -1.0 * view_point_dist;
@@ -169,13 +177,14 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     pcl_displayer->updateCameraPose(R_vec, t);
 
     // ------------------------------- Update points ----------------------------------------
-    if (0)
-    {
-        vector<Point3f> vec_pos;
-        vector<vector<unsigned char>> vec_color;
-        unsigned char r, g, b;
-        vector<unsigned char> color(3, 0);
 
+    vector<Point3f> vec_pos;
+    vector<vector<unsigned char>> vec_color;
+    unsigned char r, g, b;
+    vector<unsigned char> color(3, 0);
+
+    if (1)
+    {
         // -- Draw map points
         vec_pos.clear();
         vec_color.clear();
@@ -186,7 +195,9 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
             vec_color.push_back(p->color_);
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
-
+    }
+    if (0)
+    {
         // -- Draw newly inserted points with specified color
         vec_pos.clear();
         vec_color.clear();

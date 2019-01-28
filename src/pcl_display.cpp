@@ -14,6 +14,7 @@ namespace my_display_private
 { // store pcl related class members here instead of .h, in order to speed up compiling.
 
 ViewerPtr viewer_;
+const double LEN_COORD_AXIS=0.1;
 
 const int NUM_PC = 4;
 string pc_cam_traj = "pc_cam_traj";
@@ -42,8 +43,8 @@ PclViewer::PclViewer(double x, double y, double z,
     camera_frame_name_ = "camera_frame_name_";
 
     // Set viewer
-    viewer_ = initPointCloudViewer(viewer_name_, camera_frame_name_);
-    viewer_->addCoordinateSystem(1.0, "fixed world frame");
+    viewer_ = initPointCloudViewer(viewer_name_, camera_frame_name_, LEN_COORD_AXIS);
+    viewer_->addCoordinateSystem(LEN_COORD_AXIS, "fixed world frame");
 
     // Add point clouds to viewer, and stored the cloud ptr into the hash
     point_clouds[pc_cam_traj] = addPointCloud(viewer_, pc_cam_traj, 3); // last param is point size
@@ -137,7 +138,7 @@ void PclViewer::update()
     // Update camera
     Eigen::Affine3f T_affine = my_basics::transCVMatRt2Affine3d(cam_R_vec_, cam_t_).cast<float>();
     viewer_->removeCoordinateSystem(camera_frame_name_);
-    viewer_->addCoordinateSystem(1.0, T_affine, camera_frame_name_, 0);
+    viewer_->addCoordinateSystem(LEN_COORD_AXIS, T_affine, camera_frame_name_, 0);
 
     // Update point
     for (auto cloud_info : point_clouds)
