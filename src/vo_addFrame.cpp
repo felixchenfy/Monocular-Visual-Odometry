@@ -107,8 +107,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             Mat R_vec, R, t;
             bool useExtrinsicGuess = false;
             int iterationsCount = 100;
-            float reprojectionError = 8.0;
-            double confidence = 0.99;
+            float reprojectionError = 5.0;
+            double confidence = 0.999;
             Mat pnp_inliers_mask;
             solvePnPRansac(pts_3d, pts_2d, K, Mat(), R_vec, t,
                            useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
@@ -118,9 +118,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             curr_->T_w_c_ = transRt2T(R, t).inv();
 
             // -- Insert a keyframe is motion is large
-            Frame::Ptr frame_for_tri;
-            frame_for_tri = keyframes_[keyframes_.size() - 1];
-            Mat T_key_to_curr = frame_for_tri->T_w_c_.inv() * curr_->T_w_c_;
+            ref_ = keyframes_.back();
+            Mat T_key_to_curr = ref_->T_w_c_.inv() * curr_->T_w_c_;
             double MIN_DIST_BETWEEN_KEYFRAME=0.05;
             double moved_dist = calcMatNorm(T_key_to_curr(cv::Rect(3,0,1,3)));
             cout << "Moving dist: "<< moved_dist <<endl;
@@ -128,16 +127,16 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             {
                 cout << "!!! INSERT KEYFRAME: " << img_id << " !!!" << endl;
 
-                // ---------------------下面的需要进行更改－－－－－－－－－－－－－－－－－
+                // --------------------- Triangulate more points --------------------
                 // - Triangulate new points
-                // frame_for_tri = keyframes_[keyframes_.size() - 1]; // frame_for_triangulation
-                my_geometry::matchFeatures(frame_for_tri->descriptors_, curr_->descriptors_, curr_->matches_);
+                // ref_ = keyframes_[keyframes_.size() - 1]; // ref_angulation
+                my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
 
                 // -- Use Essential matrix to find the inliers
                 vector<DMatch> inlier_matches; // matches, that are inliers
                 Mat dummy_R, dummy_t;
                 helperEstiMotionByEssential(
-                    frame_for_tri->keypoints_, curr_->keypoints_,
+                    ref_->keypoints_, curr_->keypoints_,
                     curr_->matches_, K,
                     dummy_R, dummy_t, inlier_matches);
                 cout << "Number of inliers with prev prev keyframe: " << inlier_matches.size() << endl;
@@ -145,11 +144,11 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
                 // / --Triangulate points
                 Mat R_curr_to_key, t_curr_to_key;
-                calcMotionFromFrame1to2(curr_, frame_for_tri, R_curr_to_key, t_curr_to_key);
+                calcMotionFromFrame1to2(curr_, ref_, R_curr_to_key, t_curr_to_key);
 
                 vector<Point3f> pts_3d_in_curr;
                 helperTriangulatePoints(
-                    frame_for_tri->keypoints_, curr_->keypoints_,
+                    ref_->keypoints_, curr_->keypoints_,
                     curr_->inlier_matches_, R_curr_to_key, t_curr_to_key, K,
                     pts_3d_in_curr);
                 curr_->inliers_pts3d_ = pts_3d_in_curr;

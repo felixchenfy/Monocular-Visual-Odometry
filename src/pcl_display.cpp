@@ -26,6 +26,18 @@ unordered_map<string, CloudPtr> point_clouds;
 
 void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
+// Set keyboard event
+bool bKeyPressed=false;
+void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,void* viewer_void)
+{
+  pcl::visualization::PCLVisualizer::Ptr viewer = *static_cast<pcl::visualization::PCLVisualizer::Ptr *> (viewer_void);
+  if (event.keyDown())
+//   if (event.getKeySym () == "r" && event.keyDown ())
+  {
+    bKeyPressed=true;
+  }
+}
+
 } // namespace my_display_private
 
 // --------------------- Class definition -----------------------
@@ -54,8 +66,21 @@ PclViewer::PclViewer(double x, double y, double z,
 
     // Set viewer angle
     setViewerPose(*viewer_, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z);
+
+    // Set keyboard event
+    viewer_->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer_);
 }
 
+bool PclViewer::checkKeyPressed(){
+    if(bKeyPressed){
+        bKeyPressed=false;
+        return true;
+    }else{
+        return false;
+    }
+}
+
+// -- Update camera pose ---------------------------------------------------------------------
 void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
 {
     static int cnt_cam = 0;

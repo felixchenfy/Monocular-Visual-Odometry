@@ -51,6 +51,8 @@ class PclViewer
     void update();
     void spinOnce(unsigned int millisecond);
     bool wasStopped();
+    bool checkKeyPressed();
+
 };
 }
 

@@ -42,6 +42,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
 PclViewer::Ptr setUpPclDisplay();
 bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
 void holdOnPclViewer(PclViewer::Ptr pcl_displayer);
+void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
 
 const bool DEBUG_MODE=false;
 
@@ -98,8 +99,9 @@ int main(int argc, char **argv)
         vo->addFrame(frame);
 
         // Display
-        bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
+        bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
+        waitPclKeyPress(pcl_displayer);
 
         // Return
         cout << "Finished an image" << endl;
@@ -136,12 +138,10 @@ PclViewer::Ptr setUpPclDisplay()
     return pcl_displayer;
 }
 
-bool drawResultByOpenCV(const cv::Mat &rgb_img,
-                        const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo)
+bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo)
 {
     cv::Mat img_show = rgb_img.clone();
     const int img_id = frame->id_;
-    const int CV_WAIT_KEY_TIME = 10;
     if (1) // draw keypoints
     {
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
@@ -153,12 +153,14 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img,
     }
     else if (0 && img_id != 0) // draw matches
     {
-        my_slam::Frame::Ptr prev_frame = vo->keyframes_[vo->keyframes_.size() - 2]; // the last 2nd frame
-        drawMatches(prev_frame->rgb_img_, prev_frame->keypoints_,
-                    frame->rgb_img_, frame->keypoints_, frame->matches_, img_show);
+        drawMatches(vo->ref_->rgb_img_, vo->ref_->keypoints_,
+                    frame->rgb_img_, frame->keypoints_,
+                    // frame->matches_, 
+                    frame->inlier_matches_, 
+                    img_show);
     }
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    waitKey(CV_WAIT_KEY_TIME);
+    waitKey(50);
 
     // save to file
     string str_img_id = my_basics::int2str(img_id, 4);
@@ -216,18 +218,26 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     // -----------------------------------------------------------------------
     // -- Update and display
     pcl_displayer->update();
-    pcl_displayer->spinOnce(100);
+    pcl_displayer->spinOnce(10);
     if (pcl_displayer->wasStopped())
         return false;
     else
         return true;
 }
+
 void holdOnPclViewer(PclViewer::Ptr pcl_displayer)
 {
 
     while (!pcl_displayer->wasStopped())
     {
         // pcl_displayer->update();
+        pcl_displayer->spinOnce(10);
+    }
+}
+
+void waitPclKeyPress(PclViewer::Ptr pcl_displayer){
+    while (!pcl_displayer->checkKeyPressed())
+    {
         pcl_displayer->spinOnce(10);
     }
 }
