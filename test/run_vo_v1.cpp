@@ -8,6 +8,7 @@
 #include <deque>
 #include <sstream>
 #include <iomanip>
+#include <unistd.h>
 
 // cv
 #include <opencv2/core/core.hpp>
@@ -40,6 +41,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
 
 PclViewer::Ptr setUpPclDisplay();
 bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
+void holdOnPclViewer(PclViewer::Ptr pcl_displayer);
 
 int main(int argc, char **argv)
 {
@@ -69,7 +71,8 @@ int main(int argc, char **argv)
     my_slam::VisualOdometry::Ptr vo(new my_slam::VisualOdometry);
 
     // -- Iterate through images
-    for (int img_id = 0; img_id < (int)image_paths.size(); img_id++)
+    int max_num_images = my_basics::Config::get<int>("max_num_images");
+    for (int img_id = 0; img_id < min(max_num_images, (int)image_paths.size()); img_id++)
     {
 
         // Read image.
@@ -97,6 +100,7 @@ int main(int argc, char **argv)
             break;
         }
     }
+    holdOnPclViewer(pcl_displayer);
     cv::destroyAllWindows();
 }
 
@@ -162,11 +166,6 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     Mat R, R_vec, t;
     getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
-    // cout << endl;
-    // cout << "R_world_to_camera:\n"
-    //      << R << endl;
-    // cout << "t_world_to_camera:\n"
-    //      << t.t() << endl;
     pcl_displayer->updateCameraPose(R_vec, t);
 
     // ------------------------------- Update points ----------------------------------------
@@ -192,11 +191,13 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     color[0] = 255;
     color[1] = 0;
     color[2] = 0;
+    // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
     for (const Point3f &pt3d : frame->inliers_pts3d_)
     {
         vec_pos.push_back(transCoord(pt3d, R, t));
         vec_color.push_back(color);
     }
+    pcl_displayer->updateCurrPoints(vec_pos, vec_color);
 
     // -----------------------------------------------------------------------
     // -- Update and display
@@ -206,4 +207,13 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         return false;
     else
         return true;
+}
+void holdOnPclViewer(PclViewer::Ptr pcl_displayer)
+{
+
+    while (!pcl_displayer->wasStopped())
+    {
+        // pcl_displayer->update();
+        pcl_displayer->spinOnce(10);
+    }
 }

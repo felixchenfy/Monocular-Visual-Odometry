@@ -2,22 +2,32 @@
 
 # ===== Path to the images
 
-# ===== Camera parameters
+# ===== Images and camera parameters
+max_num_images: 100
+
 # Camera intrinsics
 
-# -- fr1 dataset
-# dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1
+# -- fr1_desk dataset
+# https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
+# dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1_desk
 # camera_info.fx: 517.3
 # camera_info.fy: 516.5
 # camera_info.cx: 325.1
 # camera_info.cy: 249.7
 
+# -- fr1_xyz dataset
+dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1_xyz
+camera_info.fx: 517.3
+camera_info.fy: 516.5
+camera_info.cx: 325.1
+camera_info.cy: 249.7
+
 # -- New Tsukuba Stereo dataset used in matlab tutorial
-dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images
-camera_info.fx: 615
-camera_info.fy: 615
-camera_info.cx: 320
-camera_info.cy: 240
+# dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images
+# camera_info.fx: 615
+# camera_info.fy: 615
+# camera_info.cx: 320
+# camera_info.cy: 240
 
 # ===== VO Parameters 
 

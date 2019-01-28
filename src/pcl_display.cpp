@@ -49,7 +49,7 @@ PclViewer::PclViewer(double x, double y, double z,
     point_clouds[pc_cam_traj] = addPointCloud(viewer_, pc_cam_traj, 3); // last param is point size
     point_clouds[pc_pts_map] = addPointCloud(viewer_, pc_pts_map, 4);
     point_clouds[pc_pts_in_view] = addPointCloud(viewer_, pc_pts_in_view, 8);
-    point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 6);
+    point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 20);
 
     // Set viewer angle
     setViewerPose(*viewer_, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z);

@@ -1,9 +1,11 @@
 tmp.cpp
+fr1_rgb_calibration/*
 test_data/*
 vo/*
 backup/*
 README*
 *.png
+*.jpg
 garbage/*
 test_data/*.png
 .vscode/
