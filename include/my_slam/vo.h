@@ -91,11 +91,11 @@ public: // Initialization
 
   void estimateMotionAnd3DPoints(Mat &R, Mat &t, 
       vector<DMatch> &inlier_matches, vector<Point3f> &pts3d_in_curr);
-
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
 
 public: // Tracking
   // void find3Dto2DCorrespondences()
+  bool checkInsertingKeyframe(Frame::Ptr curr, Frame::Ptr ref);
 };
 
 } // namespace my_slam

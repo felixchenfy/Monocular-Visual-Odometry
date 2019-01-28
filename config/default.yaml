@@ -29,10 +29,8 @@ camera_info.fy: 615
 camera_info.cx: 320
 camera_info.cy: 240
 
-# ===== VO Parameters 
-
-# Store the previous N frames and their features.
-buffsize_of_prev_frames: 1
+# ======================== VO Parameters ========================
+# ------------------- Feature Matching -------------------
 
 # Matching descriptos
 feature_match_method_index: 1
@@ -58,3 +56,7 @@ level_pyramid: 4
 # keyframe_rotation: 0.1
 # keyframe_translation: 0.1
 # map_point_erase_ratio: 0.1
+
+# ------------------- Tracking -------------------
+MIN_DIST_BETWEEN_KEYFRAME: 0.1
+MIN_ROTATED_ANGLE: 0.1

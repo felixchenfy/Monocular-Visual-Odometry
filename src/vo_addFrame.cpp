@@ -13,6 +13,10 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     curr_ = frame;
     const int img_id = curr_->id_;
     const Mat &K = curr_->camera_->K_;
+    if (img_id==0)
+        ref_ = curr_;
+    else
+        ref_ = keyframes_.back();
 
 
     // Start
@@ -35,7 +39,6 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // Update params of the first frame
             keyframes_.push_back(curr_);
             cout << "!!! INSERT KEYFRAME: " << img_id << " !!!" << endl;
-            ref_ = curr_;
         }
         else if (vo_state_ == INITIALIZATION)
         {
@@ -118,12 +121,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             curr_->T_w_c_ = transRt2T(R, t).inv();
 
             // -- Insert a keyframe is motion is large
-            ref_ = keyframes_.back();
-            Mat T_key_to_curr = ref_->T_w_c_.inv() * curr_->T_w_c_;
-            double MIN_DIST_BETWEEN_KEYFRAME=0.05;
-            double moved_dist = calcMatNorm(T_key_to_curr(cv::Rect(3,0,1,3)));
-            cout << "Moving dist: "<< moved_dist <<endl;
-            if (moved_dist > MIN_DIST_BETWEEN_KEYFRAME)
+            if (checkInsertingKeyframe(curr_, ref_))
             {
                 cout << "!!! INSERT KEYFRAME: " << img_id << " !!!" << endl;
 

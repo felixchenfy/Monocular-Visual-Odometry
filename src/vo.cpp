@@ -102,4 +102,28 @@ void VisualOdometry::estimateMotionAnd3DPoints(Mat &R, Mat &t,
         pts3d_in_curr.push_back(transCoord(p1, R, t));
 }
 
+
+// ------------------- Tracking -------------------
+bool VisualOdometry::checkInsertingKeyframe(Frame::Ptr curr, Frame::Ptr ref){
+    Mat T_key_to_curr = ref->T_w_c_.inv() * curr->T_w_c_;
+    Mat R, t, R_vec;
+    getRtFromT(T_key_to_curr, R, t);
+    cv::Rodrigues(R, R_vec);
+
+    static double MIN_DIST_BETWEEN_KEYFRAME = my_basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
+    static double MIN_ROTATED_ANGLE = my_basics::Config::get<double>("MIN_ROTATED_ANGLE");
+
+    double moved_dist = calcMatNorm(t);
+    double rotated_angle =  calcMatNorm(R_vec);
+
+    printf("Movint dist = %.5f; Rotated angle = %.5f\n", moved_dist, rotated_angle);
+
+    // Satisfy each one will be a good keyframe
+    bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;
+
+    return res;
+}
+
+
+
 } // namespace my_slam
