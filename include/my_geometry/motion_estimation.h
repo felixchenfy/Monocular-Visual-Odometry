@@ -9,10 +9,11 @@
 #include "my_geometry/epipolar_geometry.h"
 #include "my_basics/opencv_funcs.h"
 
-using namespace my_basics;
 
 namespace my_geometry
 {
+using namespace my_basics;
+
 // This is a giant function, which computes: E21/H21, all their decompositions, all corresponding triangulation results,
 //      Then, choose between E/H based on ORB-SLAM2 paper. 
 //      If choose H, then choose the one with largest norm z in camera direction.

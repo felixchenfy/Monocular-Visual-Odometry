@@ -14,7 +14,7 @@ Point2f cam2pixel(const Mat &p, const Mat &K);
 Mat world2camera(const Point3f &p, const Mat &T_world_to_cam);
 
 
-// ---------------- transformations (by Eigen && Sophus; for optimization) ----------------
+// ---------------- transformations (by Eigen && Sophus; For g2o optimization) ----------------
 // ------------ !!! Copied from Dr. Xiang Gao's book !!! --------------
 // TO DO
 

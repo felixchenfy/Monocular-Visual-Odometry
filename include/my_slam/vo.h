@@ -24,12 +24,11 @@
 #include "my_slam/mappoint.h"
 #include "my_slam/motion_funcs.h"
 
-using namespace std;
-using namespace cv;
-using namespace my_geometry;
-
 namespace my_slam
 {
+using namespace std; 
+using namespace cv;
+using namespace my_geometry;
 
 class VisualOdometry
 {
@@ -87,15 +86,7 @@ public: // ------------------------------- Mapping -----------------------------
       Mat &candidate_descriptors_in_map);
   vector<Mat> pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
-
-public: // ------------------------------- Optimization -------------------------------
-  void bundleAdjustment(
-      const vector<cv::Point3f> points_3d,
-      const vector<cv::Point2f> points_2d,
-      const Mat &K, // camera intrinsics
-      Mat &T_w2c_cv);
 };
-
 } // namespace my_slam
 
 #endif // FRAME_H

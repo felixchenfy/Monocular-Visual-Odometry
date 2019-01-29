@@ -7,12 +7,12 @@
 #include "my_basics/opencv_funcs.h"
 #include "my_geometry/camera.h" // transformations related to camera
 
-using namespace std;
-using namespace cv;
-using namespace my_basics;
 
 namespace my_geometry
 {
+using namespace std;
+using namespace cv;
+using namespace my_basics;
 
 // ---------------- main: essential, homography, triangulation ----------------
 void estiMotionByEssential(

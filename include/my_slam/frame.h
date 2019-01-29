@@ -7,13 +7,14 @@
 #include "my_basics/opencv_funcs.h"
 #include "my_geometry/camera.h"
 #include "my_geometry/feature_match.h"
+
+
+namespace my_slam
+{
 using namespace std;
 using namespace cv;
 using namespace my_basics;
 using namespace my_geometry;
-
-namespace my_slam
-{
 
 class Frame
 {

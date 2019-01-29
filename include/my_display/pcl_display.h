@@ -17,11 +17,13 @@ Instead of 15+ seconds, the linking only takes like a 3 seconds.
 #include <string>
 #include <opencv2/core/core.hpp>
 
-using namespace std;
-typedef unsigned char uchar;
+
 
 namespace my_display
 {
+using namespace std;
+typedef unsigned char uchar;
+
 class PclViewer
 {
 

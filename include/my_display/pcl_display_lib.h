@@ -17,10 +17,9 @@
 
 #include "my_basics/eigen_funcs.h"
 
-using namespace std;
 namespace my_display
 {
-
+using namespace std;
 using namespace pcl;
 
 typedef PointCloud<PointXYZRGB>::Ptr CloudPtr;

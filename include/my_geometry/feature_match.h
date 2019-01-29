@@ -3,10 +3,11 @@
 #define FEATURE_MATCH_H
 
 #include "my_geometry/common_include.h"
-using namespace std;
 
 namespace my_geometry
 {
+using namespace std;
+
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
                       bool SET_PARAM_BY_YAML = true);
 

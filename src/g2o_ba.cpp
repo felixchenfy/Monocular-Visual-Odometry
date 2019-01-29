@@ -1,5 +1,6 @@
 
-#include <iostream>
+#include "my_optimization/g2o_ba.h"
+
 #include <cmath>
 #include <stdio.h>
 
@@ -9,13 +10,10 @@
 #include <sophus/so3.h>
 #include <sophus/se3.h>
 
-#include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-
 #include <opencv2/core/eigen.hpp>
-
 
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_unary_edge.h>
@@ -23,21 +21,18 @@
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 #include <g2o/types/sba/types_six_dof_expmap.h>
-#include <chrono>
+#include <chrono> // timer
 
-using namespace std;
-using namespace cv;
-
-// ------------------------- Assistant Functions -------------------------
-
-cv::Mat transRt2T(const cv::Mat &R, const cv::Mat &t)
+namespace my_optimization
 {
-    cv::Mat T = (cv::Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
-                 R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
-                 R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0),
-                 0, 0, 0, 1);
-    return T;
+// Declaration of some functions used only in this script
+Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv);
+cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus);
 }
+
+namespace my_optimization
+{
+// ------------------------- Assistant Functions -------------------------
 
 Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv)
 {
@@ -57,13 +52,8 @@ cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
     eigen2cv(eigen_t, cv_t);
     eigen2cv(eigen_R, cv_R);
 
-    return transRt2T(cv_R, cv_t);
+    return my_basics::transRt2T(cv_R, cv_t);
 }
-
-
-
-namespace my_slam
-{
 
 // ------------------------- g2o optimization -------------------------
 
@@ -284,19 +274,23 @@ void bundleAdjustment(
         optimizer.initializeOptimization();
         optimizer.optimize(optimize_iters);
     }
-    cout << endl
-         << "after optimization:" << endl;
-    cout << "T=" << endl
-         << Eigen::Isometry3d(pose->estimate()).matrix() << endl;
 
     // Final: update T_cam_to_world
     T_cam_to_world = Sophus::SE3(
         pose->estimate().rotation(),
         pose->estimate().translation());
+    // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
 
     // -- Change data format back
+    Mat tmp = T_world_to_cam_cv.clone();
     T_cam_to_world_cv = transT_sophus2cv(T_cam_to_world);
     T_world_to_cam_cv = T_cam_to_world_cv.inv();
+
+    cout << "\nBefore Bundle Adjustment:\n"
+         << tmp << endl;
+    cout << "After Bundle Adjustment:\n"
+         << T_world_to_cam_cv << endl
+         << endl;
 }
 
-} // namespace my_slam
+} // namespace my_optimization

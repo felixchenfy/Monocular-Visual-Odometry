@@ -6,7 +6,7 @@ import cv2
 import glob # for getting files' names in the disk
 # import pickle # for saving variables to disk
 
-IMAGE_FOLDER='/home/feiyu/Desktop/slam/code/project/my2/fr1_rgb_calibration/'
+IMAGE_FOLDER='/home/feiyu/Desktop/slam/my_vo/my2/fr1_rgb_calibration/'
 
 
 # termination criteria

@@ -1,5 +1,6 @@
 
 #include "my_slam/vo.h"
+#include "my_optimization/g2o_ba.h"
 
 namespace my_slam
 {
@@ -117,15 +118,14 @@ void VisualOdometry::poseEstimationPnP()
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
     my_geometry::matchFeatures(candidate_descriptors_in_map, curr_->descriptors_, curr_->matches_);
     cout << "Number of 3d-2d pairs: " << curr_->matches_.size() << endl;
-    vector<Point3f> pts_3d;
-    vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
+    vector<Point3f> pts_3d, tmp_pts_3d;
+    vector<Point2f> pts_2d, tmp_pts_2d; // a point's 2d pos in image2 pixel curr_
     for (int i = 0; i < curr_->matches_.size(); i++)
     {
-        DMatch &dm = curr_->matches_[i];
-        MapPoint::Ptr mappoint = candidate_mappoints_in_map[dm.queryIdx];
+        DMatch &match = curr_->matches_[i];
+        MapPoint::Ptr mappoint = candidate_mappoints_in_map[match.queryIdx];
         pts_3d.push_back(Mat_to_Point3f(mappoint->pos_));
-        pts_2d.push_back(curr_->keypoints_[dm.trainIdx].pt);
-        mappoint->matched_times_++;
+        pts_2d.push_back(curr_->keypoints_[match.trainIdx].pt);
     }
 
     // -- Solve PnP, get T_cam1_to_cam2
@@ -134,13 +134,29 @@ void VisualOdometry::poseEstimationPnP()
     int iterationsCount = 100;
     float reprojectionError = 5.0;
     double confidence = 0.999;
-    Mat pnp_inliers_mask;
+    Mat pnp_inliers_mask; // type = 32SC1, size = 999x1
     solvePnPRansac(pts_3d, pts_2d, curr_->camera_->K_, Mat(), R_vec, t,
                    useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
     Rodrigues(R_vec, R);
 
+    // -- Record which are inlier points used in PnP
+    print_MatProperty(pnp_inliers_mask);
+    for (int i=0;i<pnp_inliers_mask.rows;i++){
+        int good_idx=pnp_inliers_mask.at<int>(i,0);
+        tmp_pts_3d.push_back(pts_3d[good_idx]);
+        tmp_pts_2d.push_back(pts_2d[good_idx]);
+        DMatch &match = curr_->matches_[good_idx];
+        candidate_mappoints_in_map[match.queryIdx]->matched_times_++;
+    }
+    pts_3d.swap(tmp_pts_3d);
+    pts_2d.swap(tmp_pts_2d);
+
     // -- Update current camera pos
     curr_->T_w_c_ = transRt2T(R, t).inv();
+
+    // -- Bundle Adjustment
+    my_optimization::bundleAdjustment(pts_3d, pts_2d,curr_->camera_->K_,curr_->T_w_c_);
+
 }
 
 // ------------------- Mapping -------------------

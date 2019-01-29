@@ -20,16 +20,21 @@ add_library(my_geometry SHARED
     motion_estimation.cpp
 )
 
+add_library( my_optimization SHARED
+    g2o_ba.cpp
+)
+
+
 add_library( my_slam SHARED
     frame.cpp
     vo.cpp
     vo_addFrame.cpp
     vo_motions.cpp
-    vo_g2o.cpp
     map.cpp
     mappoint.cpp
     motion_funcs.cpp
 )
+
 
 target_link_libraries( my_basics
     ${THIRD_PARTY_LIBS} 
@@ -43,9 +48,15 @@ target_link_libraries( my_geometry
     ${THIRD_PARTY_LIBS} my_basics
 )
 
-target_link_libraries( my_slam
-    ${THIRD_PARTY_LIBS} my_geometry my_basics
+target_link_libraries( my_optimization
+    ${THIRD_PARTY_LIBS} my_basics
 )
+
+
+target_link_libraries( my_slam
+    ${THIRD_PARTY_LIBS} my_geometry my_basics my_optimization
+)
+
 
 # add_executable(main main.cpp)
 # target_link_libraries( main

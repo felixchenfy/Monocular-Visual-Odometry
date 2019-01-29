@@ -12,11 +12,10 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-using namespace std;
-using namespace cv;
-
 namespace my_basics
 {
+using namespace std;
+using namespace cv;
 
 // ---------------- image operation ----------------
 vector<unsigned char> getPixelAt(const Mat &image, int x, int y);

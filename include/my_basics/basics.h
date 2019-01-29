@@ -14,10 +14,10 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace std;
 
 namespace my_basics
 {
+using namespace std;
 
 // Convert int to string, and fill it with zero before the number to make it specified width
 string int2str(int num, int width, char char_to_fill='0');

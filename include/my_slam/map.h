@@ -8,6 +8,9 @@
 
 namespace my_slam
 {
+using namespace std; 
+using namespace cv;
+
 class Map
 {
 public:

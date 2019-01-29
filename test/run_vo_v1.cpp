@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     const bool PRINT_RES = false;
     vector<string> image_paths;
     if(DEBUG_MODE){
-        string folder="/home/feiyu/Desktop/slam/code/project/my2/test_data/";
+        string folder="/home/feiyu/Desktop/slam/my_vo/my2/test_data/";
         vector<string> tmp{
             "image0001.jpg", "image0013.jpg", "image0015.jpg"
         };

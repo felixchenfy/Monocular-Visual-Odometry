@@ -56,6 +56,10 @@ Correct:
 Wrong:
 	Matrix3f m=AngleAxisf(1.0, Vector3f::UnitY());
 
+### Sometimes, include Eigen first, then include opencv
+For this one: #include <opencv2/core/eigen.hpp>,
+I must include some eigen libraries beforehand.
+
 ### data type: use double all the time
 When I change data from opencv's double to eigen's float,
 the result goes wrong.

@@ -9,7 +9,7 @@ max_num_images: 300
 
 # -- fr1_desk dataset
 # https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
-# dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1_desk
+# dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/dataset_images_fr1_desk
 # num_images: 100
 # camera_info.fx: 517.3
 # camera_info.fy: 516.5
@@ -17,7 +17,7 @@ max_num_images: 300
 # camera_info.cy: 249.7
 
 # -- fr1_xyz dataset
-# dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1_xyz
+# dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/dataset_images_fr1_xyz
 # num_images: 100
 # camera_info.fx: 517.3
 # camera_info.fy: 516.5
@@ -25,7 +25,7 @@ max_num_images: 300
 # camera_info.cy: 249.7
 
 # -- New Tsukuba Stereo dataset used in matlab tutorial
-dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_matlab
+dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/dataset_images_matlab
 num_images: 149
 camera_info.fx: 615
 camera_info.fy: 615

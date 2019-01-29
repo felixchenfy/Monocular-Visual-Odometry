@@ -5,8 +5,8 @@ import cv2
 import glob, os
 
 if 1: # fr1 dataset
-    INPUT_FOLDER = '/home/feiyu/Desktop/slam/code/project/my2/dataset_images_fr1_xyz/'
-    OUTPUT_FOLDER = '/home/feiyu/Desktop/slam/code/project/my2/undist/'
+    INPUT_FOLDER = '/home/feiyu/Desktop/slam/my_vo/my2/dataset_images_fr1_xyz/'
+    OUTPUT_FOLDER = '/home/feiyu/Desktop/slam/my_vo/my2/undist/'
 
     camera_intrinsics = np.array([
         [517.3, 0, 325.1],
