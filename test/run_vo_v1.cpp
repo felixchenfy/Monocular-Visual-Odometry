@@ -36,7 +36,7 @@ using namespace my_slam;
 // functions for this script
 bool checkInputArguments(int argc, char **argv);
 
-const string IMAGE_WINDOW_NAME = "window name";
+const string IMAGE_WINDOW_NAME = "Green: keypoints; Red: inlier matches with map points";
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
 PclViewer::Ptr setUpPclDisplay();
@@ -100,14 +100,14 @@ int main(int argc, char **argv)
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
         bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
-        waitPclKeyPress(pcl_displayer);
+        static const int PCL_WAIT_FOR_KEY_PRESS=my_basics::Config::get<int>("PCL_WAIT_FOR_KEY_PRESS");
+        if(PCL_WAIT_FOR_KEY_PRESS==1)
+            waitPclKeyPress(pcl_displayer);
 
         // Return
         cout << "Finished an image" << endl;
-        // if (img_id == 100)
+        // if (img_id == 100 || vo->vo_state_ == VisualOdometry::OK)
         //     break;
-        // if (vo->DEBUG_STOP_PROGRAM_ || vo->vo_state_ == VisualOdometry::OK)
-            // break;
     }
     // Wait for user close
     while (!pcl_displayer->wasStopped())
@@ -228,7 +228,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
 }
 
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer){
-    while (0 && !pcl_displayer->checkKeyPressed())
+    while (!pcl_displayer->checkKeyPressed())
     {
         pcl_displayer->spinOnce(10);
     }

@@ -1,11 +1,10 @@
 %YAML:1.0
 
-# ===== Path to the images
-
-# ===== Images and camera parameters
+# ===== Control for displaying
 max_num_images: 300
+PCL_WAIT_FOR_KEY_PRESS: 0 # If 1, PCL Viewer will stop and wait for any of your keypress before continueing.
 
-# Camera intrinsics
+# ===== Dataset and camera intrinsics
 
 # -- fr1_desk dataset
 # https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
@@ -33,6 +32,7 @@ camera_info.cx: 320
 camera_info.cy: 240
 
 # ======================== VO Parameters ========================
+
 # ------------------- Feature Matching -------------------
 
 # Matching descriptos
@@ -54,12 +54,13 @@ max_number_of_keypoints: 1500
 scale_factor: 1.2
 level_pyramid: 4
 
-# max_num_lost: 10
-# min_inliers: 30
-# keyframe_rotation: 0.1
-# keyframe_translation: 0.1
-# map_point_erase_ratio: 0.1
+
+# ------------------- Initialization -------------------
+MIN_PIXEL_DIST_FOR_INIT_VO: 70
 
 # ------------------- Tracking -------------------
 MIN_DIST_BETWEEN_KEYFRAME: 0.1
 MIN_ROTATED_ANGLE: 0.1
+
+# ------------------- Optimization -------------------
+USE_BA: 1 # 1 for true, 0 for false

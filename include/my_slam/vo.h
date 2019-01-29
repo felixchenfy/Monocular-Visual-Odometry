@@ -60,8 +60,6 @@ public: // ------------------------------- Member variables --------------------
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
-  // Debug
-  bool DEBUG_STOP_PROGRAM_;
 
 public: // ------------------------------- Constructor
   VisualOdometry();

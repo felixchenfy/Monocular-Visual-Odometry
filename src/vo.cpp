@@ -8,8 +8,6 @@ namespace my_slam
 VisualOdometry::VisualOdometry() : map_(new (Map))
 {
     vo_state_ = BLANK;
-    // debug
-    DEBUG_STOP_PROGRAM_ = false;
 }
 
 void VisualOdometry::getMappointsInCurrentView(
@@ -40,7 +38,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     // -- Output
     vector<DMatch> &inlier_matches = curr_->inlier_matches_;
     vector<Point3f> &pts3d_in_curr = curr_->inliers_pts3d_;
-    Mat &T=curr_->T_w_c_;
+    Mat &T = curr_->T_w_c_;
 
     // -- Start
     // Estimation motion by Essential && Homography matrix and get inlier points
@@ -82,9 +80,9 @@ bool VisualOdometry::checkIfVoGoodToInit(
 
     vector<double> dists_between_kpts;
     double mean_dist = computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
-    return mean_dist > 70;
+    static const double MIN_PIXEL_DIST_FOR_INIT_VO = my_basics::Config::get<double>("MIN_PIXEL_DIST_FOR_INIT_VO");
+    return mean_dist > MIN_PIXEL_DIST_FOR_INIT_VO;
 }
-
 
 // ------------------- Tracking -------------------
 bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref)
@@ -94,8 +92,8 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     getRtFromT(T_key_to_curr, R, t);
     cv::Rodrigues(R, R_vec);
 
-    static double MIN_DIST_BETWEEN_KEYFRAME = my_basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
-    static double MIN_ROTATED_ANGLE = my_basics::Config::get<double>("MIN_ROTATED_ANGLE");
+    static const double MIN_DIST_BETWEEN_KEYFRAME = my_basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
+    static const double MIN_ROTATED_ANGLE = my_basics::Config::get<double>("MIN_ROTATED_ANGLE");
 
     double moved_dist = calcMatNorm(t);
     double rotated_angle = calcMatNorm(R_vec);
@@ -142,8 +140,9 @@ void VisualOdometry::poseEstimationPnP()
     // -- Record which are inlier points used in PnP
     vector<MapPoint::Ptr> inlier_candidates;
     int num_inliers = pnp_inliers_mask.rows;
-    for (int i=0;i<num_inliers;i++){
-        int good_idx=pnp_inliers_mask.at<int>(i,0);
+    for (int i = 0; i < num_inliers; i++)
+    {
+        int good_idx = pnp_inliers_mask.at<int>(i, 0);
 
         // ptr 3d && 2d
         tmp_pts_3d.push_back(pts_3d[good_idx]);
@@ -162,10 +161,15 @@ void VisualOdometry::poseEstimationPnP()
     curr_->T_w_c_ = transRt2T(R, t).inv();
 
     // -- Bundle Adjustment
-    my_optimization::bundleAdjustment(pts_3d, pts_2d,curr_->camera_->K_,curr_->T_w_c_);
-    // After BA, update points' 3d pos
-    for (int i=0;i<num_inliers;i++){
-        inlier_candidates[i]->resetPos(pts_3d[i]);
+    static const int USE_BA = my_basics::Config::get<int>("USE_BA");
+    if (USE_BA==1)
+    {
+        // Update curr_->T_w_c_
+        my_optimization::bundleAdjustment(pts_3d, pts_2d, curr_->camera_->K_, curr_->T_w_c_);
+
+        // Update points' 3d pos
+        for (int i = 0; i < num_inliers; i++)
+            inlier_candidates[i]->resetPos(pts_3d[i]);
     }
 }
 
