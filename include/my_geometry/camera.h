@@ -6,12 +6,17 @@
 
 namespace my_geometry
 {
-// ---------------- transformation ----------------
+// ---------------- transformations (by OpenCV) ----------------
 Point2f pixel2camNormPlane(const Point2f &p, const Mat &K);
 Point3f pixel2cam(const Point2f &p, const Mat &K, double depth = 1);
 Point2f cam2pixel(const Point3f &p, const Mat &K);
 Point2f cam2pixel(const Mat &p, const Mat &K);
 Mat world2camera(const Point3f &p, const Mat &T_world_to_cam);
+
+
+// ---------------- transformations (by Eigen && Sophus; for optimization) ----------------
+// ------------ !!! Copied from Dr. Xiang Gao's book !!! --------------
+// TO DO
 
 // ---------------- Class ----------------
 class Camera /*This is defined but not acctually used*/

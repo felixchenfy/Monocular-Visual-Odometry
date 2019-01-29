@@ -34,7 +34,7 @@ namespace my_slam
 class VisualOdometry
 {
 
-public: // Member variables
+public: // ------------------------------- Member variables -------------------------------
   typedef shared_ptr<VisualOdometry> Ptr;
 
   enum VOState
@@ -45,12 +45,6 @@ public: // Member variables
     LOST
   };
   VOState vo_state_;
-  // deque<my_slam::Frame::Ptr> keyframes_; // store the previous frames
-
-  // // Initiliazation
-  // Frame::Ptr init_frame_;
-  // vector<KeyPoint> init_frame_keypoints_;
-  // Mat init_frame_descriptors_;
 
   // Frame
   Frame::Ptr curr_;
@@ -70,28 +64,36 @@ public: // Member variables
   // Debug
   bool DEBUG_STOP_PROGRAM_;
 
-public: // Constructor
+public: // ------------------------------- Constructor
   VisualOdometry();
   void addFrame(my_slam::Frame::Ptr frame);
 
-public: // Functions
-public: // Initialization
+  // ================================ Functions ================================
+
+public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
 
-public: // Tracking
+public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()
   bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);
   void optimizeMap();
   void poseEstimationPnP();
 
-public: // Mapping
+public: // ------------------------------- Mapping -------------------------------
   void addKeyFrame(Frame::Ptr frame);
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &candidate_descriptors_in_map);
   vector<Mat> pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
+
+public: // ------------------------------- Optimization -------------------------------
+  void bundleAdjustment(
+      const vector<cv::Point3f> points_3d,
+      const vector<cv::Point2f> points_2d,
+      const Mat &K, // camera intrinsics
+      Mat &T_w2c_cv);
 };
 
 } // namespace my_slam

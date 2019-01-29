@@ -32,7 +32,9 @@ include_directories( ${Sophus_INCLUDE_DIRS} )
 # G2O
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
 find_package( G2O REQUIRED )
+find_package( CSparse REQUIRED ) ## note!! if the csparse is not found, please install: sudo apt-get install libsuitesparse-dev
 include_directories( ${G2O_INCLUDE_DIRS} )
+include_directories( ${CSPARSE_INCLUDE_DIR} )
 # PCL 
 find_package( PCL REQUIRED ) 
 include_directories( ${PCL_INCLUDE_DIRS} )
