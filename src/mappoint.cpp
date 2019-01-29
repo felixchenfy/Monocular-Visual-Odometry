@@ -16,4 +16,9 @@ MapPoint::MapPoint(
     id_ = factory_id_++;
 }
 
+void MapPoint::resetPos(Point3f pos)
+{
+    pos_ = (Mat_<double>(3,1) << pos.x, pos.y, pos.z);
+}
+
 } // namespace my_slam

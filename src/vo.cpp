@@ -140,13 +140,20 @@ void VisualOdometry::poseEstimationPnP()
     Rodrigues(R_vec, R);
 
     // -- Record which are inlier points used in PnP
-    print_MatProperty(pnp_inliers_mask);
-    for (int i=0;i<pnp_inliers_mask.rows;i++){
+    vector<MapPoint::Ptr> inlier_candidates;
+    int num_inliers = pnp_inliers_mask.rows;
+    for (int i=0;i<num_inliers;i++){
         int good_idx=pnp_inliers_mask.at<int>(i,0);
+
+        // ptr 3d && 2d
         tmp_pts_3d.push_back(pts_3d[good_idx]);
         tmp_pts_2d.push_back(pts_2d[good_idx]);
         DMatch &match = curr_->matches_[good_idx];
-        candidate_mappoints_in_map[match.queryIdx]->matched_times_++;
+
+        // map point
+        MapPoint::Ptr inlier_mappoint = candidate_mappoints_in_map[match.queryIdx];
+        inlier_candidates.push_back(inlier_mappoint);
+        inlier_mappoint->matched_times_++;
     }
     pts_3d.swap(tmp_pts_3d);
     pts_2d.swap(tmp_pts_2d);
@@ -156,7 +163,10 @@ void VisualOdometry::poseEstimationPnP()
 
     // -- Bundle Adjustment
     my_optimization::bundleAdjustment(pts_3d, pts_2d,curr_->camera_->K_,curr_->T_w_c_);
-
+    // After BA, update points' 3d pos
+    for (int i=0;i<num_inliers;i++){
+        inlier_candidates[i]->resetPos(pts_3d[i]);
+    }
 }
 
 // ------------------- Mapping -------------------

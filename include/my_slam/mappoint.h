@@ -13,7 +13,7 @@ using namespace cv;
 // class Frame;
 class MapPoint
 {
-public: // Variables
+public: // Basics Properties
     typedef shared_ptr<MapPoint> Ptr;
 
     static unsigned long factory_id_; 
@@ -34,34 +34,11 @@ public: // Properties for constructing local mapping
     vector<Point2f>    uv_in_matched_frames_;
 
 
-public: // Constructor
+public: // Functions
     MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,
         unsigned char r=0, unsigned char g=0, unsigned char b=0);
+    void resetPos(Point3f pos);
 
-public: // Functions
-
-
-    // list<Frame*>    observed_frames_;   // key-frames that can observe this point 
-    
-    // MapPoint();
-    // MapPoint( 
-    //     unsigned long id, 
-    //     const Vector3d& position, 
-    //     const Vector3d& norm, 
-    //     Frame* frame=nullptr, 
-    //     const Mat& descriptor=Mat() 
-    // );
-    
-    // inline cv::Point3f getPositionCV() const {
-    //     return cv::Point3f( pos_(0,0), pos_(1,0), pos_(2,0) );
-    // }
-    
-    // static MapPoint::Ptr createMapPoint();
-    // static MapPoint::Ptr createMapPoint( 
-    //     const Vector3d& pos_world, 
-    //     const Vector3d& norm_,
-    //     const Mat& descriptor,
-    //     Frame* frame );
 };
 }
 
