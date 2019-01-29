@@ -3,6 +3,7 @@
 #define MAPPOINT_H
 
 #include "my_slam/common_include.h"
+#include "my_slam/frame.h"
 
 namespace my_slam
 {
@@ -13,10 +14,10 @@ class MapPoint
 public: // Variables
     typedef shared_ptr<MapPoint> Ptr;
 
-    static unsigned long factory_id_;    // factory id
+    static unsigned long factory_id_; 
     unsigned long id_;
     Mat pos_;
-    Mat norm_; // Normal of viewing direction 
+    Mat norm_; // Vector pointing from camera center to the point
     vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
 
@@ -26,6 +27,10 @@ public: // Properties for constructing local mapping
     int         matched_times_;     // being an inliner in pose estimation
     int         visible_times_;     // being visible in current frame 
     
+    // TO DO: Add property of which frame this mappoint is as inlier. This is for optimization.
+    vector<Frame::Ptr>    matched_frames_;
+    vector<Point2f>    uv_in_matched_frames_;
+
 
 public: // Constructor
     MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,

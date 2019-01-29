@@ -5,7 +5,6 @@
 //     return (1);
 // }
 
-
 // This is for testing basic functions/datatypes in Eigen.
 // 1. Datatype conversions between:
 //      OpenCV and Matrix3d/Vector3d/Isometry3d/Affine3d.
@@ -45,24 +44,13 @@ int main(void)
     cout << "R: \n"
          << R << endl;
 
-    { // test 1: test test functions defined in this script
+    Eigen::Matrix3d Re;
+    Eigen::Vector3d te;
+    Eigen::Isometry3d Te;
+    Eigen::Affine3d Te_affine;
+    transRtFromCV2Eigen_good_method(R, t, Re, te, Te, Te_affine);
+    transRtFromCV2Eigen_manually(R_vec, t, Re, te, Te, Te_affine);
 
-        Eigen::Matrix3d Re;
-        Eigen::Vector3d te;
-        Eigen::Isometry3d Te;
-        Eigen::Affine3d Te_affine;
-        transRtFromCV2Eigen_good_method(R, t, Re, te, Te, Te_affine);
-        transRtFromCV2Eigen_manually(R_vec, t, Re, te, Te, Te_affine);
-    }
-
-    { // test 2: functions in the library
-
-        Eigen::Affine3d T_affine = my_basics::transCVMatRt2Affine3d(R_vec, t);
-        Eigen::Affine3f tmpT = T_affine.cast<float>();
-        cout << "\n==============================================\n";
-        cout << "Print result of T_affine:\n"
-             << tmpT.matrix() << endl;
-    }
     return 1;
 }
 
