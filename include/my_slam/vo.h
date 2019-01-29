@@ -45,7 +45,7 @@ public: // Member variables
     LOST
   };
   VOState vo_state_;
-  deque<my_slam::Frame::Ptr> keyframes_; // store the previous frames
+  // deque<my_slam::Frame::Ptr> keyframes_; // store the previous frames
 
   // // Initiliazation
   // Frame::Ptr init_frame_;
@@ -76,16 +76,17 @@ public: // Constructor
 
 public: // Functions
 public: // Initialization
-  void estimateMotionAnd3DPoints(Mat &R, Mat &t,
-                                 vector<DMatch> &inlier_matches, vector<Point3f> &pts3d_in_curr);
+  void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
 
 public: // Tracking
   // void find3Dto2DCorrespondences()
-  bool checkInsertingKeyframe(Frame::Ptr curr, Frame::Ptr ref);
+  bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);
   void optimizeMap();
+  void poseEstimationPnP();
 
 public: // Mapping
+  void addKeyFrame(Frame::Ptr frame);
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &candidate_descriptors_in_map);

@@ -199,9 +199,10 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
     }
-    if (0)
+    if (0 && vo->map_->checkKeyFrame(frame->id_)==false) // If frame is a keyframe
     {
         // -- Draw newly inserted points with specified color
+
         vec_pos.clear();
         vec_color.clear();
         color[0] = 255;
@@ -209,7 +210,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         color[2] = 0;
         // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
         // for (const Point3f &pt3d : frame->inliers_pts3d_)
-        for (const Point3f &pt3d : vo->keyframes_.back()->inliers_pts3d_)
+        for (const Point3f &pt3d : frame->inliers_pts3d_)
         {
             vec_pos.push_back(transCoord(pt3d, R, t));
             vec_color.push_back(color);

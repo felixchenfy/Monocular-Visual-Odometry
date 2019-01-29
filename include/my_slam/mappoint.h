@@ -20,6 +20,13 @@ public: // Variables
     vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
 
+public: // Properties for constructing local mapping
+
+    bool        good_;      // wheter a good point 
+    int         matched_times_;     // being an inliner in pose estimation
+    int         visible_times_;     // being visible in current frame 
+    
+
 public: // Constructor
     MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,
         unsigned char r=0, unsigned char g=0, unsigned char b=0);
@@ -27,14 +34,7 @@ public: // Constructor
 public: // Functions
 
 
-    // bool        good_;      // wheter a good point 
-    // Vector3d    pos_;       // Position in world
-    // Vector3d    norm_;      // Normal of viewing direction 
-    
     // list<Frame*>    observed_frames_;   // key-frames that can observe this point 
-    
-    // int         matched_times_;     // being an inliner in pose estimation
-    // int         visible_times_;     // being visible in current frame 
     
     // MapPoint();
     // MapPoint( 

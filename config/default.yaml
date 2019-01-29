@@ -26,7 +26,7 @@ max_num_images: 300
 
 # -- New Tsukuba Stereo dataset used in matlab tutorial
 dataset_dir: /home/feiyu/Desktop/slam/code/project/my2/dataset_images_matlab
-num_images: 150
+num_images: 149
 camera_info.fx: 615
 camera_info.fy: 615
 camera_info.cx: 320
@@ -41,7 +41,7 @@ feature_match_method_index: 1
   #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
   # method 2: the method in Lowe's 2004 paper:
   #           min dis / second min dis < 0.8
-match_ratio: 2.0 # This is for method 1 used in Dr. Xiang Gao's slambook:
+match_ratio: 1.5 # This is for method 1 used in Dr. Xiang Gao's slambook:
 lowe_dist_ratio: 0.8 # This is for method 2 of Lowe's 2004 SIFT paper
 
 # remove wrong matches
