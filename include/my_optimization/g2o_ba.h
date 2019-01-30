@@ -2,7 +2,6 @@
 #ifndef G2O_BA_H
 #define G2O_BA_H
 
-#include "my_basics/opencv_funcs.h"
 
 #include <iostream>
 #include <vector>

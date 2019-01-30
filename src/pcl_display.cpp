@@ -48,7 +48,7 @@ using namespace my_display_private;
 
 // constructor
 PclViewer::PclViewer(double x, double y, double z,
-                     double rotaxis_x, double rotaxis_y, double rotaxis_z)
+                     double rot_axis_x, double rot_axis_y, double rot_axis_z)
 {
     // Set names
     viewer_name_ = "viewer_name_";
@@ -65,7 +65,7 @@ PclViewer::PclViewer(double x, double y, double z,
     point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 20);
 
     // Set viewer angle
-    setViewerPose(*viewer_, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z);
+    setViewerPose(*viewer_, x, y, z, rot_axis_x, rot_axis_y, rot_axis_z);
 
     // Set keyboard event
     viewer_->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer_);
@@ -161,7 +161,7 @@ void PclViewer::update()
 {
     static int cnt_frame = 0;
     // Update camera
-    Eigen::Affine3f T_affine = my_basics::transCVMatRt2Affine3d(cam_R_vec_, cam_t_).cast<float>();
+    Eigen::Affine3f T_affine = my_basics::transT_CVRt_to_EigenAffine3d(cam_R_vec_, cam_t_).cast<float>();
     viewer_->removeCoordinateSystem(camera_frame_name_);
     viewer_->addCoordinateSystem(LEN_COORD_AXIS, T_affine, camera_frame_name_, 0);
 

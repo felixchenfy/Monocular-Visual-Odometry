@@ -133,9 +133,9 @@ PclViewer::Ptr setUpPclDisplay()
     double x = 0.5 * view_point_dist,
            y = -1.0 * view_point_dist,
            z = -1.0 * view_point_dist;
-    double rotaxis_x = -0.5, rotaxis_y = 0, rotaxis_z = 0;
+    double rot_axis_x = -0.5, rot_axis_y = 0, rot_axis_z = 0;
     PclViewer::Ptr pcl_displayer(
-        new PclViewer(x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
+        new PclViewer(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z));
     return pcl_displayer;
 }
 

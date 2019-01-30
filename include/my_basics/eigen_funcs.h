@@ -8,18 +8,32 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <sophus/so3.h>
+#include <sophus/se3.h>
+
+#include <opencv2/core/eigen.hpp>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp> // for cv::Rodrigues
+
 
 namespace my_basics
 {
 
-// convert cv::Mat R and t --> Affine3d SE3
-Eigen::Affine3d transCVMatRt2Affine3d(const cv::Mat &R0, const cv::Mat &t);
+// --------------  Eigen --------------
 
-// get Affine3d using pos (x,y,z) and euler angles (rotaxis_x, rotaxis_y, rotaxis_z)
-Eigen::Affine3d getAffine3d(double x, double y, double z, double rotaxis_x, double rotaxis_y, double rotaxis_z); 
+// Get Affine3d using pos (x,y,z) and axis-rotation (rot_axis_x, rot_axis_y, rot_axis_z) with maginitude
+Eigen::Affine3d getAffine3d(double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z);
 
-}
+// -------------- CV <--> Eigen --------------
+
+// Convert cv::Mat R and t --> Eigen Affine3d
+Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const cv::Mat &R, const cv::Mat &t);
+
+// -------------- CV <--> Sophus --------------
+Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv);
+cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus);
+
+} // namespace my_basics
 
 #endif

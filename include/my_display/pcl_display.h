@@ -41,7 +41,7 @@ class PclViewer
     // ----------------- constructor -----------------
     PclViewer( 
       double x = 1.0, double y = -1.0, double z = -1.0, 
-      double rotaxis_x = -0.5, double rotaxis_y = 0, double rotaxis_z = 0
+      double rot_axis_x = -0.5, double rot_axis_y = 0, double rot_axis_z = 0
     );
 
   public:

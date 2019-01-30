@@ -51,8 +51,8 @@ void setViewerPose(visualization::PCLVisualizer& viewer, const Eigen::Affine3f& 
 }
 
 void setViewerPose(visualization::PCLVisualizer& viewer,
-    double x, double y, double z, double rotaxis_x, double rotaxis_y, double rotaxis_z){
-    Eigen::Affine3d T = my_basics::getAffine3d(x, y, z, rotaxis_x, rotaxis_y, rotaxis_z); 
+    double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z){
+    Eigen::Affine3d T = my_basics::getAffine3d(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z); 
     setViewerPose(viewer, T.cast<float>());
 }
 

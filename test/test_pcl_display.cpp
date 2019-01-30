@@ -26,11 +26,11 @@ int main()
     double  x = 0.5*dis_scale,
             y = -1.0*dis_scale,
             z = -1.0*dis_scale;
-    double rotaxis_x = -0.5, rotaxis_y = 0, rotaxis_z = 0;
+    double rot_axis_x = -0.5, rot_axis_y = 0, rot_axis_z = 0;
     string viewer_name = "my pcl viewer";
     my_display::PclViewer::Ptr pcl_displayer(
         new my_display::PclViewer(
-            viewer_name, x, y, z, rotaxis_x, rotaxis_y, rotaxis_z));
+            viewer_name, x, y, z, rot_axis_x, rot_axis_y, rot_axis_z));
 
     // Set up camera pos.
     // Eigen::Affine3d T_affine;

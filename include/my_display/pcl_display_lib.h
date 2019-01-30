@@ -47,7 +47,7 @@ void setViewerPose (visualization::PCLVisualizer& viewer, const Eigen::Affine3f&
 
 // set the initial viewing angle (Overload by using pos and euler angles)
 void setViewerPose (visualization::PCLVisualizer& viewer,
-    double x, double y, double z, double rotaxis_x, double rotaxis_y, double rotaxis_z);
+    double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z);
 
 } // namespace my_display
 
