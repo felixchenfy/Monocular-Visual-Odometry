@@ -1,10 +1,12 @@
 %YAML:1.0
 
-# ===== Control for displaying
+# ===== Settings for displaying
 MAX_NUM_IMAGES: 300
 PCL_WAIT_FOR_KEY_PRESS: 0 # If 1, PCL Viewer will stop and wait for any of your keypress before continueing.
+USE_BA: 1 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
+DRAW_GROUND_TRUTH_TRAJ: 1 # Ground truth traj's color is set as green. Estimated is set as white.
+GROUND_TRUTH_TRAJ_FILENAME: /home/feiyu/Desktop/slam/my_vo/my2/test_data/cam_traj_truth.txt
 STORE_CAM_TRAJ: /home/feiyu/Desktop/slam/my_vo/my2/test_data/cam_traj.txt
-USE_BA: 0 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
 
 # ===== Dataset and camera intrinsics
 
@@ -61,7 +63,7 @@ level_pyramid: 4
 MIN_PIXEL_DIST_FOR_INIT_VO: 70
 
 # ------------------- Tracking -------------------
-MIN_DIST_BETWEEN_KEYFRAME: 0.1
-MIN_ROTATED_ANGLE: 0.1
+MIN_DIST_BETWEEN_KEYFRAME: 0.08
+MIN_ROTATED_ANGLE: 0.08
 
 

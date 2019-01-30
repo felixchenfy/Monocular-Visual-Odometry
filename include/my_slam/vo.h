@@ -70,7 +70,8 @@ public: // ------------------------------- Constructor
 public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
-
+  bool isInitialized();
+  
 public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()
   bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);

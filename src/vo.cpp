@@ -83,7 +83,9 @@ bool VisualOdometry::checkIfVoGoodToInit(
     static const double MIN_PIXEL_DIST_FOR_INIT_VO = my_basics::Config::get<double>("MIN_PIXEL_DIST_FOR_INIT_VO");
     return mean_dist > MIN_PIXEL_DIST_FOR_INIT_VO;
 }
-
+bool VisualOdometry::isInitialized(){
+    return vo_state_==OK;
+}
 // ------------------- Tracking -------------------
 bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref)
 {

@@ -22,7 +22,7 @@ vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
     // Set up image_paths
     vector<string> image_paths;
     string dataset_dir = my_basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
-    int num_images = my_basics::Config::get<int>("num_images"); 
+    int num_images = my_basics::Config::get<int>("num_images");
     boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
     for (int i = 0; i < num_images; i++)
     {
@@ -58,12 +58,17 @@ cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res)
 
 // -- Read/Write camera pose to file
 
-
 // Write pose to file: x, y, z, 1st row of R, 2nd row of R, 3rd row of R
 void writePoseToFile(const string filename, vector<cv::Mat> list_T)
 {
     ofstream fout;
     fout.open(filename);
+    if (!fout.is_open())
+    {
+        cout << "my WARNING: failed to store camera trajectory to the wrong file name of:" << endl;
+        cout << "    " << filename << endl;
+        return;
+    }
     for (auto T : list_T)
     {
         double x = T.at<double>(0, 3);

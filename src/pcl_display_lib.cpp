@@ -13,13 +13,10 @@ namespace my_display
 
 // initialize the viewer
 boost::shared_ptr<visualization::PCLVisualizer>
-initPointCloudViewer(const string &viewer_name, const string &camera_frame_name, const double LEN_COORD_AXIS)
+initPointCloudViewer(const string &viewer_name)
 {
     boost::shared_ptr<visualization::PCLVisualizer> viewer(
         new visualization::PCLVisualizer(viewer_name));
-
-    // Add Coordinate system
-    viewer->addCoordinateSystem(LEN_COORD_AXIS, camera_frame_name);
 
     // Other properties
     viewer->setBackgroundColor(0, 0, 0);

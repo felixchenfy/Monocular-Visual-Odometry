@@ -40,7 +40,8 @@ const string IMAGE_WINDOW_NAME = "Green: keypoints; Red: inlier matches with map
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
 PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer);
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, 
+    PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
 
 const bool DEBUG_MODE = false;
@@ -75,6 +76,7 @@ int main(int argc, char **argv)
 
     // -- Prepare Pcl display
     PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
+    bool DRAW_GROUND_TRUTH_TRAJ =  my_basics::Config::get<int>("DRAW_GROUND_TRUTH_TRAJ")==1;
 
     // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
@@ -103,7 +105,7 @@ int main(int argc, char **argv)
 
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
-        bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer);
+        bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer, DRAW_GROUND_TRUTH_TRAJ);
         static const int PCL_WAIT_FOR_KEY_PRESS = my_basics::Config::get<int>("PCL_WAIT_FOR_KEY_PRESS");
         if (PCL_WAIT_FOR_KEY_PRESS == 1)
             waitPclKeyPress(pcl_displayer);
@@ -183,7 +185,8 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
     return true;
 }
 
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, PclViewer::Ptr pcl_displayer)
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, 
+    PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
 {
 
     // -- Update camera pose
@@ -191,7 +194,31 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
     pcl_displayer->updateCameraPose(R_vec, t);
+    
+    // -- Update truth camera pose
+    if(DRAW_GROUND_TRUTH_TRAJ){
+        static string GROUND_TRUTH_TRAJ_FILENAME =  my_basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
+        static vector<cv::Mat> truth_poses= readPoseToFile(GROUND_TRUTH_TRAJ_FILENAME);
+        cv::Mat truth_T = truth_poses[frame->id_], truth_R_vec, truth_t;
+        getRtFromT(truth_T, truth_R_vec, truth_t);
+        
+        // Start drawing only when visual odometry has been initialized. (i.e. The first few frames are not drawn.)
+        // The reason is: we need scale the truth pose to be same as estiamted pose, so we can make comparison between them. 
+        // (And the underlying reason is that Mono SLAM cannot estiamte depth of point.)
+        static bool is_made_the_same_scale=false;
+        static double scale;
+        if(is_made_the_same_scale==false && vo->isInitialized()){
+            scale = calcMatNorm(truth_t)/calcMatNorm(t);
+            is_made_the_same_scale = true;
+        }
+        if(vo->isInitialized()){
+            truth_t/=scale;
+            pcl_displayer->updateCameraTruthPose(truth_R_vec, truth_t);
+        }else{
+            // not draw truth camera pose
+        }
 
+    }
     // ------------------------------- Update points ----------------------------------------
 
     vector<Point3f> vec_pos;
@@ -212,17 +239,16 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
     }
-    if (0 && vo->map_->checkKeyFrame(frame->id_) == false) // If frame is a keyframe
+    if (1 && vo->map_->checkKeyFrame(frame->id_) == true) 
     {
-        // -- Draw newly inserted points with specified color
+        // --  If frame is a keyframe, Draw newly triangulated points with color
+        // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
 
         vec_pos.clear();
         vec_color.clear();
         color[0] = 255;
         color[1] = 0;
         color[2] = 0;
-        // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
-        // for (const Point3f &pt3d : frame->inliers_pts3d_)
         for (const Point3f &pt3d : frame->inliers_pts3d_)
         {
             vec_pos.push_back(transCoord(pt3d, R, t));
@@ -230,8 +256,9 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         }
         pcl_displayer->updateCurrPoints(vec_pos, vec_color);
     }
+
     // -----------------------------------------------------------------------
-    // -- Update and display
+    // -- Display
     pcl_displayer->update();
     pcl_displayer->spinOnce(10);
     if (pcl_displayer->wasStopped())

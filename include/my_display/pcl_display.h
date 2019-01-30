@@ -32,10 +32,14 @@ class PclViewer
     typedef shared_ptr<PclViewer> Ptr;
 
     string viewer_name_;
-    string camera_frame_name_;
 
+    string camera_frame_name_;
     cv::Mat cam_R_vec_;
     cv::Mat cam_t_;
+
+    string truth_camera_frame_name_;
+    cv::Mat truth_cam_R_vec_;
+    cv::Mat truth_cam_t_;
 
   public:
     // ----------------- constructor -----------------
@@ -50,6 +54,7 @@ class PclViewer
     void updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
     void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t);
+    void updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t); 
     void update();
     void spinOnce(unsigned int millisecond);
     bool wasStopped();

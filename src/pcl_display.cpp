@@ -14,28 +14,44 @@ namespace my_display_private
 { // store pcl related class members here instead of .h, in order to speed up compiling.
 
 ViewerPtr viewer_;
-const double LEN_COORD_AXIS=0.1;
+const double LEN_COORD_AXIS = 0.1;
+const double LEN_COORD_AXIS_TRUTH_TRAJ = 0.05;
 
-const int NUM_PC = 4;
+// -- Point clouds to display
+
+// 1. camera truth trajectory
 string pc_cam_traj = "pc_cam_traj";
+const unsigned char pc_cam_traj_color[3] = {255, 255, 255};
+
+// 2. camera ground truth trajectory
+string pc_cam_traj_ground_truth = "pc_cam_traj_ground_truth";
+const unsigned char pc_cam_traj_ground_truth_color[3] = {0, 255, 0};
+
+// 3. map points
 string pc_pts_map = "pc_pts_map";
-string pc_pts_in_view = "pc_pts_in_view";
+
+// 4. newly triangulated points by current frame
 string pc_pts_curr = "pc_pts_curr";
-vector<string> point_clouds_names = {pc_cam_traj, pc_pts_map, pc_pts_in_view, pc_pts_curr};
+
+// Store the above into a vector and a unordered_map
+vector<string> point_clouds_names = {pc_cam_traj, pc_cam_traj_ground_truth, pc_pts_map, pc_pts_curr};
 unordered_map<string, CloudPtr> point_clouds;
 
-void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+// -- Functions
+
+// Set cloud points as the vector of pos and color
+void setCloudPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
 // Set keyboard event
-bool bKeyPressed=false;
-void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,void* viewer_void)
+bool bKeyPressed = false;
+void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void *viewer_void)
 {
-  pcl::visualization::PCLVisualizer::Ptr viewer = *static_cast<pcl::visualization::PCLVisualizer::Ptr *> (viewer_void);
-  if (event.keyDown())
-//   if (event.getKeySym () == "r" && event.keyDown ())
-  {
-    bKeyPressed=true;
-  }
+    pcl::visualization::PCLVisualizer::Ptr viewer = *static_cast<pcl::visualization::PCLVisualizer::Ptr *>(viewer_void);
+    if (event.keyDown())
+    //   if (event.getKeySym () == "r" && event.keyDown ())
+    {
+        bKeyPressed = true;
+    }
 }
 
 } // namespace my_display_private
@@ -53,60 +69,88 @@ PclViewer::PclViewer(double x, double y, double z,
     // Set names
     viewer_name_ = "viewer_name_";
     camera_frame_name_ = "camera_frame_name_";
+    truth_camera_frame_name_ = "truth_camera_frame_name_";
 
     // Set viewer
-    viewer_ = initPointCloudViewer(viewer_name_, camera_frame_name_, LEN_COORD_AXIS);
+    viewer_ = initPointCloudViewer(viewer_name_);
     viewer_->addCoordinateSystem(LEN_COORD_AXIS, "fixed world frame");
+    viewer_->addCoordinateSystem(LEN_COORD_AXIS, camera_frame_name_);
+    viewer_->addCoordinateSystem(LEN_COORD_AXIS_TRUTH_TRAJ, truth_camera_frame_name_);
 
-    // Add point clouds to viewer, and stored the cloud ptr into the hash
-    point_clouds[pc_cam_traj] = addPointCloud(viewer_, pc_cam_traj, 3); // last param is point size
-    point_clouds[pc_pts_map] = addPointCloud(viewer_, pc_pts_map, 4);
-    point_clouds[pc_pts_in_view] = addPointCloud(viewer_, pc_pts_in_view, 8);
-    point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 20);
+    // Add point clouds to viewer, and stored the cloud ptr into the hash. (Last param is point size.)
+    point_clouds[pc_cam_traj] = addPointCloud(viewer_, pc_cam_traj, 3);
+    point_clouds[pc_cam_traj_ground_truth] = addPointCloud(viewer_, pc_cam_traj_ground_truth, 3);
+    point_clouds[pc_pts_map] = addPointCloud(viewer_, pc_pts_map, 5);
+    point_clouds[pc_pts_curr] = addPointCloud(viewer_, pc_pts_curr, 7);
 
     // Set viewer angle
     setViewerPose(*viewer_, x, y, z, rot_axis_x, rot_axis_y, rot_axis_z);
 
     // Set keyboard event
-    viewer_->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer_);
+    viewer_->registerKeyboardCallback(keyboardEventOccurred, (void *)&viewer_);
+
+    // Camera pose
+    cam_R_vec_ = cv::Mat::eye(3, 3, CV_64F);
+    cam_t_ = cv::Mat::zeros(3, 1, CV_64F);
+    truth_cam_R_vec_ = cv::Mat::eye(3, 3, CV_64F);
+    truth_cam_t_ = cv::Mat::zeros(3, 1, CV_64F);
 }
 
-bool PclViewer::checkKeyPressed(){
-    if(bKeyPressed){
-        bKeyPressed=false;
+bool PclViewer::checkKeyPressed()
+{
+    if (bKeyPressed)
+    {
+        bKeyPressed = false;
         return true;
-    }else{
+    }
+    else
+    {
         return false;
     }
 }
 
 // -- Update camera pose ---------------------------------------------------------------------
-void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
+void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
+                            ViewerPtr viewer, cv::Mat &R_vec_curr, cv::Mat &t_curr,
+                            const string cam_traj_name, const unsigned char color[3], int cnt_cam)
 {
-    static int cnt_cam = 0;
-    // Before update camera pos, add a line and a point for display
-    if (!cam_t_.empty())
+    // Add a line between new_pos and old_pos. Also, add a point.
+    if (cnt_cam > 0)
     {
         // add a line between current and old camera pos
         pcl::PointXYZ cam_pos_old, cam_pos_new;
-        setPointPos(cam_pos_old, cam_t_);
-        setPointPos(cam_pos_new, t);
-        viewer_->addLine<pcl::PointXYZ>(cam_pos_old, cam_pos_new, "line-cam" + to_string(cnt_cam++));
+        setPointPos(cam_pos_old, t_curr);
+        setPointPos(cam_pos_new, t_new);
+        viewer_->addLine<pcl::PointXYZ>(cam_pos_old, cam_pos_new, cam_traj_name + "-line" + to_string(cnt_cam));
 
         // add a point of the new camera pos
         pcl::PointXYZRGB point;
-        setPointPos(point, t);
-        unsigned char r = 255, g = 255, b = 255;
-        setPointColor(point, r, g, b);
-        point_clouds[pc_cam_traj]->points.push_back(point);
+        setPointPos(point, t_new);
+        setPointColor(point, color[0], color[1], color[2]);
+        point_clouds[cam_traj_name]->points.push_back(point);
     }
-    cam_R_vec_ = R_vec.clone();
-    cam_t_ = t.clone();
+    // Update new camera pose
+    R_vec_curr = R_vec_new.clone();
+    t_curr = t_new.clone();
+}
+void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t)
+{
+    static int cnt_cam = 0;
+    addNewCameraPoseToTraj(
+        R_vec, t, viewer_, cam_R_vec_, cam_t_,
+        pc_cam_traj, pc_cam_traj_color, cnt_cam++);
+}
+void PclViewer::updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t)
+{
+    static int cnt_cam = 0;
+    addNewCameraPoseToTraj(
+        R_vec, t, viewer_, truth_cam_R_vec_, truth_cam_t_,
+        pc_cam_traj_ground_truth, pc_cam_traj_ground_truth_color, cnt_cam++);
 }
 
 // -- Insert points ---------------------------------------------------------------------
 
-void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
+void setCloudPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
 {
     cloud->points.clear();
     assert(vec_pos.size() == vec_color.size());
@@ -127,17 +171,12 @@ void resetPoints(CloudPtr cloud, const vector<cv::Point3f> &vec_pos, const vecto
 void PclViewer::updateMapPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
 {
     CloudPtr cloud = point_clouds[pc_pts_map];
-    resetPoints(cloud, vec_pos, vec_color);
+    setCloudPoints(cloud, vec_pos, vec_color);
 }
 void PclViewer::updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
 {
     CloudPtr cloud = point_clouds[pc_pts_curr];
-    resetPoints(cloud, vec_pos, vec_color);
-}
-void PclViewer::updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color)
-{
-    CloudPtr cloud = point_clouds[pc_pts_in_view];
-    resetPoints(cloud, vec_pos, vec_color);
+    setCloudPoints(cloud, vec_pos, vec_color);
 }
 
 // // Add point to cloud by name. Not used
@@ -160,10 +199,16 @@ void PclViewer::updatePointsInView(const vector<cv::Point3f> &vec_pos, const vec
 void PclViewer::update()
 {
     static int cnt_frame = 0;
+
     // Update camera
     Eigen::Affine3f T_affine = my_basics::transT_CVRt_to_EigenAffine3d(cam_R_vec_, cam_t_).cast<float>();
     viewer_->removeCoordinateSystem(camera_frame_name_);
     viewer_->addCoordinateSystem(LEN_COORD_AXIS, T_affine, camera_frame_name_, 0);
+
+    // Update truth camera
+    Eigen::Affine3f T_affine_truth = my_basics::transT_CVRt_to_EigenAffine3d(truth_cam_R_vec_, truth_cam_t_).cast<float>();
+    viewer_->removeCoordinateSystem(truth_camera_frame_name_);
+    viewer_->addCoordinateSystem(LEN_COORD_AXIS_TRUTH_TRAJ, T_affine_truth, truth_camera_frame_name_, 0);
 
     // Update point
     for (auto cloud_info : point_clouds)
