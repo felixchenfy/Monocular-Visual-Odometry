@@ -1,7 +1,7 @@
 
 
-add_executable(run_vo_v1 run_vo_v1.cpp)
-target_link_libraries( run_vo_v1
+add_executable(run_vo run_vo.cpp)
+target_link_libraries( run_vo
     my_basics
     my_geometry
     my_display

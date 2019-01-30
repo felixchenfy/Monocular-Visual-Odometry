@@ -67,7 +67,7 @@ PclViewer::PclViewer(double x, double y, double z,
                      double rot_axis_x, double rot_axis_y, double rot_axis_z)
 {
     // Set names
-    viewer_name_ = "viewer_name_";
+    viewer_name_ = "Camera trajectory: White is estimated; Green (Optional) is truth";
     camera_frame_name_ = "camera_frame_name_";
     truth_camera_frame_name_ = "truth_camera_frame_name_";
 

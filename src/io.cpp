@@ -75,11 +75,11 @@ void writePoseToFile(const string filename, vector<cv::Mat> list_T)
         double y = T.at<double>(1, 3);
         double z = T.at<double>(2, 3);
         fout << x << " " << y << " " << z << " ";
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++) // order: 1st column, 2nd column, 3rd column
         {
             for (int j = 0; j < 3; j++)
             {
-                fout << T.at<double>(i, j) << " ";
+                fout << T.at<double>(j, i) << " ";
             }
         }
         fout << '\n';
@@ -100,7 +100,7 @@ vector<cv::Mat> readPoseToFile(const string filename)
     assert(fin.is_open()); // Fail to find the config file
 
     // Read data
-    const int NUM_IN_ROW = 12; // x,y,z, 1st row of R, 2nd row of R, 3rd row of R
+    const int NUM_IN_ROW = 12; // x,y,z, 1st column of R, 2nd column of R, 3rd column of R
     vector<double> pose(NUM_IN_ROW, 0.0);
     double val;
     int cnt = 0;
@@ -111,9 +111,14 @@ vector<cv::Mat> readPoseToFile(const string filename)
         {
             cnt = 0;
             list_pose.push_back(pose);
-            cv::Mat T = (cv::Mat_<double>(4, 4) << pose[3], pose[4], pose[5], pose[0],
-                         pose[6], pose[7], pose[8], pose[1],
-                         pose[9], pose[10], pose[11], pose[2],
+            // cv::Mat T = (cv::Mat_<double>(4, 4) << pose[3], pose[4], pose[5], pose[0],
+            //              pose[6], pose[7], pose[8], pose[1],
+            //              pose[9], pose[10], pose[11], pose[2],
+            //              0, 0, 0, 1);
+            cv::Mat T = (cv::Mat_<double>(4, 4) << 
+                        pose[3], pose[6], pose[9], pose[0],
+                         pose[4], pose[7], pose[10], pose[1],
+                         pose[5], pose[8], pose[11], pose[2],
                          0, 0, 0, 1);
             list_T.push_back(T);
         }

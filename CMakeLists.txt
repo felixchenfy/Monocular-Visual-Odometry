@@ -5,6 +5,7 @@ project ( my_slam )
 # compile settings
 set( CMAKE_CXX_COMPILER "g++" )
 set( CMAKE_BUILD_TYPE "Debug" )
+# set( CMAKE_BUILD_TYPE "Release" ) # *** stack smashing detected ***: <unknown> terminated
 set( CMAKE_CXX_FLAGS "-std=c++11 -O3" )
 
 # list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
@@ -54,5 +55,5 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 add_subdirectory( src )
 add_subdirectory( src_main )
 add_subdirectory( test )
-add_subdirectory( test_tmp )
+# add_subdirectory( test_tmp )
 

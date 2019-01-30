@@ -35,7 +35,7 @@ int main ( int argc, char** argv )
     vector<KeyPoint> keypoints_1, keypoints_2;
     vector<DMatch> matches;
     Mat descriptors_1, descriptors_2;
-    string filename = "config/default.yaml";
+    string filename = "config/config.yaml";
     my_basics::Config::setParameterFile(filename);
     extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
     extractKeyPoints(img_2, keypoints_2);

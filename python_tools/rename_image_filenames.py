@@ -1,11 +1,11 @@
 
-# Run this script, to rename all the images in dataset_dir (specified by default.yaml) to the required filenames.
+# Run this script, to rename all the images in dataset_dir (specified by config.yaml) to the required filenames.
 
 import yaml # for loading .yaml file
 import os # for getting/setting filenames
 
 # Open config file
-stream = open("config/default.yaml", "r")
+stream = open("config/config.yaml", "r")
 
 # !!!!!
 # If the first sentence is "%YAML:1.0", skip it

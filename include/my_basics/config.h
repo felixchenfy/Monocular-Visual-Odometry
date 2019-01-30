@@ -1,3 +1,7 @@
+/* This script is mainly copied and then modified from Chapter 9 of Dr. Xiang Gao's book. Link is here:
+https://github.com/gaoxiang12/slambook/blob/master/project/0.4/include/myslam/config.h
+The modification is that in OpenCV 4.0, I have to use "new" to create a cv::FileStorage instance.
+*/
 
 #ifndef CONFIG_H
 #define CONFIG_H

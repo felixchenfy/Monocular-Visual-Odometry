@@ -6,7 +6,7 @@ using namespace cv;
 
 int main(int argc, char **argv)
 {
-    string filename = "config/default.yaml";
+    string filename = "config/config.yaml";
     int level_pyramid;
     string key = "level_pyramid";
 

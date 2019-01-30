@@ -17,5 +17,4 @@ test_tmp/
 # Compile
 lib/
 build/
-cmake_modules/
 bin/
