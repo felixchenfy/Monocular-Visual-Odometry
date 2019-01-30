@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 
     // read in images
     string img_file1, img_file2;
-    string folder = "test_data/";
+    string folder = "data/test_data/";
     int IDX_TEST_CASE = 1;
 
     if (argc - 1 == 2)

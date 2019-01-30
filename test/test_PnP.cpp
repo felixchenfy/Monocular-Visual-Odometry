@@ -21,7 +21,7 @@ int main ( int argc, char** argv )
 {
 
     cout << "program start" << endl;
-    string folder="test_data/";
+    string folder="data/test_data/";
     string img_file1="fr1_1_1.png";
     string img_file2="fr1_1_2.png";
     string img_file3="fr1_1_1_depth.png";

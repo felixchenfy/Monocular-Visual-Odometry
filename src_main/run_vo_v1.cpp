@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     vector<string> image_paths;
     if (DEBUG_MODE)
     {
-        string folder = "/home/feiyu/Desktop/slam/my_vo/my2/test_data/";
+        string folder = "/home/feiyu/Desktop/slam/my_vo/my2/data/test_data/";
         vector<string> tmp{
             "image0001.jpg", "image0013.jpg", "image0015.jpg"};
         for (string &filename : tmp)
