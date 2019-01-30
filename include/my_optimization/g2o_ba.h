@@ -1,4 +1,8 @@
 
+/* This script is mainly copied and then modified from Chapter 7 of Dr. Xiang Gao's book. Link is here:
+https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
+*/
+
 #ifndef G2O_BA_H
 #define G2O_BA_H
 

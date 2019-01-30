@@ -1,65 +1,22 @@
+
+# My files
+
 tmp.cpp
-fr1_rgb_calibration/*
-test_data/*
-vo/*
-backup/*
-README*
-*.png
-*.jpg
-garbage/*
-test_data/*.png
-.vscode/
-bin/
-cmake_modules
-dataset_images/
-dataset_images_copy/
-lib/
-run.bash
-
-*build*
+source_this.bash
 *.out
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-*.kdev4
-*.DS*
-.idea*
+README*
 
+.vscode/
+others/
+garbage/
 
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# Test_data
+dataset*/
+test_data/
+test_tmp/
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# Logs and databases #
-######################
-*.log
-*.sql
-*.sqlite
-
-# OS generated files #
-######################
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Compile
+lib/
+build/
+cmake_modules/
+bin/

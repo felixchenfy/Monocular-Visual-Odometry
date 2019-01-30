@@ -1,3 +1,6 @@
+/* This script is mainly copied and then modified from Chapter 7 of Dr. Xiang Gao's book. Link is here:
+https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
+*/
 
 #include "my_optimization/g2o_ba.h"
 #include "my_basics/eigen_funcs.h"
@@ -118,20 +121,23 @@ void bundleAdjustment(
     // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
     T_world_to_cam_cv = my_basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
 
-    cout << "\nBefore Bundle Adjustment:\n"
-         << pose_before_optimization << endl;
-    cout << "After Bundle Adjustment:\n"
-         << T_world_to_cam_cv << endl
-         << endl;
-
+    if (0)
+    {
+        cout << "\nBefore Bundle Adjustment:\n"
+             << pose_before_optimization << endl;
+        cout << "After Bundle Adjustment:\n"
+             << T_world_to_cam_cv << endl
+             << endl;
+    }
+    
     // 2. Points 3d world pos
     int N = points_3d.size();
     for (int i = 0; i < N; i++)
     {
         Eigen::Vector3d p = points_3d_g2o[i]->estimate();
 
-        if (0)
-        { // Print
+        if (0) // Print
+        {
             // cout << typeid(p).name() <<endl; // print this: N5Eigen6MatrixIdLi3ELi1ELi0ELi3ELi1EEE
             cout << "point " << i << " pose:" << points_3d[i] << endl;
             cout << "point " << i << " pose:" << p(0, 0) << "," << p(1, 0) << "," << p(2, 0) << endl;
