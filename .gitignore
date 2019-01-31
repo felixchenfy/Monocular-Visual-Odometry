@@ -5,6 +5,7 @@ tmp.cpp
 source_this.bash
 *.out
 README_*
+*.png
 
 .vscode/
 others/

@@ -100,7 +100,7 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     double moved_dist = calcMatNorm(t);
     double rotated_angle = calcMatNorm(R_vec);
 
-    printf("Movint dist = %.5f; Rotated angle = %.5f\n", moved_dist, rotated_angle);
+    printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
     // Satisfy each one will be a good keyframe
     bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;

@@ -39,7 +39,8 @@ int main(int argc, char **argv)
         // bin/test_epipolor_geometry rgb_00000.png rgb_00001.png # inliers = 90+
         // bin/test_epipolor_geometry rgb_00003.png rgb_00004.png # inliers = 35
         // bin/test_epipolor_geometry rgb_00004.png rgb_00005.png # inliers = 90+
-        // bin/test_epipolor_geometry image0001.jpg image0015.jpg # inliers = 90+
+        // bin/test_epipolor_geometry image0001.jpg image0015.jpg # Mean Score: E=11.0, H=9.1
+        // bin/test_epipolor_geometry image0001.jpg image0002.jpg # Mean Score: E=11.3, H=11.0
         IDX_TEST_CASE = -1;
         img_file1 = argv[1];
         img_file2 = argv[2];
@@ -94,6 +95,8 @@ int main(int argc, char **argv)
         computeDescriptors(img_1, keypoints_1, descriptors_1);
         computeDescriptors(img_2, keypoints_2, descriptors_2);
         matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES);
+        printf("Number of matches: %d\n", (int)matches.size());
+
     }
 
     // Estimation motion

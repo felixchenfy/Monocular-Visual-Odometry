@@ -111,7 +111,7 @@ int main(int argc, char **argv)
             waitPclKeyPress(pcl_displayer);
 
         // Return
-        cout << "Finished an image" << endl;
+        // cout << "Finished an image" << endl;
         cam_pose_history.push_back(vo->curr_->T_w_c_.clone());
         // if (img_id == 100 || vo->vo_state_ == VisualOdometry::OK)
         //     break;

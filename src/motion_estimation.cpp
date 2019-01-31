@@ -136,7 +136,9 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     double score_E = checkEssentialScore(essential_matrix, K, pts_img1, pts_img2, inliers_index_e);
     double score_H = checkHomographyScore(homography_matrix, pts_img1, pts_img2, inliers_index_h);
     double ratio=score_H/(score_E+score_H);
-    printf("score_E = %.1f, score_H = %.1f, H/(E+H)=%.1f\n", score_E, score_H, ratio);
+    printf("Evaluate E/H score: E = %.1f, H = %.1f, H/(E+H)=%.1f\n", score_E, score_H, ratio);
+    printf("        Mean score: E = %.1f, H = %.1f\n", 
+        score_E/inliers_index_e.size(), score_H/inliers_index_h.size());
     int best_sol=0;
     if (ratio>0.45){
         best_sol=1;

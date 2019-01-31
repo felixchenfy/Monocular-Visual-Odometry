@@ -169,7 +169,6 @@ void matchFeatures(
         printf("-- Max dist : %f \n", max_dis);
         printf("-- Min dist : %f \n", min_dis);
     }
-    printf("Number of matches: %d\n", (int)matches.size());
 }
 
 void removeDuplicatedMatches(vector<cv::DMatch> &matches)

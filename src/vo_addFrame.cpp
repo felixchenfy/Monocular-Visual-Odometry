@@ -33,6 +33,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     {
         // Match features
         my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
+        printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_.size());
 
         // Estimae motion and triangulate points
         estimateMotionAnd3DPoints();
@@ -51,7 +52,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         {
             curr_->T_w_c_ = ref_->T_w_c_;
             cout << "Small movement. Not initialize..." << endl;
-        }        
+        }
     }
     else if (vo_state_ == OK)
     {
@@ -65,6 +66,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             // --------------------- Triangulate more points --------------------
             // - Triangulate new points
             my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
+            printf("Number of matches with prev keyframe: %d\n", (int)curr_->matches_.size());
 
             // -- Use Essential matrix to find the inliers
             vector<DMatch> inlier_matches; // matches, that are inliers
@@ -102,6 +104,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         Mat T_prev_to_curr = T_w_to_prev.inv() * T_w_to_curr;
         Mat R, t;
         getRtFromT(T_prev_to_curr, R, t);
+        cout << "\nCamera motion:" << endl;
         cout << "R_prev_to_curr: " << R << endl;
         cout << "t_prev_to_curr: " << t.t() << endl;
     }

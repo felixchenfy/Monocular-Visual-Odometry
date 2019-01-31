@@ -14,7 +14,7 @@ void Map::insertKeyFrame(Frame::Ptr frame)
     {
         keyframes_[frame->id_] = frame;
     }
-    printf("Insert keyframe!!! frame_id = %ld, total keyframes = %d", frame->id_, (int)keyframes_.size());
+    printf("Insert keyframe!!! frame_id = %ld, total keyframes = %d\n", frame->id_, (int)keyframes_.size());
 }
 
 void Map::insertMapPoint(MapPoint::Ptr map_point)
