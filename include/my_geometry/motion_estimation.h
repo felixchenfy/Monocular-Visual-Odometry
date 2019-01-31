@@ -41,7 +41,6 @@ void helperEvalEppiAndTriangErrors(
     bool print_res);
 
 // Estimate camera motion by Essential matrix.
-// This utility is part of the helperEstimatePossibleRelativePosesByEpipolarGeometry
 void helperEstiMotionByEssential( 
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
@@ -66,10 +65,9 @@ void helperTriangulatePoints(
     vector<Point3f> &pts_3d_in_curr
 );
 
-
+// Compute the score of estiamted E/H matrix by the method in ORB-SLAM
 double checkEssentialScore(const Mat &E21, const Mat &K, const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2, 
     vector<int> &inliers_index, double sigma=1.0);
-
 double checkHomographyScore(const Mat &H21,const vector<Point2f> &pts_img1, const vector<Point2f> &pts_img2, 
     vector<int> &inliers_index, double sigma=1.0);
 

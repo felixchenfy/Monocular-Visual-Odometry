@@ -22,11 +22,11 @@
 #include "my_slam/frame.h"
 #include "my_slam/map.h"
 #include "my_slam/mappoint.h"
-#include "my_slam/motion_funcs.h"
+#include "my_slam/commons.h"
 
 namespace my_slam
 {
-using namespace std; 
+using namespace std;
 using namespace cv;
 using namespace my_geometry;
 
@@ -60,7 +60,6 @@ public: // ------------------------------- Member variables --------------------
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
-
 public: // ------------------------------- Constructor
   VisualOdometry();
   void addFrame(my_slam::Frame::Ptr frame);
@@ -71,7 +70,7 @@ public: // ------------------------------- Initialization ----------------------
   void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
   bool isInitialized();
-  
+
 public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()
   bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);
@@ -86,6 +85,7 @@ public: // ------------------------------- Mapping -----------------------------
   vector<Mat> pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 };
+
 } // namespace my_slam
 
 #endif // FRAME_H

@@ -1,7 +1,6 @@
 cmake_minimum_required( VERSION 2.8 )
 project ( my_slam )
 
-
 # compile settings
 set( CMAKE_CXX_COMPILER "g++" )
 set( CMAKE_BUILD_TYPE "Debug" )
@@ -20,7 +19,7 @@ if(CCACHE_FOUND)
 endif(CCACHE_FOUND) 
 set (CMAKE_CXX_FLAGS "-DPCL_ONLY_CORE_POINT_TYPES=ON -DNO_EXPLICIT_INSTANTIATIONS") 
 
-############### dependencies ######################
+############### Dependencies ######################
 
 # Eigen
 include_directories( "/usr/include/eigen3" )
@@ -50,7 +49,7 @@ set( THIRD_PARTY_LIBS
     ${CSPARSE_LIBRARY}
 )
 
-############### dependencies ######################
+############### My Files ###############
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 add_subdirectory( src )
 add_subdirectory( src_main )

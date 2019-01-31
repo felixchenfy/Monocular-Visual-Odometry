@@ -1,6 +1,6 @@
 
-#ifndef MOTION_FUNCS_H
-#define MOTION_FUNCS_H
+#ifndef COMMONS_H
+#define COMMONS_H
 
 #include "my_slam/common_include.h"
 #include "my_slam/frame.h"
