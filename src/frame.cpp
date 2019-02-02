@@ -4,7 +4,7 @@
 namespace my_slam
 {
 
-unsigned long Frame::factory_id_ = 0;
+int Frame::factory_id_ = 0;
 
 Frame::Ptr Frame::createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp)
 {

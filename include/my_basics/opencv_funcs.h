@@ -42,7 +42,7 @@ double calcDist(const Point2f &p1, const Point2f &p2);
 double calcMeanDepth(const vector<Point3f> &pts_3d);
 double scalePointPos(Point3f &p, double scale);
 double calcMatNorm(const Mat &mat);
-void normalize(Mat &mat);
+Mat getNormalizedMat(const Mat mat);
 
 // ---------------- Print ----------------
 void print_MatProperty(const cv::Mat &M); // print data type and size

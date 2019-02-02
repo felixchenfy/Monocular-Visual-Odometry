@@ -72,6 +72,13 @@ public: // ------------------------------- Initialization ----------------------
   bool checkIfVoGoodToInit(int checkIfVoGoodToInit);
   bool isInitialized();
 
+public: // ------------------------------- Triangulation -------------------------------
+  // 1. motion_estimation.h: helperTriangulatePoints
+  // 2. Some triangulated points have a small viewing angle between two frames.
+  //    Remove these points: change "pts3d_in_curr", return a new "inlier_matches"
+  vector<DMatch> retainGoodTriangulationResult(Frame::Ptr ref, Frame::Ptr curr,
+    const vector<DMatch> inlier_matches, vector<Point3f> pts3d_in_curr);
+
 public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()
   bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);
@@ -83,6 +90,7 @@ public: // ------------------------------- Mapping -----------------------------
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &corresponding_mappoints_descriptors);
+    
   vector<Mat> pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 };

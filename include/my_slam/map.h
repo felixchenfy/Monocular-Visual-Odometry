@@ -15,8 +15,8 @@ class Map
 {
 public:
     typedef shared_ptr<Map> Ptr;
-    unordered_map<unsigned long, Frame::Ptr > keyframes_; 
-    unordered_map<unsigned long, MapPoint::Ptr >  map_points_; 
+    unordered_map<int, Frame::Ptr > keyframes_; 
+    unordered_map<int, MapPoint::Ptr >  map_points_; 
 
     Map() {}
     

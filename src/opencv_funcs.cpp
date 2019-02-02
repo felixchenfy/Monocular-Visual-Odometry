@@ -142,11 +142,11 @@ double calcMatNorm(const Mat &mat){
     double norm=sqrt(sum);
     return norm;
 }
-void normalize(Mat &mat){
+Mat getNormalizedMat(const Mat mat){
     double len = calcMatNorm(mat);
-    mat /= len;
+    Mat res = mat / len;
+    return res;
 }
-
 
 // ---------------- Print ----------------
 

@@ -16,8 +16,8 @@ class MapPoint
 public: // Basics Properties
     typedef shared_ptr<MapPoint> Ptr;
 
-    static unsigned long factory_id_; 
-    unsigned long id_;
+    static int factory_id_; 
+    int id_;
     Mat pos_;
     Mat norm_; // Vector pointing from camera center to the point
     vector<unsigned char> color_; // r,g,b

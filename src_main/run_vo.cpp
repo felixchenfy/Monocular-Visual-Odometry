@@ -159,8 +159,13 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
     {
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
         vector<KeyPoint> inliers_kpt;
-        for (auto &m : frame->matches_with_ref_)
-            inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
+        if(vo->isInitialized()){
+            for (auto &m : frame->matches_with_map_)
+                inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
+        }else{
+            for (auto &m : frame->matches_with_ref_)
+                inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
+        }
         cv::drawKeypoints(img_show, frame->keypoints_, img_show, color_g);
         cv::drawKeypoints(img_show, inliers_kpt, img_show, color_r);
     }

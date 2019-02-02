@@ -38,6 +38,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     // -- Rename output
     vector<DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
     vector<Point3f> &pts3d_in_curr = curr_->inliers_pts3d_;
+    vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
     Mat &T = curr_->T_w_c_;
 
     // -- Start: call this big function to compute everything
@@ -65,6 +66,9 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     for (const Point3f &p1 : pts3d_in_cam1)
         pts3d_in_curr.push_back(transCoord(p1, R_curr_to_prev, t_curr_to_prev));
 
+    // Get points that are used for triangulating new map points
+    inliers_matches_for_3d = retainGoodTriangulationResult(ref_, curr_, inlier_matches, pts3d_in_curr);
+
     // -- Normalize Points Depth to 1, and compute camera pose
     const int num_inlier_pts = curr_->inliers_pts3d_.size();
     double mean_depth = calcMeanDepth(curr_->inliers_pts3d_);
@@ -73,7 +77,6 @@ void VisualOdometry::estimateMotionAnd3DPoints()
         scalePointPos(p, 1 / mean_depth);
     T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv();
 }
-
 
 bool VisualOdometry::checkIfVoGoodToInit(int checkIfVoGoodToInit)
 {
@@ -84,23 +87,42 @@ bool VisualOdometry::checkIfVoGoodToInit(int checkIfVoGoodToInit)
     const vector<DMatch> &matches = curr_->inliers_matches_with_ref_;
 
     // -- Start
-    if(checkIfVoGoodToInit==1){
+    if (checkIfVoGoodToInit == 1)
+    {
         // CRITERIA 1: init vo only when distance between matched keypoints are large
         vector<double> dists_between_kpts;
         double mean_dist = computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
         printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
         static const double MIN_PIXEL_DIST_FOR_INIT_VO = my_basics::Config::get<double>("MIN_PIXEL_DIST_FOR_INIT_VO");
         return mean_dist > MIN_PIXEL_DIST_FOR_INIT_VO;
-    }else
+    }
+    else
     {
         assert(0);
     }
-    
 }
 
-bool VisualOdometry::isInitialized(){
-    return vo_state_==OK;
+bool VisualOdometry::isInitialized()
+{
+    return vo_state_ == OK;
 }
+
+// ------------------------------- Triangulation -------------------------------
+
+// Some triangulated points have a small viewing angle between two frames.
+//    Remove these points: change "pts3d_in_curr", return a new "inlier_matches"
+vector<DMatch> VisualOdometry::retainGoodTriangulationResult(
+    Frame::Ptr ref, Frame::Ptr curr,
+    const vector<DMatch> inlier_matches, vector<Point3f> pts3d_in_curr)
+{
+    // TODO: implement the algorithm.
+    // (below are just copy and paste the data)
+    vector<DMatch> inliers_matches_for_3d;
+    for (DMatch dmatch : inlier_matches) // All 3d points are newly triangualted
+        inliers_matches_for_3d.push_back(dmatch);
+    return inliers_matches_for_3d;
+}
+
 // ------------------- Tracking -------------------
 bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref)
 {
@@ -115,10 +137,13 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     double moved_dist = calcMatNorm(t);
     double rotated_angle = calcMatNorm(R_vec);
 
+    printf("1 .... ");
     printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
+    printf("2 .... ");
     // Satisfy each one will be a good keyframe
     bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;
+    printf("3 .... ");
 
     return res;
 }
@@ -178,13 +203,13 @@ void VisualOdometry::poseEstimationPnP()
     pts_3d.swap(tmp_pts_3d);
     pts_2d.swap(tmp_pts_2d);
     curr_->matches_with_map_.swap(tmp_matches_with_map_);
-    
+
     // -- Update current camera pos
     curr_->T_w_c_ = transRt2T(R, t).inv();
 
     // -- Bundle Adjustment
     static const int USE_BA = my_basics::Config::get<int>("USE_BA");
-    if (USE_BA==1)
+    if (USE_BA == 1)
     {
         // Update curr_->T_w_c_
         my_optimization::bundleAdjustment(pts_3d, pts_2d, curr_->camera_->K_, curr_->T_w_c_);
@@ -248,46 +273,77 @@ void VisualOdometry::optimizeMap()
 
 vector<Mat> VisualOdometry::pushCurrPointsToMap()
 {
+    printf("Pushing points to map .... ");
     // -- Input
     const vector<Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
     const Mat &T_w_curr = curr_->T_w_c_;
     const Mat &descriptors = curr_->descriptors_;
     const vector<vector<unsigned char>> &kpts_colors = curr_->kpts_colors_;
-    const vector<DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
+    const vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
 
     // -- Output
     vector<Mat> newly_inserted_pts3d;
+    vector<bool> &vb_is_mappoint = curr_->vb_is_mappoint_;
+    vector<int> &vi_mappoint_idx = curr_->vi_mappoint_idx_;
+    vector<PtConn> &inliers_connections = curr_->inliers_connections_;
 
     // -- Start
-    for (int i = 0; i < inlier_matches.size(); i++)
+    for (int i = 0; i < inliers_matches_for_3d.size(); i++)
     {
-        newly_inserted_pts3d.push_back(
-            Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr)));
+        const DMatch &dm = inliers_matches_for_3d[i];
+        int pt_idx = dm.trainIdx;
+        /*We've triangulated all current inlier keypoints to find their 3d pos.
+        However, some of them might have already been triangulated in the previous keyframe.
+        For these points, we only need to add it with a match, instead of pushing to map again.*/
+
+        // Points already triangulated in previous frames. Find it, and add graph connection
+        if (1 && ref_->vb_is_mappoint_[dm.queryIdx]) // TODO!!! remove 0 here. change pos of bundle adjustment
+        {
+            int mappoint_idx = ref_->vi_mappoint_idx_[dm.queryIdx];
+            MapPoint::Ptr map_point = map_->map_points_[mappoint_idx];
+           
+            // Add graph connection of this mappoint
+            map_point->matched_frames_.push_back(curr_);
+            map_point->uv_in_matched_frames_.push_back(curr_->keypoints_[pt_idx].pt);
+        }
+        else // Newly triangulated points
+        {
+
+            // Change coordinate of 3d points to world frame
+            Mat world_pos = Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr));
+            
+            // Create map point
+            MapPoint::Ptr map_point(new MapPoint( // createMapPoint
+                world_pos,
+                descriptors.row(pt_idx).clone(),                                       // descriptor
+                getNormalizedMat(world_pos - curr_->getCamCenter()),                   // view direction of the point
+                kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
+                ));
+
+            // Add graph connection of this mappoint
+            map_point->matched_frames_.push_back(curr_);
+            map_point->uv_in_matched_frames_.push_back(curr_->keypoints_[pt_idx].pt);
+            
+            // Push to map
+            map_->insertMapPoint(map_point);
+
+            // Update graph connection of current frame
+            vb_is_mappoint[pt_idx] = true;
+            vi_mappoint_idx[pt_idx] = map_point->id_;
+            inliers_connections.push_back(PtConn{dm.trainIdx, dm.queryIdx, map_point->id_});
+
+            // Update newly inserted 3d point pos
+            newly_inserted_pts3d.push_back(world_pos);
+        }
     }
-
-    for (int i = 0; i < inlier_matches.size(); i++)
-    {
-        int pt_idx = inlier_matches[i].trainIdx;
-        const vector<unsigned char> &rgb = kpts_colors[pt_idx];
-
-        const Mat &p_world = newly_inserted_pts3d[i];
-        Mat norm = p_world - curr_->getCamCenter();
-        my_basics::normalize(norm);
-
-        MapPoint::Ptr map_point(new MapPoint( // createMapPoint
-            p_world,
-            descriptors.row(pt_idx).clone(),
-            norm,
-            rgb[0], rgb[1], rgb[2]));
-        map_->insertMapPoint(map_point);
-    }
+    printf("Pushing to map done.\n");
     return newly_inserted_pts3d;
 }
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
     Mat n = point->pos_ - frame->getCamCenter();
-    my_basics::normalize(n);
+    n = getNormalizedMat(n);
     Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));
 }

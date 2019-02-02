@@ -6,7 +6,7 @@
 namespace my_slam
 {
 
-unsigned long MapPoint::factory_id_ = 0;
+int MapPoint::factory_id_ = 0;
 MapPoint::MapPoint(
     const Mat &pos, const Mat &descriptor, const Mat &norm,
     unsigned char r, unsigned char g, unsigned char b) : pos_(pos), descriptor_(descriptor), norm_(norm), color_({r, g, b}),
