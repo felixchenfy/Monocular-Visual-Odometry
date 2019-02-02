@@ -195,10 +195,13 @@ void VisualOdometry::poseEstimationPnP()
         DMatch &match = curr_->matches_with_map_[good_idx];
         tmp_matches_with_map_.push_back(match);
 
-        // map point
+        // Updape map point info
         MapPoint::Ptr inlier_mappoint = candidate_mappoints_in_map[match.queryIdx];
         inlier_candidates.push_back(inlier_mappoint);
         inlier_mappoint->matched_times_++;
+
+        // Update graph info
+        curr_->inliers_to_mappt_connections_[match.trainIdx]=PtConn{-1,inlier_mappoint->id_};
     }
     pts_3d.swap(tmp_pts_3d);
     pts_2d.swap(tmp_pts_2d);
@@ -212,7 +215,7 @@ void VisualOdometry::poseEstimationPnP()
     if (USE_BA == 1)
     {
         // Update curr_->T_w_c_
-        my_optimization::bundleAdjustment(pts_3d, pts_2d, curr_->camera_->K_, curr_->T_w_c_);
+        my_optimization::optimizeSingleFrame(pts_3d, pts_2d, curr_->camera_->K_, curr_->T_w_c_);
 
         // Update points' 3d pos
         for (int i = 0; i < num_inliers; i++)
@@ -235,12 +238,15 @@ void VisualOdometry::optimizeMap()
     // remove the hardly seen and no visible points
     for (auto iter = map_->map_points_.begin(); iter != map_->map_points_.end();)
     {
+        cout << "1:" << iter->first << endl;
+        cout << "1:" << iter->first << "," << iter->second->pos_ << endl;
         if (!curr_->isInFrame(iter->second->pos_))
         {
             iter = map_->map_points_.erase(iter);
             continue;
         }
 
+        cout << "2" << endl;
         float match_ratio = float(iter->second->matched_times_) / iter->second->visible_times_;
         if (match_ratio < map_point_erase_ratio)
         {
@@ -248,16 +254,13 @@ void VisualOdometry::optimizeMap()
             continue;
         }
 
+        cout << "3" << endl;
         double angle = getViewAngle(curr_, iter->second);
         if (angle > M_PI / 6.)
         {
             iter = map_->map_points_.erase(iter);
             continue;
         }
-        // if ( iter->second->good_ == false )
-        // {
-        //     // TODO try triangulate this map point
-        // }
         iter++;
     }
 
@@ -273,7 +276,6 @@ void VisualOdometry::optimizeMap()
 
 vector<Mat> VisualOdometry::pushCurrPointsToMap()
 {
-    printf("Pushing points to map .... ");
     // -- Input
     const vector<Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
     const Mat &T_w_curr = curr_->T_w_c_;
@@ -283,35 +285,27 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
 
     // -- Output
     vector<Mat> newly_inserted_pts3d;
-    vector<bool> &vb_is_mappoint = curr_->vb_is_mappoint_;
-    vector<int> &vi_mappoint_idx = curr_->vi_mappoint_idx_;
-    vector<PtConn> &inliers_connections = curr_->inliers_connections_;
+    unordered_map<int, PtConn> &inliers_to_mappt_connections = curr_->inliers_to_mappt_connections_;
 
     // -- Start
     for (int i = 0; i < inliers_matches_for_3d.size(); i++)
     {
         const DMatch &dm = inliers_matches_for_3d[i];
         int pt_idx = dm.trainIdx;
-        /*We've triangulated all current inlier keypoints to find their 3d pos.
-        However, some of them might have already been triangulated in the previous keyframe.
-        For these points, we only need to add it with a match, instead of pushing to map again.*/
+        int map_point_id;
 
-        // Points already triangulated in previous frames. Find it, and add graph connection
-        if (1 && ref_->vb_is_mappoint_[dm.queryIdx]) // TODO!!! remove 0 here. change pos of bundle adjustment
+        // Points already triangulated in previous frames.
+        //      Just find the mappoint, no need to create new.
+        if (1 && ref_->isMappoint(dm.queryIdx))
         {
-            int mappoint_idx = ref_->vi_mappoint_idx_[dm.queryIdx];
-            MapPoint::Ptr map_point = map_->map_points_[mappoint_idx];
-           
-            // Add graph connection of this mappoint
-            map_point->matched_frames_.push_back(curr_);
-            map_point->uv_in_matched_frames_.push_back(curr_->keypoints_[pt_idx].pt);
+            map_point_id = ref_->inliers_to_mappt_connections_[dm.queryIdx].pt_map_idx;
         }
-        else // Newly triangulated points
+        else // Not triangulated before. Create and push to map.
         {
 
             // Change coordinate of 3d points to world frame
             Mat world_pos = Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr));
-            
+
             // Create map point
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
@@ -319,24 +313,17 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
                 getNormalizedMat(world_pos - curr_->getCamCenter()),                   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
+            map_point_id = map_point->id_;
 
-            // Add graph connection of this mappoint
-            map_point->matched_frames_.push_back(curr_);
-            map_point->uv_in_matched_frames_.push_back(curr_->keypoints_[pt_idx].pt);
-            
             // Push to map
             map_->insertMapPoint(map_point);
-
-            // Update graph connection of current frame
-            vb_is_mappoint[pt_idx] = true;
-            vi_mappoint_idx[pt_idx] = map_point->id_;
-            inliers_connections.push_back(PtConn{dm.trainIdx, dm.queryIdx, map_point->id_});
 
             // Update newly inserted 3d point pos
             newly_inserted_pts3d.push_back(world_pos);
         }
+        // Update graph connection of current frame
+        inliers_to_mappt_connections.insert({pt_idx, PtConn{dm.queryIdx, map_point_id}});
     }
-    printf("Pushing to map done.\n");
     return newly_inserted_pts3d;
 }
 

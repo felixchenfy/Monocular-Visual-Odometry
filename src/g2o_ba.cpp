@@ -19,7 +19,7 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 namespace my_optimization
 {
 
-void bundleAdjustment(
+void optimizeSingleFrame(
     vector<Point3f> points_3d,
     const vector<Point2f> points_2d,
     const Mat &K,

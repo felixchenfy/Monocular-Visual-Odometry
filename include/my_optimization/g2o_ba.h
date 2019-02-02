@@ -17,7 +17,7 @@ namespace my_optimization
 using namespace std;
 using namespace cv;
 
-void bundleAdjustment(
+void optimizeSingleFrame(
     const vector<Point3f> points_3d,
     const vector<Point2f> points_2d,
     const Mat &K,

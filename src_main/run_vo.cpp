@@ -112,7 +112,8 @@ int main(int argc, char **argv)
 
         // Return
         // cout << "Finished an image" << endl;
-        cam_pose_history.push_back(vo->curr_->T_w_c_.clone());
+        cam_pose_history.push_back(frame->T_w_c_.clone());
+        frame->clearNoUsed();
         // if (img_id == 100 || vo->vo_state_ == VisualOdometry::OK)
         //     break;
     }

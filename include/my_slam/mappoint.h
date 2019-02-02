@@ -25,15 +25,10 @@ public: // Basics Properties
 
 public: // Properties for constructing local mapping
 
-    bool        good_;      // wheter a good point 
+    bool        good_;      // TODO: determine wheter a good point 
     int         matched_times_;     // being an inliner in pose estimation
     int         visible_times_;     // being visible in current frame 
     
-    // TO DO: Add property of which frame this mappoint is as inlier. This is for optimization.
-    vector<Frame::Ptr>    matched_frames_;
-    vector<Point2f>    uv_in_matched_frames_;
-
-
 public: // Functions
     MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,
         unsigned char r=0, unsigned char g=0, unsigned char b=0);

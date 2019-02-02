@@ -17,7 +17,6 @@ using namespace my_geometry;
 
 typedef struct PtConn_
 {
-  int pt_curr_idx;
   int pt_ref_idx;
   int pt_map_idx;
 } PtConn;
@@ -45,17 +44,10 @@ public:
   vector<DMatch> inliers_matches_with_ref_; // matches that satisify E or H's constraints, and
   vector<DMatch> inliers_matches_for_3d_;   // matches whose triangulation result is good.
   vector<Point3f> inliers_pts3d_;           // 3d points triangulated from inliers_matches_for_3d_
+  unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
 
   // -- Matches with map points (for PnP)
   vector<DMatch> matches_with_map_; // inliers matches index with respect to all the points
-
-  // -- Information for keypoints' association with map points (for bundle adjustment)
-  // Whether a keypoint has associatation with a map point. -1 means no. If yes, the value is the index.
-  vector<bool> vb_is_mappoint_; // size = keypoints_.size()
-  vector<int> vi_mappoint_idx_; // size = keypoints_.size()
-  // Store the keypoint that is in curr and ref frame, as well as being a mappoint.
-  // Store these points' indices in curr, ref, and map.
-  vector<PtConn> inliers_connections_; // size = inliers_pts3d_.size()
 
   // -- Camera
   my_geometry::Camera::Ptr camera_;
@@ -69,6 +61,14 @@ public:
   static Frame::Ptr createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp = -1);
 
 public: // Below are deprecated. These were used in the two-frame-matching vo.
+  void clearNoUsed(){
+    rgb_img_.release();
+    kpts_colors_.clear();
+    matches_with_ref_.clear();
+    inliers_matches_with_ref_.clear();
+    inliers_matches_for_3d_.clear();
+    matches_with_map_.clear();
+  }
   void extractKeyPoints()
   {
     my_geometry::extractKeyPoints(rgb_img_, keypoints_);
@@ -82,9 +82,6 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
       int x = floor(kpt.pt.x), y = floor(kpt.pt.y);
       kpts_colors_.push_back(getPixelAt(rgb_img_, x, y));
     }
-    vb_is_mappoint_ = vector<bool>(keypoints_.size(), false);
-    vi_mappoint_idx_ = vector<int>(keypoints_.size(), -1);
-    
   };
   void matchFeatures(Frame::Ptr prev_frame)
   {
@@ -97,6 +94,10 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   }
   bool isInFrame(const Point3f &p_world);
   bool isInFrame(const Mat &p_world);
+  bool isMappoint(int idx){
+    bool not_find = inliers_to_mappt_connections_.find(idx)==inliers_to_mappt_connections_.end();
+    return !not_find;
+  }
   Mat getCamCenter();
 };
 

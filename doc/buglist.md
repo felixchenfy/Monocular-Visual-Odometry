@@ -75,10 +75,26 @@ Solution:
 > suffix: ".png"
 
 ## Smart pointer
-I met a bug of "Segmentation fault" due to Smart pointer.
+`` I met a bug of "Segmentation fault" due to Smart pointer.
 (Not explicitly tested, but it seems its due to this matter.
  Althought it looks strange and unreasonable.)
 	pointer p1=xxx, p2=xxx
 	pointer p3=p1
 	p1=p2 // After this, p1's originally pointed data will be destroyed
 	cout << p3 // This gives an error
+`` Feb/02, I met a "segmentation fault" again
+
+pointer p1;
+bool is_in=false;
+if(1){
+	p1=mappoints[mappoint_id];
+	or 
+    p1.reset( mappoints[mappoint_id].get() );
+	is_in=true;
+}else{
+	None
+}
+if (is_in) cout << p1->content; or delete this sentence
+
+Then, an segmentation error occurs at some random location.
+It seems that p1=mappoints[mappoint_id] has ruin the original data.

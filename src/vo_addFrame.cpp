@@ -75,16 +75,13 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 (int) curr_->matches_with_ref_.size(),(int) curr_->inliers_matches_with_ref_.size());
 
             // Triangulate points
-            printf("Pushing points to map .... ");
             curr_->inliers_pts3d_ = helperTriangulatePoints(
                 ref_->keypoints_, curr_->keypoints_,
                 curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
     
-            printf("Pushing points to map .... ");
             curr_->inliers_matches_for_3d_ = retainGoodTriangulationResult(
                 ref_, curr_, curr_->inliers_matches_with_ref_, 
                 curr_->inliers_pts3d_/*This will be updated*/);
-            printf("Pushing points to map .... ");
 
             // -- Update state
             pushCurrPointsToMap();
