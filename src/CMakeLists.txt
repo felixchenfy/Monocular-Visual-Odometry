@@ -51,7 +51,6 @@ target_link_libraries( my_optimization
     ${THIRD_PARTY_LIBS} my_basics
 )
 
-
 target_link_libraries( my_slam
     ${THIRD_PARTY_LIBS} my_geometry my_basics my_optimization
 )

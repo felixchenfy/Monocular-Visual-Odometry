@@ -50,6 +50,7 @@ public: // ------------------------------- Member variables --------------------
   Frame::Ptr ref_;
   Frame::Ptr newest_frame_; // temporarily store the newest frame
   Mat prev_T_w_c_;          // pos of previous frame
+  deque<Frame::Ptr> frames_buff_;
 
   // Map
   Map::Ptr map_;
@@ -61,12 +62,16 @@ public: // ------------------------------- Member variables --------------------
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
-public: // ------------------------------- Constructor
+// ================================ Functions ================================
+public: // basics
   VisualOdometry();
   void addFrame(my_slam::Frame::Ptr frame);
-
-  // ================================ Functions ================================
-
+  void pushFrameToBuff(Frame::Ptr frame){
+    const int BUFF_SIZE=10;
+    frames_buff_.push_back(frame);
+    if(frames_buff_.size()>BUFF_SIZE)
+      frames_buff_.pop_front();
+  }
 public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit(int checkIfVoGoodToInit);
@@ -90,9 +95,11 @@ public: // ------------------------------- Mapping -----------------------------
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       Mat &corresponding_mappoints_descriptors);
-    
-  vector<Mat> pushCurrPointsToMap();
+  void pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
+  
+public: // ------------------------------- BundleAdjustment -------------------------------
+  void callBundleAdjustment();
 };
 
 } // namespace my_slam

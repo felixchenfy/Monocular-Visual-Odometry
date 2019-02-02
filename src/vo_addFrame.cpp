@@ -102,7 +102,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         cout << "R_prev_to_curr: " << R << endl;
         cout << "t_prev_to_curr: " << t.t() << endl;
     }
-
+    pushFrameToBuff(frame);
     cout << "\nEnd of a frame" << endl;
 }
 

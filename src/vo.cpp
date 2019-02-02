@@ -137,14 +137,10 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     double moved_dist = calcMatNorm(t);
     double rotated_angle = calcMatNorm(R_vec);
 
-    printf("1 .... ");
     printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
-    printf("2 .... ");
     // Satisfy each one will be a good keyframe
     bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;
-    printf("3 .... ");
-
     return res;
 }
 
@@ -164,7 +160,7 @@ void VisualOdometry::poseEstimationPnP()
     {
         DMatch &match = curr_->matches_with_map_[i];
         MapPoint::Ptr mappoint = candidate_mappoints_in_map[match.queryIdx];
-        pts_3d.push_back(Mat_to_Point3f(mappoint->pos_));
+        pts_3d.push_back(mappoint->pos_);
         pts_2d.push_back(curr_->keypoints_[match.trainIdx].pt);
     }
 
@@ -201,7 +197,7 @@ void VisualOdometry::poseEstimationPnP()
         inlier_mappoint->matched_times_++;
 
         // Update graph info
-        curr_->inliers_to_mappt_connections_[match.trainIdx]=PtConn{-1,inlier_mappoint->id_};
+        curr_->inliers_to_mappt_connections_[match.trainIdx] = PtConn{-1, inlier_mappoint->id_};
     }
     pts_3d.swap(tmp_pts_3d);
     pts_2d.swap(tmp_pts_2d);
@@ -214,15 +210,63 @@ void VisualOdometry::poseEstimationPnP()
     static const int USE_BA = my_basics::Config::get<int>("USE_BA");
     if (USE_BA == 1)
     {
-        // Update curr_->T_w_c_
-        my_optimization::optimizeSingleFrame(pts_3d, pts_2d, curr_->camera_->K_, curr_->T_w_c_);
-
-        // Update points' 3d pos
-        for (int i = 0; i < num_inliers; i++)
-            inlier_candidates[i]->resetPos(pts_3d[i]);
+        bool optimize_single_frame = false;
+        if (optimize_single_frame)
+        {
+            my_optimization::optimizeSingleFrame(pts_2d, curr_->camera_->K_,
+                                                 pts_3d, curr_->T_w_c_); // Update pts_3d and curr_->T_w_c_
+            for (int i = 0; i < num_inliers; i++)
+                inlier_candidates[i]->pos_ = pts_3d[i]; // assign pts_3d to mappoint
+        }
+        else
+        {
+            callBundleAdjustment();
+        }
     }
 }
 
+// bundle adjustment
+void VisualOdometry::callBundleAdjustment()
+{
+    // Param
+    const int TOTAL_FRAMES = frames_buff_.size();
+    const int NUM_FRAMES_FOR_BA = frames_buff_.size();
+
+    // Input vars to BA
+    vector<vector<Point2f*>> v_pts_2d(NUM_FRAMES_FOR_BA, vector<Point2f*>());
+    vector<vector<int>> v_pts_2d_to_3d_idx(NUM_FRAMES_FOR_BA, vector<int>());
+    unordered_map<int, Point3f *> pts_3d; // this is to optimize
+    vector<Mat *> v_camera_poses; // this is to optimize
+
+    // Set input vars
+    for (int i = TOTAL_FRAMES-1; i >= TOTAL_FRAMES-NUM_FRAMES_FOR_BA ; i--)
+    {
+        Frame::Ptr frame = frames_buff_[i];
+        // Get camera poses
+        v_camera_poses.push_back(&frame->T_w_c_);
+
+        // Iterate through this camera's mappoints
+        int num_mappt_in_frame = frame->inliers_to_mappt_connections_.size();
+        for (unordered_map<int, PtConn>::iterator ite = frame->inliers_to_mappt_connections_.begin();
+             ite != frame->inliers_to_mappt_connections_.end(); ite++)
+        {
+            int kpt_idx = ite->first;
+            int mappt_idx = ite->second.pt_map_idx;
+
+            // Get 2d pos
+            v_pts_2d[i].push_back(&(frame->keypoints_[kpt_idx].pt));
+            v_pts_2d_to_3d_idx[i].push_back(mappt_idx);
+
+            // Get 3d pos
+            pts_3d[mappt_idx]=&(map_->map_points_[mappt_idx]->pos_);
+
+        }
+    }
+
+    // Bundle Adjustment
+    my_optimization::bundleAdjustment(v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
+        pts_3d, v_camera_poses);
+}
 // ------------------- Mapping -------------------
 void VisualOdometry::addKeyFrame(Frame::Ptr frame)
 {
@@ -238,15 +282,12 @@ void VisualOdometry::optimizeMap()
     // remove the hardly seen and no visible points
     for (auto iter = map_->map_points_.begin(); iter != map_->map_points_.end();)
     {
-        cout << "1:" << iter->first << endl;
-        cout << "1:" << iter->first << "," << iter->second->pos_ << endl;
         if (!curr_->isInFrame(iter->second->pos_))
         {
             iter = map_->map_points_.erase(iter);
             continue;
         }
 
-        cout << "2" << endl;
         float match_ratio = float(iter->second->matched_times_) / iter->second->visible_times_;
         if (match_ratio < map_point_erase_ratio)
         {
@@ -254,7 +295,6 @@ void VisualOdometry::optimizeMap()
             continue;
         }
 
-        cout << "3" << endl;
         double angle = getViewAngle(curr_, iter->second);
         if (angle > M_PI / 6.)
         {
@@ -274,7 +314,7 @@ void VisualOdometry::optimizeMap()
     cout << "map points: " << map_->map_points_.size() << endl;
 }
 
-vector<Mat> VisualOdometry::pushCurrPointsToMap()
+void VisualOdometry::pushCurrPointsToMap()
 {
     // -- Input
     const vector<Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
@@ -284,7 +324,6 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
     const vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
 
     // -- Output
-    vector<Mat> newly_inserted_pts3d;
     unordered_map<int, PtConn> &inliers_to_mappt_connections = curr_->inliers_to_mappt_connections_;
 
     // -- Start
@@ -304,13 +343,13 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
         {
 
             // Change coordinate of 3d points to world frame
-            Mat world_pos = Point3f_to_Mat(preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr));
+            Point3f world_pos = preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr);
 
             // Create map point
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
                 descriptors.row(pt_idx).clone(),                                       // descriptor
-                getNormalizedMat(world_pos - curr_->getCamCenter()),                   // view direction of the point
+                getNormalizedMat(Point3f_to_Mat(world_pos) - curr_->getCamCenter()),                   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
             map_point_id = map_point->id_;
@@ -318,18 +357,16 @@ vector<Mat> VisualOdometry::pushCurrPointsToMap()
             // Push to map
             map_->insertMapPoint(map_point);
 
-            // Update newly inserted 3d point pos
-            newly_inserted_pts3d.push_back(world_pos);
         }
         // Update graph connection of current frame
         inliers_to_mappt_connections.insert({pt_idx, PtConn{dm.queryIdx, map_point_id}});
     }
-    return newly_inserted_pts3d;
+    return;
 }
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
-    Mat n = point->pos_ - frame->getCamCenter();
+    Mat n = Point3f_to_Mat(point->pos_) - frame->getCamCenter();
     n = getNormalizedMat(n);
     Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));

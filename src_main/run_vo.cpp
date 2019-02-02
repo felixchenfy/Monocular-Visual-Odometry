@@ -240,7 +240,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         for (auto &iter_map_point : vo->map_->map_points_)
         {
             const MapPoint::Ptr &p = iter_map_point.second;
-            vec_pos.push_back(Mat_to_Point3f(p->pos_));
+            vec_pos.push_back(p->pos_);
             vec_color.push_back(p->color_);
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);

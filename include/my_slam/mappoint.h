@@ -18,7 +18,7 @@ public: // Basics Properties
 
     static int factory_id_; 
     int id_;
-    Mat pos_;
+    Point3f pos_;
     Mat norm_; // Vector pointing from camera center to the point
     vector<unsigned char> color_; // r,g,b
     Mat descriptor_; // Descriptor for matching 
@@ -30,9 +30,9 @@ public: // Properties for constructing local mapping
     int         visible_times_;     // being visible in current frame 
     
 public: // Functions
-    MapPoint (const Mat& pos,  const Mat& descriptor, const Mat& norm,
+    MapPoint (const Point3f& pos,  const Mat& descriptor, const Mat& norm,
         unsigned char r=0, unsigned char g=0, unsigned char b=0);
-    void resetPos(Point3f pos);
+    // void resetPos(Point3f pos);
 
 };
 }
