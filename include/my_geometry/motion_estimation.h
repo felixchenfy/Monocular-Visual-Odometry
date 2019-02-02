@@ -21,7 +21,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
-    const Mat &K,
+    const Mat &K, // camera intrinsics
     vector<Mat> &list_R, vector<Mat> &list_t,
     vector<vector<DMatch>> &list_matches,
     vector<Mat> &list_normal,
@@ -37,7 +37,7 @@ void helperEvalEppiAndTriangErrors(
     const vector<vector<DMatch>> &list_matches,
     const vector<vector<Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<Mat> &list_R, const vector<Mat> &list_t, const vector<Mat> &list_normal,
-    const Mat &K,
+    const Mat &K, // camera intrinsics
     bool print_res);
 
 // Estimate camera motion by Essential matrix.
@@ -45,10 +45,17 @@ void helperEstiMotionByEssential(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<DMatch> &matches,
-    const Mat &K,
+    const Mat &K, // camera intrinsics
     Mat &R, Mat &t,
     vector<DMatch> &inlier_matches,
     const bool print_res=false);
+
+// After feature matching, find inlier matches by using epipolar constraint to exclude wrong matches
+vector<DMatch> helperFindInlierMatchesByEpipolarCons(
+    const vector<KeyPoint> &keypoints_1,
+    const vector<KeyPoint> &keypoints_2,
+    const vector<DMatch> &matches,
+    const Mat &K);
 
 // Get the 3d-2d corrsponding points
 void helperFind3Dto2DCorrespondences( 
@@ -57,12 +64,17 @@ void helperFind3Dto2DCorrespondences(
     vector<Point3f> &pts_3d, vector<Point2f> &pts_2d);
 
 // Triangulate points
-void helperTriangulatePoints(
+vector<Point3f> helperTriangulatePoints(
+    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &curr_inlier_matches,
+    const Mat &T_curr_to_prev,
+    const Mat &K
+);
+vector<Point3f> helperTriangulatePoints(
     const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
     const vector<DMatch> &curr_inlier_matches,
     const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
-    const Mat &K,
-    vector<Point3f> &pts_3d_in_curr
+    const Mat &K
 );
 
 // Compute the score of estiamted E/H matrix by the method in ORB-SLAM

@@ -111,7 +111,6 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
         sols_pts3d_in_cam1.push_back(pts3d_in_cam1);
     }
 
-
     // Change frame
     // Caution: This should be done after all other algorithms
     if (is_motion_cam2_to_cam1 == false)
@@ -135,25 +134,27 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     // -- Choose a solution
     double score_E = checkEssentialScore(essential_matrix, K, pts_img1, pts_img2, inliers_index_e);
     double score_H = checkHomographyScore(homography_matrix, pts_img1, pts_img2, inliers_index_h);
-    double ratio=score_H/(score_E+score_H);
+    double ratio = score_H / (score_E + score_H);
     printf("Evaluate E/H score: E = %.1f, H = %.1f, H/(E+H)=%.1f\n", score_E, score_H, ratio);
-    printf("        Mean score: E = %.1f, H = %.1f\n", 
-        score_E/inliers_index_e.size(), score_H/inliers_index_h.size());
-    int best_sol=0;
-    if (ratio>0.45){
-        best_sol=1;
+    int best_sol = 0;
+    if (ratio > 0.45)
+    {
+        best_sol = 1;
         double largest_norm_z = fabs(list_normal[1].at<double>(2, 0));
-        for(int i=2;i<num_solutions;i++){
+        for (int i = 2; i < num_solutions; i++)
+        {
             double norm_z = fabs(list_normal[i].at<double>(2, 0));
-            if(norm_z>largest_norm_z){
-                largest_norm_z=norm_z;
-                best_sol=i;
+            if (norm_z > largest_norm_z)
+            {
+                largest_norm_z = norm_z;
+                best_sol = i;
             }
         }
     }
     return best_sol;
 }
 
+// Estimate camera motion by Essential matrix.
 void helperEstiMotionByEssential(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
@@ -175,6 +176,25 @@ void helperEstiMotionByEssential(
         inlier_matches.push_back(
             DMatch(m.queryIdx, m.trainIdx, m.distance));
     }
+}
+
+// After feature matching, find inlier matches by using epipolar constraint to exclude wrong matches
+vector<DMatch> helperFindInlierMatchesByEpipolarCons(
+    const vector<KeyPoint> &keypoints_1,
+    const vector<KeyPoint> &keypoints_2,
+    const vector<DMatch> &matches,
+    const Mat &K)
+{
+    // Output
+    vector<DMatch> inlier_matches;
+
+    // Estimate Essential to get inlier matches
+    Mat dummy_R, dummy_t;
+    helperEstiMotionByEssential(
+        keypoints_1, keypoints_2,
+        matches, K,
+        dummy_R, dummy_t, inlier_matches);
+    return inlier_matches;
 }
 
 // Get the 3d-2d corrsponding points
@@ -210,14 +230,26 @@ void helperFind3Dto2DCorrespondences(
 }
 
 // Triangulate points
-void helperTriangulatePoints(
+vector<Point3f> helperTriangulatePoints(
+    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
+    const vector<DMatch> &curr_inlier_matches,
+    const Mat &T_curr_to_prev,
+    const Mat &K)
+{
+    Mat R_curr_to_prev, t_curr_to_prev;
+    getRtFromT(T_curr_to_prev, R_curr_to_prev, t_curr_to_prev);
+    // call this func again
+    return helperTriangulatePoints(prev_kpts, curr_kpts, curr_inlier_matches,
+        R_curr_to_prev, t_curr_to_prev, K);
+}
+
+vector<Point3f> helperTriangulatePoints(
     const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
     const vector<DMatch> &curr_inlier_matches,
     const Mat &R_curr_to_prev, const Mat &t_curr_to_prev,
-    const Mat &K,
-    vector<Point3f> &pts_3d_in_curr)
+    const Mat &K)
 {
-
+    // Extract matched keypoints, and convert to camera normalized plane
     vector<Point2f> pts_img1, pts_img2;
     extractPtsFromMatches(prev_kpts, curr_kpts, curr_inlier_matches, pts_img1, pts_img2);
 
@@ -226,15 +258,24 @@ void helperTriangulatePoints(
         pts_on_np1.push_back(pixel2camNormPlane(pt, K));
     for (const Point2f &pt : pts_img2)
         pts_on_np2.push_back(pixel2camNormPlane(pt, K));
+
+    // Set inliers indices
     const Mat &R = R_curr_to_prev, &t = t_curr_to_prev; //rename
     vector<int> inliers;
     for (int i = 0; i < pts_on_np1.size(); i++)
         inliers.push_back(i);       // all are inliers
+
+    // Do triangulation
     vector<Point3f> pts_3d_in_prev; // pts 3d pos to compute
     doTriangulation(pts_on_np1, pts_on_np2, R, t, inliers, pts_3d_in_prev);
 
+    // Change pos to current frame
+    vector<Point3f> pts_3d_in_curr;
     for (const Point3f &pt3d : pts_3d_in_prev)
         pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
+
+    // Return
+    return pts_3d_in_curr;
 }
 
 double computeScoreForEH(double d2, double TM)
@@ -247,7 +288,7 @@ double computeScoreForEH(double d2, double TM)
 }
 
 // (Deprecated) Choose EH by triangulation error. This helps nothing.
-void helperEvalEppiAndTriangErrors( 
+void helperEvalEppiAndTriangErrors(
     const vector<KeyPoint> &keypoints_1,
     const vector<KeyPoint> &keypoints_2,
     const vector<vector<DMatch>> &list_matches,
@@ -272,7 +313,6 @@ void helperEvalEppiAndTriangErrors(
 
         // epipolar error
         double err_epipolar = computeEpipolarConsError(inlpts1, inlpts2, R, t, K);
-
 
         // In image frame,  the error between triangulation and real
         double err_triangulation = 0; // more correctly called: symmetric transfer error
@@ -549,7 +589,7 @@ double checkEssentialScore(const Mat &E21, const Mat &K, const vector<Point2f> &
 
         // Reprojection error in second image
         // l1 =x2tF21=(a1,b1,c1)
-        
+
         const double a1 = f11 * u2 + f21 * v2 + f31;
         const double b1 = f12 * u2 + f22 * v2 + f32;
         const double c1 = f13 * u2 + f23 * v2 + f33;
@@ -569,6 +609,7 @@ double checkEssentialScore(const Mat &E21, const Mat &K, const vector<Point2f> &
         if (good_point)
             inliers_index_new.push_back(inliers_index[i]);
     }
+    printf("E score: sum = %.1f, mean = %.2f\n", score, score / inliers_index.size());
     inliers_index_new.swap(inliers_index);
     return score;
 }
@@ -649,9 +690,9 @@ double checkHomographyScore(const Mat &H21, const vector<Point2f> &pts_img1, con
         if (good_point)
             inliers_index_new.push_back(inliers_index[i]);
     }
+    printf("H score: sum = %.1f, mean = %.2f\n", score, score / inliers_index.size());
     inliers_index_new.swap(inliers_index);
     return score;
 }
-
 
 } // namespace my_geometry

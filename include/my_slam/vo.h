@@ -57,6 +57,7 @@ public: // ------------------------------- Member variables --------------------
   // Map features
   vector<KeyPoint> keypoints_curr_;
   Mat descriptors_curr_;
+  
   vector<Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
@@ -68,7 +69,7 @@ public: // ------------------------------- Constructor
 
 public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
-  bool checkIfVoGoodToInit(const vector<KeyPoint> &init_kpts, const vector<KeyPoint> &curr_kpts, const vector<DMatch> &matches);
+  bool checkIfVoGoodToInit(int checkIfVoGoodToInit);
   bool isInitialized();
 
 public: // ------------------------------- Tracking -------------------------------
@@ -81,7 +82,7 @@ public: // ------------------------------- Mapping -----------------------------
   void addKeyFrame(Frame::Ptr frame);
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
-      Mat &candidate_descriptors_in_map);
+      Mat &corresponding_mappoints_descriptors);
   vector<Mat> pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 };

@@ -32,15 +32,16 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     else if (vo_state_ == INITIALIZATION)
     {
         // Match features
-        my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
-        printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_.size());
+        my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+        printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_with_ref_.size());
 
         // Estimae motion and triangulate points
         estimateMotionAnd3DPoints();
 
         // Check initialization condition:
-        //      init vo only when distance between matched keypoints are large
-        if (checkIfVoGoodToInit(ref_->keypoints_, curr_->keypoints_, curr_->inlier_matches_))
+        const int CRITERIA_INDEX=1;
+        // CRITERIA 1: init vo only when distance between matched keypoints are large
+        if (checkIfVoGoodToInit(CRITERIA_INDEX))
         {
             cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             pushCurrPointsToMap();
@@ -59,35 +60,24 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         curr_->T_w_c_ = ref_->T_w_c_.clone(); // Initial estimation of the current pose
         poseEstimationPnP();
 
-        // -- Insert a keyframe is motion is large
+        // -- Insert a keyframe is motion is large. Then, triangulate more points
         if (checkLargeMoveForAddKeyFrame(curr_, ref_))
         {
+            // Feature matching
+            my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
 
-            // --------------------- Triangulate more points --------------------
-            // - Triangulate new points
-            my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_);
-            printf("Number of matches with prev keyframe: %d\n", (int)curr_->matches_.size());
+            // Find inliers by epipolar constraint
+            curr_->inliers_matches_with_ref_ = helperFindInlierMatchesByEpipolarCons(
+                ref_->keypoints_, curr_->keypoints_,curr_->matches_with_ref_, K);
+            
+            // Print
+            printf("For triangulation: Matches with prev keyframe: %d; Num inliers: %d \n", 
+                (int) curr_->matches_with_ref_.size(),(int) curr_->inliers_matches_with_ref_.size());
 
-            // -- Use Essential matrix to find the inliers
-            vector<DMatch> inlier_matches; // matches, that are inliers
-            Mat dummy_R, dummy_t;
-            helperEstiMotionByEssential(
+            // Triangulate points
+            curr_->inliers_pts3d_ = helperTriangulatePoints(
                 ref_->keypoints_, curr_->keypoints_,
-                curr_->matches_, K,
-                dummy_R, dummy_t, inlier_matches);
-            cout << "Number of inliers with prev prev keyframe: " << inlier_matches.size() << endl;
-            curr_->inlier_matches_ = inlier_matches;
-
-            // / --Triangulate points
-            Mat R_curr_to_key, t_curr_to_key;
-            calcMotionFromFrame1to2(curr_, ref_, R_curr_to_key, t_curr_to_key);
-
-            vector<Point3f> pts_3d_in_curr;
-            helperTriangulatePoints(
-                ref_->keypoints_, curr_->keypoints_,
-                curr_->inlier_matches_, R_curr_to_key, t_curr_to_key, K,
-                pts_3d_in_curr);
-            curr_->inliers_pts3d_ = pts_3d_in_curr;
+                curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
 
             // -- Update state
             pushCurrPointsToMap();

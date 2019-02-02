@@ -53,7 +53,7 @@ class PclViewer
     void updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
     void updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
-    void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t);
+    void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_keyframe);
     void updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t); 
     void update();
     void spinOnce(unsigned int millisecond);

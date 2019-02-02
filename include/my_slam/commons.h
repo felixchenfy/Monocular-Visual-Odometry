@@ -10,8 +10,8 @@ namespace my_slam
 using namespace std; 
 using namespace cv;
 
-Mat calcMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2);
-void calcMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2, Mat &R, Mat &t);
+Mat getMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2);
+void getMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2, Mat &R, Mat &t);
 
 }
 

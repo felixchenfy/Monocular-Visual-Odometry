@@ -33,12 +33,20 @@ public:
   Mat descriptors_;
   vector<vector<unsigned char>> kpts_colors_; // rgb colors
 
-  vector<DMatch> matches_;        // matches with the previous frame
-  vector<DMatch> inlier_matches_; // inliers matches index with respect to all the points
-  vector<Point3f> inliers_pts3d_; // matches with the previous frame
+  // Matches with reference frame.
+  //  for (1) E/H at initialization stage and (2) triangulating 3d points at all stages.
+  vector<DMatch> matches_with_ref_;         // matches with reference frame
+  vector<DMatch> inliers_matches_with_ref_; // matches that satisify E or H's constraints
+  vector<Point3f> inliers_pts3d_; // 3d points triangulated from inliers keypoints
 
-  // pose
+  // Matches with map points.
+  //  for (1) PnP and (2) bundle adjustment
+  vector<DMatch> matches_with_map_; // inliers matches index with respect to all the points
+
+  // Camera
   my_geometry::Camera::Ptr camera_;
+  
+  // Current pose
   Mat T_w_c_; // transform from camera to world
 
 public:
@@ -66,7 +74,7 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
     my_geometry::matchFeatures(
         // descriptors_, prev_frame->descriptors_,
         prev_frame->descriptors_, descriptors_,
-        matches_,
+        matches_with_ref_,
         true // print result
     );
   }
