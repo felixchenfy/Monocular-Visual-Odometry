@@ -2,11 +2,12 @@
 Monocular Visual Odometry
 =======================================
 
-**Content:** A simple **Monocular Visual Odometry** (VO) with initialization, tracking, local map, and optimization on single frame.
+**Content:** A simple **Monocular Visual Odometry** (VO) with initialization, tracking, local map, and optimization.  
+(Currently optimization is done on single frame and points. I'm still debugging the bundle adjustment for multi frames).
 
 **Video demo**: http://feiyuchen.com/wp-content/uploads/vo_with_opti.mp4   
-  On the left, **white line** is the estimated camera trajectory, **green line** is ground truth.   
-  On the right, **green** are keypoints, **red** are inlier matches with map points.  
+  On the left: **White line** is the estimated camera trajectory, whose **red dots** are keyframes. **Green line** is ground truth. **Red map points** are triangulated by last keyframe.  
+  On the right: **Green** are keypoints. **Red** are inlier matches with map points.  
 
 ![](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/raw/master/result/vo_with_opti.gif)
 
@@ -21,8 +22,8 @@ Monocular Visual Odometry
 - [1. Algorithm](#1-algorithm)
   - [1.1. Initialization](#11-initialization)
   - [1.2. Tracking](#12-tracking)
-  - [1.3. Optimization](#13-optimization)
   - [1.4. Local Map](#14-local-map)
+  - [1.3. Optimization](#13-optimization)
   - [1.5. Other details](#15-other-details)
 - [2. File Structure](#2-file-structure)
   - [2.1. Folders](#21-folders)
@@ -57,24 +58,33 @@ Insert both 1st and K_th frame as **keyframe**. **Triangulate** their inlier mat
 
 Keep on estimating the next camera pose. First, find map points that are in the camera view. Do feature matching to find 2d-3d correspondance between 3d map points and 2d image keypoints. Estimate camera pose by RANSAC and PnP.
 
+## 1.4. Local Map
+
+**Insert keyframe:** If the relative pose between current frame and previous keyframe is large enough with a translation or rotation larger than the threshold, insert current frame as a keyframe.   
+Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map.
+
+**Clean up local map:** Remove map points that are: (1) not in current view, (2) whose view_angle is larger than threshold, (3) rarely be matched as inlier point. (See Slambook Chapter 9.4.)
+
+**Graph/Connections between map points and frames:**  
+Graphs are built at two stages of the algorithm:
+1) After PnP, based on the 3d-2d correspondances, I update the connectionts between map points and current keypoints.
+2) During triangulation, I also update the 2d-3d correspondance between current keypoints and triangulated mappoints, by either a direct link or going through previous keypoints that have been triangulated.
+
+
 ## 1.3. Optimization
 
 Apply optimization to this single frame : Using the inlier 3d-2d corresponding from PnP, we can compute the sum of reprojection error of each point pair to form the cost function. By computing the deriviate wrt (1) points 3d pos and (2) camera pose, we can solve the optimization problem using Gauss-Newton Method and its variants. These are done by **g2o** and its built-in datatypes of `VertexSBAPointXYZ`, `VertexSE3Expmap`, and `EdgeProjectXYZ2UV`. See Slambook Chapter 4 and Chapter 7.8.2 for more details.
 
-Then the camera pose and inlier points' 3d pos are updated, at a level of about 0.0001 meter. (I found that that this optimization doesn't make much difference compared to the one without it. I need to make improvement by optimizing multiple frames at the same time.) 
+Currently, I only feed the camera pose and keypoints of the current frame into the optimizer. Though I set the points to be unfixed during optimization, I don't use the result to update points's pos (Simply because its result looks better).
 
-(TODO: Apply optimization to multiple frames, so that I can call this process bundle adjustment.)
+TODO: Bundle Adjustment. I've coded this part, but the program throws error. I need some time to fix it.
 
-## 1.4. Local Map
 
-**Insert keyframe:** If the relative pose between current frame and previous keyframe is large enough with a translation or rotation larger than the threshold, insert current frame as a keyframe. Triangulate 3d points and push to local map.
-
-**Clean up local map:** Remove map points that are: (1) not in current view, (2) whose view_angle is larger than threshold, (3) rarely be matched as inlier point. (See Slambook Chapter 9.4.)
 
 ## 1.5. Other details
 
 **Image features**:  
-Extract ORB keypoints and features. Then, a simple grid sampling on keypoint's pixel pos is applied to retain uniform keypoints.  
+Extract ORB keypoints and features. Then, a simple grid sampling on keypoint's pixel pos is applied to retain uniform keypoints. See [config/config.yaml](config/config.yaml) for the parameters.
 (Notes: The ORB-SLAM paper says that they do grid sampling in all pyramids, and extract more keypoints if somewhere has few points.)
 
 
@@ -166,14 +176,15 @@ Then, set up things in [config/config.yaml](config/config.yaml), and run:
 
 I tested the current implementation on [TUM](https://vision.in.tum.de/data/datasets/rgbd-dataset/download) fr1_desk and fr1_xyz dataset, but both performances are **bad**. I guess one of the **cause** is that high quality keypoints are too few, so the feature matching returns few matches. The **solution** I guess is to use the ORB-SLAM's method for extracting enough uniformly destributed keypoints, and doing guided matching based on the estimated camera motion. 
 
-However, my program does work on this [New Tsukuba Stereo Database](http://cvlab.cs.tsukuba.ac.jp/), whose images and scenes are synthetic and have abundant high quality keypoints. Though large error still exists, the VO could roughly estimated the camera motion.  
+However, my program does work on this [New Tsukuba Stereo Database](http://cvlab.cs.tsukuba.ac.jp/), whose images and scenes are synthetic and have abundant high quality keypoints. The result shows that the VO could roughly estimate camera motion.  
 See the gif **at the beginning of this README**.
 
-I also put two video links here which I recorded on my computer of running this VO program:  
+I also put two video links here which I recorded on my computer:  
 [1. VO video, with optimization on single frame](
 https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_with_opti.mp4)  
 [2. VO video, no optimization](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_no_opti.mp4)  
-The sad thing is, with or without this optimization on single frame, the result is about the same.
+With optimization on single frame, the result is slightly better, as you can see that the shape of the estimated trajectory is closer to the truth trajectory.  
+(You may mentally scale the two camera trajectories to compare the shape.)
 
 
 # 6. Reference
@@ -183,7 +194,7 @@ I read this Dr. Xiang Gao's [Slambook](https://github.com/gaoxiang12/slambook) b
 
 The framework of my program is based on Chapter 9 of Slambook, which is a RGB-D visual odometry project. Classes declared in [include/my_slam/](include/my_slam/) are based on this Chapter.
 
-These files are mainly copied from Slambook and then modified:
+These files are mainly copied or built on top of the Slambook's code:
 * CMakeLists.txt
 * [include/my_basics/config.h](include/my_basics/config.h).
 *  [include/my_optimization/g2o_ba.h](include/my_optimization/g2o_ba.h).
@@ -212,5 +223,5 @@ I borrowed its code of **the criteria for choosing Essential or Homography** for
   Please run in debug mode.
 
 **Improvements**  
-* Build up the connections keypoints and frames. Then, add bundle adjustment.
+* Fix bug in bundle adjustment.
 

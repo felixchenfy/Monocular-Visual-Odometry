@@ -176,8 +176,8 @@ void VisualOdometry::poseEstimationPnP()
     Rodrigues(R_vec, R);
 
     // -- Get inlier matches used in PnP
-    vector<Point2f> tmp_pts_2d; 
-    vector<Point3f*> inlier_candidates_pos;
+    vector<Point2f> tmp_pts_2d;
+    vector<Point3f *> inlier_candidates_pos;
     vector<MapPoint::Ptr> inlier_candidates;
     vector<DMatch> tmp_matches_with_map_;
     int num_inliers = pnp_inliers_mask.rows;
@@ -205,49 +205,37 @@ void VisualOdometry::poseEstimationPnP()
 
     // -- Update current camera pos
     curr_->T_w_c_ = transRt2T(R, t).inv();
-
-    // -- Bundle Adjustment
-    static const int USE_BA = my_basics::Config::get<int>("USE_BA");
-    if (USE_BA == 1)
-    {
-        bool optimize_single_frame = false;
-        if (optimize_single_frame)
-        {
-            // printf("Optimizing on single frame: num pts = %d\n", (int) pts_3d.size());
-            // const bool fix_map_pts = false, update_map_pts = false;      
-            // my_optimization::optimizeSingleFrame(pts_2d, curr_->camera_->K_,
-            //         inlier_candidates_pos, curr_->T_w_c_,
-            //         fix_map_pts, update_map_pts); // Update pts_3d and curr_->T_w_c_
-
-        }
-        else
-        {
-            callBundleAdjustment();
-        }
-    }
 }
 
 // bundle adjustment
 void VisualOdometry::callBundleAdjustment()
 {
+    static const int USE_BA = my_basics::Config::get<int>("USE_BA");
+    const int NUM_FRAMES_FOR_BA = my_basics::Config::get<int>("NUM_FRAMES_FOR_BA");
+    ;
+    if (USE_BA != 1)
+    {
+        printf("\nNot using bundle adjustment ... \n");
+        return;
+    }
     printf("\nCalling bundle adjustment ... \n");
 
     // Param
     const int TOTAL_FRAMES = frames_buff_.size();
-    // const int NUM_FRAMES_FOR_BA = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = 1;
 
-    // Input vars to BA
+    // Measurement (which is fixed; truth)
     vector<vector<Point2f *>> v_pts_2d(NUM_FRAMES_FOR_BA, vector<Point2f *>());
     vector<vector<int>> v_pts_2d_to_3d_idx(NUM_FRAMES_FOR_BA, vector<int>());
-    unordered_map<int, Point3f *> um_pts_3d; // this is to optimize
-    vector<Point3f*> v_pts_3d_only_in_curr;
-    vector<Mat *> v_camera_poses;         // this is to optimize
 
-    // Set input vars
+    // Things to to optimize
+    unordered_map<int, Point3f *> um_pts_3d;
+    vector<Point3f *> v_pts_3d_only_in_curr; // This is an alternative of the above
+    vector<Mat *> v_camera_poses;
+
+    // Set up input vars
     int ith_frame = 0;
     for (int frame_id = TOTAL_FRAMES - 1; frame_id >= TOTAL_FRAMES - NUM_FRAMES_FOR_BA;
-        frame_id--, ith_frame++)
+         frame_id--, ith_frame++)
     {
         Frame::Ptr frame = frames_buff_[frame_id];
         // Get camera poses
@@ -268,24 +256,35 @@ void VisualOdometry::callBundleAdjustment()
             v_pts_2d_to_3d_idx[ith_frame].push_back(mappt_idx);
 
             // Get 3d pos
-            Point3f * p = &(map_->map_points_[mappt_idx]->pos_);
+            Point3f *p = &(map_->map_points_[mappt_idx]->pos_);
             um_pts_3d[mappt_idx] = p;
-            if(ith_frame==0)
+            if (ith_frame == 0)
                 v_pts_3d_only_in_curr.push_back(p);
         }
     }
-
     // Bundle Adjustment
-    const bool fix_map_pts = false, update_map_pts = false;      
-    // my_optimization::bundleAdjustment(v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
-    //                                   um_pts_3d, v_camera_poses,
-    //                                   fix_map_pts, update_map_pts);
-    my_optimization::optimizeSingleFrame(v_pts_2d[0], curr_->camera_->K_,
-                    v_pts_3d_only_in_curr, curr_->T_w_c_,
-                    fix_map_pts, update_map_pts); // Update pts_3d and curr_->T_w_c_
+    const bool fix_map_pts = false, update_map_pts = false;
+    Mat pose_src = getPosFromT(curr_->T_w_c_);
+    if (1)
+    {
+        my_optimization::bundleAdjustment(
+            v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
+            um_pts_3d, v_camera_poses,
+            fix_map_pts, update_map_pts);
+    }
+    else
+    {
+        my_optimization::optimizeSingleFrame(
+            v_pts_2d[0], curr_->camera_->K_,
+            v_pts_3d_only_in_curr, curr_->T_w_c_,
+            fix_map_pts, update_map_pts); // Update pts_3d and curr_->T_w_c_
+    }
 
-    // opti single frame:
-
+    // Print result
+    Mat pose_new = getPosFromT(curr_->T_w_c_);
+    printf("Cam pos: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
+        pose_src.at<double>(0,0), pose_src.at<double>(1,0), pose_src.at<double>(2,0),
+        pose_new.at<double>(0,0), pose_new.at<double>(1,0), pose_new.at<double>(2,0));
     printf("Bundle adjustment finishes... \n\n");
 }
 // ------------------- Mapping -------------------

@@ -162,7 +162,7 @@ void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_
 void PclViewer::updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t)
 {
     static int cnt_cam = 0;
-    const int line_width = 2;
+    const int line_width = 1;
     double line_color[3]; 
     copyColor(pc_cam_traj_ground_truth_color, line_color);
     addNewCameraPoseToTraj(

@@ -60,7 +60,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     {
         curr_->T_w_c_ = ref_->T_w_c_.clone(); // Initial estimation of the current pose
         poseEstimationPnP();
-        
+        callBundleAdjustment();
+
         // -- Insert a keyframe is motion is large. Then, triangulate more points
         if (checkLargeMoveForAddKeyFrame(curr_, ref_))
         {

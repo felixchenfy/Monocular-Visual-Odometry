@@ -119,10 +119,6 @@ void optimizeSingleFrame(
         pose->estimate().translation());
     // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
     pose_src = my_basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
-    
-    printf("Cam t: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
-        pose_src0.at<double>(0,0), pose_src0.at<double>(1,0), pose_src0.at<double>(2,0),
-        pose_src.at<double>(0,0), pose_src.at<double>(1,0), pose_src.at<double>(2,0));
 
 
     // 2. Points 3d world pos
