@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         // cout << "Finished an image" << endl;
         cam_pose_history.push_back(frame->T_w_c_.clone());
         frame->clearNoUsed();
-        // if (img_id == 100 || vo->vo_state_ == VisualOdometry::OK)
+        // if (img_id == 10+3)
         //     break;
     }
    

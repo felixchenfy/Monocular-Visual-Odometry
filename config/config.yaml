@@ -53,11 +53,11 @@ GRID_SIZE: 16
 MAX_PTS_IN_GRID: 8
 
 # ORB settings 
-number_of_keypoints_to_extract: 5000
+number_of_keypoints_to_extract: 10000
 max_number_of_keypoints: 1500
 scale_factor: 1.2
 level_pyramid: 4
-
+score_threshold: 15
 
 # ------------------- Initialization -------------------
 MIN_PIXEL_DIST_FOR_INIT_VO: 70

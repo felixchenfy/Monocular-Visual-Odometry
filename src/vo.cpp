@@ -154,8 +154,8 @@ void VisualOdometry::poseEstimationPnP()
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
     my_geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
     cout << "Number of 3d-2d pairs: " << curr_->matches_with_map_.size() << endl;
-    vector<Point3f> pts_3d, tmp_pts_3d;
-    vector<Point2f> pts_2d, tmp_pts_2d; // a point's 2d pos in image2 pixel curr_
+    vector<Point3f> pts_3d;
+    vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
     for (int i = 0; i < curr_->matches_with_map_.size(); i++)
     {
         DMatch &match = curr_->matches_with_map_[i];
@@ -176,6 +176,8 @@ void VisualOdometry::poseEstimationPnP()
     Rodrigues(R_vec, R);
 
     // -- Get inlier matches used in PnP
+    vector<Point2f> tmp_pts_2d; 
+    vector<Point3f*> inlier_candidates_pos;
     vector<MapPoint::Ptr> inlier_candidates;
     vector<DMatch> tmp_matches_with_map_;
     int num_inliers = pnp_inliers_mask.rows;
@@ -183,23 +185,21 @@ void VisualOdometry::poseEstimationPnP()
     {
         int good_idx = pnp_inliers_mask.at<int>(i, 0);
 
-        // good pts 3d && 2d
-        tmp_pts_3d.push_back(pts_3d[good_idx]);
-        tmp_pts_2d.push_back(pts_2d[good_idx]);
-
         // good match
         DMatch &match = curr_->matches_with_map_[good_idx];
         tmp_matches_with_map_.push_back(match);
 
-        // Updape map point info
+        // good pts 2d
+        tmp_pts_2d.push_back(pts_2d[good_idx]);
+
+        // good pts 3d
         MapPoint::Ptr inlier_mappoint = candidate_mappoints_in_map[match.queryIdx];
-        inlier_candidates.push_back(inlier_mappoint);
+        inlier_candidates_pos.push_back(&(inlier_mappoint->pos_));
         inlier_mappoint->matched_times_++;
 
         // Update graph info
         curr_->inliers_to_mappt_connections_[match.trainIdx] = PtConn{-1, inlier_mappoint->id_};
     }
-    pts_3d.swap(tmp_pts_3d);
     pts_2d.swap(tmp_pts_2d);
     curr_->matches_with_map_.swap(tmp_matches_with_map_);
 
@@ -213,10 +213,12 @@ void VisualOdometry::poseEstimationPnP()
         bool optimize_single_frame = false;
         if (optimize_single_frame)
         {
+            printf("Optimizing on single frame: num pts = %d\n", (int) pts_3d.size());
+            const bool fix_map_pts = false, update_map_pts = false;      
             my_optimization::optimizeSingleFrame(pts_2d, curr_->camera_->K_,
-                                                 pts_3d, curr_->T_w_c_); // Update pts_3d and curr_->T_w_c_
-            for (int i = 0; i < num_inliers; i++)
-                inlier_candidates[i]->pos_ = pts_3d[i]; // assign pts_3d to mappoint
+                    inlier_candidates_pos, curr_->T_w_c_,
+                    fix_map_pts, update_map_pts); // Update pts_3d and curr_->T_w_c_
+
         }
         else
         {
@@ -228,20 +230,25 @@ void VisualOdometry::poseEstimationPnP()
 // bundle adjustment
 void VisualOdometry::callBundleAdjustment()
 {
+    printf("\nCalling bundle adjustment ... \n");
+
     // Param
     const int TOTAL_FRAMES = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = frames_buff_.size();
+    // const int NUM_FRAMES_FOR_BA = frames_buff_.size();
+    const int NUM_FRAMES_FOR_BA = 1;
 
     // Input vars to BA
-    vector<vector<Point2f*>> v_pts_2d(NUM_FRAMES_FOR_BA, vector<Point2f*>());
+    vector<vector<Point2f *>> v_pts_2d(NUM_FRAMES_FOR_BA, vector<Point2f *>());
     vector<vector<int>> v_pts_2d_to_3d_idx(NUM_FRAMES_FOR_BA, vector<int>());
     unordered_map<int, Point3f *> pts_3d; // this is to optimize
-    vector<Mat *> v_camera_poses; // this is to optimize
+    vector<Mat *> v_camera_poses;         // this is to optimize
 
     // Set input vars
-    for (int i = TOTAL_FRAMES-1; i >= TOTAL_FRAMES-NUM_FRAMES_FOR_BA ; i--)
+    int ith_frame = 0;
+    for (int frame_id = TOTAL_FRAMES - 1; frame_id >= TOTAL_FRAMES - NUM_FRAMES_FOR_BA;
+        frame_id--, ith_frame++)
     {
-        Frame::Ptr frame = frames_buff_[i];
+        Frame::Ptr frame = frames_buff_[frame_id];
         // Get camera poses
         v_camera_poses.push_back(&frame->T_w_c_);
 
@@ -252,20 +259,30 @@ void VisualOdometry::callBundleAdjustment()
         {
             int kpt_idx = ite->first;
             int mappt_idx = ite->second.pt_map_idx;
+            if (map_->map_points_.find(mappt_idx) == map_->map_points_.end())
+                continue; // point has been deleted
 
             // Get 2d pos
-            v_pts_2d[i].push_back(&(frame->keypoints_[kpt_idx].pt));
-            v_pts_2d_to_3d_idx[i].push_back(mappt_idx);
+            v_pts_2d[ith_frame].push_back(&(frame->keypoints_[kpt_idx].pt));
+            v_pts_2d_to_3d_idx[ith_frame].push_back(mappt_idx);
 
             // Get 3d pos
-            pts_3d[mappt_idx]=&(map_->map_points_[mappt_idx]->pos_);
-
+            pts_3d[mappt_idx] = &(map_->map_points_[mappt_idx]->pos_);
+            // printf("3d points: idx=%d", mappt_idx);
+            // printf(", x=%.2f, y=%.2f, z=%.2f\n",pts_3d[mappt_idx]->x, pts_3d[mappt_idx]->y, pts_3d[mappt_idx]->z);
         }
     }
 
     // Bundle Adjustment
+    const bool fix_map_pts = false, update_map_pts = false;      
     my_optimization::bundleAdjustment(v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
-        pts_3d, v_camera_poses);
+                                      pts_3d, v_camera_poses,
+                                      fix_map_pts, update_map_pts);
+    
+
+    // opti single frame:
+
+    printf("Bundle adjustment finishes... \n\n");
 }
 // ------------------- Mapping -------------------
 void VisualOdometry::addKeyFrame(Frame::Ptr frame)
@@ -349,14 +366,14 @@ void VisualOdometry::pushCurrPointsToMap()
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
                 descriptors.row(pt_idx).clone(),                                       // descriptor
-                getNormalizedMat(Point3f_to_Mat(world_pos) - curr_->getCamCenter()),                   // view direction of the point
+                getNormalizedMat(Point3f_to_Mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
             map_point_id = map_point->id_;
+            // cout<<map_point->id_ <<", "<< map_point->factory_id_<<endl;
 
             // Push to map
             map_->insertMapPoint(map_point);
-
         }
         // Update graph connection of current frame
         inliers_to_mappt_connections.insert({pt_idx, PtConn{dm.queryIdx, map_point_id}});

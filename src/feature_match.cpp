@@ -9,6 +9,7 @@ namespace my_geometry
 #define _num_keypoints 5000
 #define _scale_factor 1.2
 #define _level_pyramid 4
+#define _score_threshold 15
 
 // set default Grid params for non-maximum suppression
 #define _max_num_keypoints 1000
@@ -24,15 +25,24 @@ using namespace cv;
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     const bool SET_PARAM_BY_YAML)
 {
-    static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid;
+    static int num_keypoints=_num_keypoints, level_pyramid=_level_pyramid, score_threshold=_score_threshold;
     static double scale_factor=_scale_factor;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
         num_keypoints = my_basics::Config::get<int>("number_of_keypoints_to_extract");
         scale_factor = my_basics::Config::get<double>("scale_factor");
         level_pyramid = my_basics::Config::get<int>("level_pyramid");
+        score_threshold = my_basics::Config::get<int>("score_threshold");
     }
-    static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
+    // int 	nlevels = 8,
+    // int 	edgeThreshold = 31,
+    // int 	firstLevel = 0,
+    // int 	WTA_K = 2,
+    // ORB::ScoreType 	scoreType = ORB::HARRIS_SCORE,
+    // int 	patchSize = 31,
+    // int 	fastThreshold = 20 
+    static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid,
+        31, 0, 2, ORB::HARRIS_SCORE, 31, score_threshold);
 
     // compute
     orb->detect(image, keypoints);

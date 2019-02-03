@@ -100,6 +100,9 @@ void getRtFromT(const Mat &T, Mat &R, Mat &t)
     // R = T(cv::Rect(0,0,3,3)).clone(); 
     // t = T(cv::Rect(3,0,1,3)).clone(); // x, y, width, height
 }
+
+
+
 Mat getPosFromT(const Mat &T){
     return T(cv::Rect(3,0,1,3)).clone();
 }
