@@ -25,7 +25,7 @@ namespace my_optimization
 {
 
 void optimizeSingleFrame(
-    const vector<Point2f> &points_2d,
+    const vector<Point2f*> &points_2d,
     const Mat &K,
     vector<Point3f*> &points_3d,
     Mat &pose_src,
@@ -79,13 +79,13 @@ void optimizeSingleFrame(
 
     // -- Add edges, which define the error/cost function.
     index = 1;
-    for (const Point2f &p : points_2d)
+    for (const Point2f *p : points_2d)
     {
         g2o::EdgeProjectXYZ2UV *edge = new g2o::EdgeProjectXYZ2UV();
         edge->setId(index);
         edge->setVertex(0, dynamic_cast<g2o::VertexSBAPointXYZ *>(optimizer.vertex(index)));
         edge->setVertex(1, pose);
-        edge->setMeasurement(Eigen::Vector2d(p.x, p.y));
+        edge->setMeasurement(Eigen::Vector2d(p->x, p->y));
         edge->setParameterId(0, 0);
         edge->setInformation(Eigen::Matrix2d::Identity());
         optimizer.addEdge(edge);

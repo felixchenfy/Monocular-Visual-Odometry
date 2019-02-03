@@ -19,7 +19,7 @@ using namespace std;
 using namespace cv;
 
 void optimizeSingleFrame(
-    const vector<Point2f> &points_2d,
+    const vector<Point2f*> &points_2d,
     const Mat &K,
     vector<Point3f*> &points_3d,
     Mat &cam_pose_in_world,
