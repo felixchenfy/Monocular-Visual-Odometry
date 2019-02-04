@@ -2,13 +2,10 @@
 
 # ===== Settings for displaying
 MAX_NUM_IMAGES: 300
-PCL_WAIT_FOR_KEY_PRESS: 0 # If 1, PCL Viewer will stop and wait for any of your keypress before continueing.
-USE_BA: 0                 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
-NUM_FRAMES_FOR_BA: 1      # [Still have bug. Can only be set as 1.]
-DRAW_GROUND_TRUTH_TRAJ: 1 # Ground truth traj's color is set as green. Estimated is set as white.
-
+PCL_WAIT_FOR_KEY_PRESS: "false" # If true, PCL Viewer will stop and wait for any of your keypress before continueing.
+DRAW_GROUND_TRUTH_TRAJ: "true" # Ground truth traj's color is set as green. Estimated is set as white.
 GROUND_TRUTH_TRAJ_FILENAME: /home/feiyu/Desktop/slam/my_vo/my2/data/test_data/cam_traj_truth.txt
-STORE_CAM_TRAJ: /home/feiyu/Desktop/slam/my_vo/my2/data/test_data/cam_traj.txt
+FILENAME_FOR_RESULT_TRAJECTORY: /home/feiyu/Desktop/slam/my_vo/my2/data/test_data/cam_traj.txt
 
 # ===== Dataset and camera intrinsics
 
@@ -68,4 +65,9 @@ MIN_PIXEL_DIST_FOR_INIT_VO: 70
 MIN_DIST_BETWEEN_KEYFRAME: 0.08
 MIN_ROTATED_ANGLE: 0.08
 
-
+# ------------------- Optimization -------------------
+USE_BA: "true"                 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
+MAX_NUM_FRAMES_FOR_BA: 15      # <= 20. I set the "BUFF_SIZE" in "vo.h" as 20, so only previous 20 frames are stored.
+information_matrix: "1.0 0.0 0.0 1.0"
+FIX_MAP_PTS: "true" # TO DEBUG: If I set it to true and optimize both camera pose and map points, there is huge error.
+UPDATE_MAP_PTS: "false"

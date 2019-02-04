@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
     // -- Prepare Pcl display
     PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
-    bool DRAW_GROUND_TRUTH_TRAJ =  my_basics::Config::get<int>("DRAW_GROUND_TRUTH_TRAJ")==1;
+    bool DRAW_GROUND_TRUTH_TRAJ =  my_basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
 
     // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
@@ -106,8 +106,8 @@ int main(int argc, char **argv)
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
         bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer, DRAW_GROUND_TRUTH_TRAJ);
-        static const int PCL_WAIT_FOR_KEY_PRESS = my_basics::Config::get<int>("PCL_WAIT_FOR_KEY_PRESS");
-        if (PCL_WAIT_FOR_KEY_PRESS == 1)
+        static const bool PCL_WAIT_FOR_KEY_PRESS = my_basics::Config::getBool("PCL_WAIT_FOR_KEY_PRESS");
+        if (PCL_WAIT_FOR_KEY_PRESS)
             waitPclKeyPress(pcl_displayer);
 
         // Return
@@ -119,8 +119,8 @@ int main(int argc, char **argv)
     }
    
     // Save camera trajectory
-    const string STORE_CAM_TRAJ= my_basics::Config::get<string>("STORE_CAM_TRAJ");
-    writePoseToFile(STORE_CAM_TRAJ, cam_pose_history);
+    const string FILENAME_FOR_RESULT_TRAJECTORY= my_basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
+    writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
     
     // Wait for user close
     while (!pcl_displayer->wasStopped())

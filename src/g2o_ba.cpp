@@ -24,6 +24,11 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 namespace my_optimization
 {
 
+Eigen::Matrix2d mat2eigen(const cv::Mat &mat){
+    Eigen::Matrix2d mat_eigen;
+    mat_eigen<<mat.at<double>(0,0), mat.at<double>(0,1), mat.at<double>(1,0), mat.at<double>(1,1);
+    return mat_eigen;
+}
 void optimizeSingleFrame(
     const vector<Point2f*> &points_2d,
     const Mat &K,
@@ -171,6 +176,7 @@ void bundleAdjustment(
     const Mat &K,
     unordered_map<int, Point3f *> &pts_3d,
     vector<Mat *> &v_camera_g2o_poses,
+    const Mat &information_matrix,
     bool fix_map_pts, bool update_map_pts)
 {
 
@@ -239,7 +245,10 @@ void bundleAdjustment(
     printf("Number of frames = %d, 3d points = %d\n", num_frames, vertex_id - num_frames);
 
     // -- Add edges, which define the error/cost function.
+    
+    // Set information matrix
     int edge_id = 0;
+    Eigen::Matrix2d information_matrix_eigen =mat2eigen(information_matrix);
     for (int ith_frame = 0; ith_frame < num_frames; ith_frame++)
     {
         int num_pts_2d = v_pts_2d[ith_frame].size();
@@ -257,8 +266,8 @@ void bundleAdjustment(
 
             edge->setMeasurement(Eigen::Vector2d(p->x, p->y));
             edge->setParameterId(0, 0);
-            edge->setInformation(Eigen::Matrix2d::Identity());
-            // edge->setRobustKernel( new g2o::RobustKernelHuber() );
+            edge->setInformation(information_matrix_eigen);
+            edge->setRobustKernel( new g2o::RobustKernelHuber() );
             optimizer.addEdge(edge);
         }
     }

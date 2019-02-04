@@ -10,6 +10,7 @@
 
 // my
 
+#include "my_basics/basics.h"
 #include "my_basics/io.h"
 #include "my_basics/config.h"
 #include "my_basics/opencv_funcs.h"
@@ -67,7 +68,7 @@ public: // basics
   VisualOdometry();
   void addFrame(my_slam::Frame::Ptr frame);
   void pushFrameToBuff(Frame::Ptr frame){
-    const int BUFF_SIZE=10;
+    const int BUFF_SIZE=20;
     frames_buff_.push_back(frame);
     if(frames_buff_.size()>BUFF_SIZE)
       frames_buff_.pop_front();

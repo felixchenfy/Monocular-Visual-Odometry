@@ -31,7 +31,8 @@ void bundleAdjustment(
     const Mat& K,
     unordered_map<int, Point3f*> &pts_3d,
     vector<Mat*> &v_camera_g2o_poses,
-    bool fix_map_pts, bool update_map_pts);
+    const Mat &information_matrix,
+    bool fix_map_pts=false, bool update_map_pts=true);
 
 } // namespace my_optimization
 #endif
