@@ -217,9 +217,9 @@ void VisualOdometry::callBundleAdjustment()
         my_basics::Config::get<string>("information_matrix"));
     static const bool FIX_MAP_PTS = my_basics::Config::getBool("FIX_MAP_PTS");
     static const bool UPDATE_MAP_PTS =my_basics::Config::getBool("UPDATE_MAP_PTS");
-    cout << FIX_MAP_PTS << UPDATE_MAP_PTS << endl;
+    // cout << FIX_MAP_PTS << UPDATE_MAP_PTS << endl;
 
-    if (USE_BA != 1)
+    if (USE_BA != true)
     {
         printf("\nNot using bundle adjustment ... \n");
         return;

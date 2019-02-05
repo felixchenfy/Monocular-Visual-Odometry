@@ -67,7 +67,7 @@ MIN_ROTATED_ANGLE: 0.08
 
 # ------------------- Optimization -------------------
 USE_BA: "true"                 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
-MAX_NUM_FRAMES_FOR_BA: 15      # <= 20. I set the "BUFF_SIZE" in "vo.h" as 20, so only previous 20 frames are stored.
+MAX_NUM_FRAMES_FOR_BA: 1      # <= 20. I set the "BUFF_SIZE" in "vo.h" as 20, so only previous 20 frames are stored.
 information_matrix: "1.0 0.0 0.0 1.0"
 FIX_MAP_PTS: "true" # TO DEBUG: If I set it to true and optimize both camera pose and map points, there is huge error.
 UPDATE_MAP_PTS: "false"

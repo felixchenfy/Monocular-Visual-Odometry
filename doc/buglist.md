@@ -108,3 +108,36 @@ if (is_in) cout << p1->content; or delete this sentence
 
 Then, an segmentation error occurs at some random location.
 It seems that p1=mappoints[mappoint_id] has ruin the original data.
+
+# ==========================
+# C++
+
+### vector
+
+* speed:
+almost same as array
+https://stackoverflow.com/questions/8848575/fastest-way-to-reset-every-value-of-stdvectorint-to-0
+
+* set all to zero
+https://stackoverflow.com/questions/8848575/fastest-way-to-reset-every-value-of-stdvectorint-to-0
+std::fill(v.begin(), v.end(), 0);//13.4s. But this is recommaneded stype.
+memset(&v[0], 0, v.size() * sizeof v[0]); //0.125s
+
+* resize and clear
+
+* copy
+` vector B(3,0)
+vector A = B; // This is a memory copy. Later if change B, A won't change.
+` use swap
+
+### deque
+deque is basically same as vector, but:  
+supports two-ends constant-time insert and delete, while vector only supports one end.
+
+## Template
+For a funcion with template only in return type instead of input type, there could be some trouble. I cannot manually do a switch in the function, such as if(T==bool){return bool}else if(T==string){return string}. It gives error that bool cannot be convert to string, and vice versa.
+I have figure out a good solution.
+
+# Euler Angle of cv::Rodrigues(input, output)
+Axis of r_vec: x, y, z
+

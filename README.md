@@ -2,8 +2,7 @@
 Monocular Visual Odometry
 =======================================
 
-**Content:** A simple **Monocular Visual Odometry** (VO) with initialization, tracking, local map, and optimization.  
-(Currently optimization is done on single frame and points. I'm still debugging the bundle adjustment for multi frames).
+**Content:** A **Monocular Visual Odometry** (VO) with initialization, tracking, local map, and bundle adjustment.
 
 **Video demo**: http://feiyuchen.com/wp-content/uploads/vo_with_opti.mp4   
   On the left: **White line** is the estimated camera trajectory, whose **red dots** are keyframes. **Green line** is ground truth. **Red map points** are triangulated by last keyframe.  
@@ -11,7 +10,7 @@ Monocular Visual Odometry
 
 ![](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/raw/master/result/vo_with_opti.gif)
 
-**Project purpose:** This is a practice after I read the [Slambook](https://github.com/gaoxiang12/slambook). This will also be my final project of the course EESC-432 Advanced Computer Vision, so this repo will be kept on updating until and completed by **March 15th**. 
+**Project purpose:** This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). This will also be my final project of the course EESC-432 Advanced Computer Vision, so this repo will be kept on updating until and completed by **March 15th**. 
 
 **Data files:** Please download from here: https://github.com/felixchenfy/Monocular-Visual-Odometry-Data
 
@@ -23,7 +22,7 @@ Monocular Visual Odometry
   - [1.1. Initialization](#11-initialization)
   - [1.2. Tracking](#12-tracking)
   - [1.4. Local Map](#14-local-map)
-  - [1.3. Optimization](#13-optimization)
+  - [1.3. Bundle Adjustment](#13-bundle-adjustment)
   - [1.5. Other details](#15-other-details)
 - [2. File Structure](#2-file-structure)
   - [2.1. Folders](#21-folders)
@@ -61,7 +60,7 @@ Keep on estimating the next camera pose. First, find map points that are in the 
 ## 1.4. Local Map
 
 **Insert keyframe:** If the relative pose between current frame and previous keyframe is large enough with a translation or rotation larger than the threshold, insert current frame as a keyframe.   
-Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map.
+Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map. All map points have a unique ID.
 
 **Clean up local map:** Remove map points that are: (1) not in current view, (2) whose view_angle is larger than threshold, (3) rarely be matched as inlier point. (See Slambook Chapter 9.4.)
 
@@ -71,15 +70,15 @@ Graphs are built at two stages of the algorithm:
 2) During triangulation, I also update the 2d-3d correspondance between current keypoints and triangulated mappoints, by either a direct link or going through previous keypoints that have been triangulated.
 
 
-## 1.3. Optimization
+## 1.3. Bundle Adjustment
 
-Apply optimization to this single frame : Using the inlier 3d-2d corresponding from PnP, we can compute the sum of reprojection error of each point pair to form the cost function. By computing the deriviate wrt (1) points 3d pos and (2) camera pose, we can solve the optimization problem using Gauss-Newton Method and its variants. These are done by **g2o** and its built-in datatypes of `VertexSBAPointXYZ`, `VertexSE3Expmap`, and `EdgeProjectXYZ2UV`. See Slambook Chapter 4 and Chapter 7.8.2 for more details.
+Since I've built the graph in the previous step, I know what the 3d-2d point correspondances are in all frames.
 
-Currently, I only feed the camera pose and keypoints of the current frame into the optimizer. Though I set the points to be unfixed during optimization, I don't use the result to update points's pos (Simply because its result looks better).
+Apply optimization to the previous N frames, where the cost function is the sum of reprojection error of each 3d-2d point pair. By computing the deriviate wrt (1) points 3d pos and (2) camera poses, we can solve the optimization problem using Gauss-Newton Method and its variants. These are done by **g2o** and its built-in datatypes of `VertexSBAPointXYZ`, `VertexSE3Expmap`, and `EdgeProjectXYZ2UV`. See Slambook Chapter 4 and Chapter 7.8.2 for more details.
 
-TODO: Bundle Adjustment. I've coded this part, but the program throws error. I need some time to fix it.
+TODO: Currently, I only do optimization on the camera poses. There is a bug of huge error when I simultaneously optimize the map points, which might due to the wrong weight between mappoints and camera poses. DEBUG later. 
 
-
+Besides, my result shows that the best result achieves when I optimimze only a single frame (instead of multiple), which is kind of weired. (I don't think its a bug of the program, since Performance of optimizing on 5 or 15 frames is about the same.)
 
 ## 1.5. Other details
 
@@ -183,9 +182,9 @@ I also put two video links here which I recorded on my computer:
 [1. VO video, with optimization on single frame](
 https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_with_opti.mp4)  
 [2. VO video, no optimization](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_no_opti.mp4)  
-With optimization on single frame, the result is slightly better, as you can see that the shape of the estimated trajectory is closer to the truth trajectory.  
-(You may mentally scale the two camera trajectories to compare the shape.)
+With bundle adjustment (only on camera pose, and single frame), the result improves, as you can see that the shape of the estimated trajectory is very closer to the truth trajectory.
 
+TODO: Debug BA, why I failed to optimize map points at the same time.
 
 # 6. Reference
 
