@@ -242,13 +242,12 @@ void bundleAdjustment(
         optimizer.addVertex(point);
         g2o_points_3d[pt3d_id] = point;
     }
-    printf("Number of frames = %d, 3d points = %d\n", num_frames, vertex_id - num_frames);
 
     // -- Add edges, which define the error/cost function.
     
     // Set information matrix
     int edge_id = 0;
-    Eigen::Matrix2d information_matrix_eigen =mat2eigen(information_matrix);
+    Eigen::Matrix2d information_matrix_eigen = mat2eigen(information_matrix);
     for (int ith_frame = 0; ith_frame < num_frames; ith_frame++)
     {
         int num_pts_2d = v_pts_2d[ith_frame].size();
@@ -293,6 +292,8 @@ void bundleAdjustment(
 
     // --------------------------------------------------
     // -- Final: get the result from solver
+
+    printf("BA: Number of frames = %d, 3d points = %d\n", num_frames, vertex_id - num_frames);
 
     // 1. Camera pose
     for (int i = 0; i < num_frames; i++)

@@ -1,6 +1,7 @@
 
 #include "my_slam/vo.h"
 #include "my_optimization/g2o_ba.h"
+#include <numeric>
 
 namespace my_slam
 {
@@ -66,40 +67,81 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     for (const Point3f &p1 : pts3d_in_cam1)
         pts3d_in_curr.push_back(transCoord(p1, R_curr_to_prev, t_curr_to_prev));
 
-    // Get points that are used for triangulating new map points
-    inliers_matches_for_3d = retainGoodTriangulationResult(ref_, curr_, inlier_matches, pts3d_in_curr);
+    // -- Output
 
-    // -- Normalize Points Depth to 1, and compute camera pose
-    const int num_inlier_pts = curr_->inliers_pts3d_.size();
+    // compute camera pose
+    T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv();
+
+    // Get points that are used for triangulating new map points
+    retainGoodTriangulationResult();
+
+    int N = curr_->inliers_pts3d_.size();
+    if (N < 20)
+    {
+        printf("After remove bad triag, only %d pts. It's too few ...\n", N);
+        return;
+    }
+
+    //Normalize Points Depth to 1, and
     double mean_depth = calcMeanDepth(curr_->inliers_pts3d_);
     t_curr_to_prev /= mean_depth;
     for (Point3f &p : curr_->inliers_pts3d_)
         scalePointPos(p, 1 / mean_depth);
-    T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv();
+    T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
 
-bool VisualOdometry::checkIfVoGoodToInit(int checkIfVoGoodToInit)
+bool VisualOdometry::checkIfVoGoodToInit()
 {
 
     // -- Rename input
     const vector<KeyPoint> &init_kpts = ref_->keypoints_;
     const vector<KeyPoint> &curr_kpts = curr_->keypoints_;
-    const vector<DMatch> &matches = curr_->inliers_matches_with_ref_;
+    // const vector<DMatch> &matches = curr_->inliers_matches_with_ref_;
+    const vector<DMatch> &matches = curr_->inliers_matches_for_3d_;
 
-    // -- Start
-    if (checkIfVoGoodToInit == 1)
+    // Params
+    static const double min_pixel_dist = my_basics::Config::get<double>("min_pixel_dist");
+    static const double min_median_triangulation_angle = my_basics::Config::get<double>("min_median_triangulation_angle");
+
+    // -- Check CRITERIA_0: num inliers should be large
+    if (matches.size() < 20)
     {
-        // CRITERIA 1: init vo only when distance between matched keypoints are large
+        printf("Check VO init: Too few inlier points ...\n");
+        return false;
+    }
+
+    // -- Check CRITERIA_1
+    bool CRITERIA_1 = false; // init vo only when distance between matched keypoints are large
+    {
         vector<double> dists_between_kpts;
         double mean_dist = computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
         printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
-        static const double MIN_PIXEL_DIST_FOR_INIT_VO = my_basics::Config::get<double>("MIN_PIXEL_DIST_FOR_INIT_VO");
-        return mean_dist > MIN_PIXEL_DIST_FOR_INIT_VO;
+
+        CRITERIA_1 = mean_dist > min_pixel_dist;
     }
-    else
+
+    // -- Check CRITERIA_2
+    bool CRITERIA_2 = false; // Triangulation angle of each point should be larger than threshold.
     {
-        assert(0);
+        vector<double> sort_a = curr_->triangulation_angles_of_inliers_; // a copy of angles
+        int N = sort_a.size();                                           // num of 3d points triangulated from inlier points
+        sort(sort_a.begin(), sort_a.end());
+        double mean_angle = accumulate(sort_a.begin(), sort_a.end(), 0.0) / N;
+        double median_angle = sort_a[N / 2];
+        printf("Triangulation angle: mean=%f, median=%f, min=%f, max=%f\n",
+               mean_angle,   // mean
+               median_angle, // median
+               sort_a[0],    // min
+               sort_a[N - 1] // max
+        );
+
+        // Thresholding
+        if (median_angle > min_median_triangulation_angle)
+            CRITERIA_2 = true;
     }
+
+    // -- Return
+    return CRITERIA_1 && CRITERIA_2;
 }
 
 bool VisualOdometry::isInitialized()
@@ -109,18 +151,72 @@ bool VisualOdometry::isInitialized()
 
 // ------------------------------- Triangulation -------------------------------
 
-// Some triangulated points have a small viewing angle between two frames.
-//    Remove these points: change "pts3d_in_curr", return a new "inlier_matches"
-vector<DMatch> VisualOdometry::retainGoodTriangulationResult(
-    Frame::Ptr ref, Frame::Ptr curr,
-    const vector<DMatch> inlier_matches, vector<Point3f> pts3d_in_curr)
+// Compute the triangulation angle of each point, and get the statistics.
+// Remove those with a too large or too small angle.
+//    Remove these points: change "pts3d_in_curr", and return a new "inlier_matches"
+void VisualOdometry::retainGoodTriangulationResult()
 {
-    // TODO: implement the algorithm.
-    // (below are just copy and paste the data)
-    vector<DMatch> inliers_matches_for_3d;
-    for (DMatch dmatch : inlier_matches) // All 3d points are newly triangualted
-        inliers_matches_for_3d.push_back(dmatch);
-    return inliers_matches_for_3d;
+    static const double min_triang_angle = my_basics::Config::get<double>("min_triang_angle");
+    static const double max_ratio_between_max_angle_and_median_angle =
+        my_basics::Config::get<double>("max_ratio_between_max_angle_and_median_angle");
+
+    // -- Input
+    // 1. vector<DMatch>  curr_ -> inliers_matches_with_ref_; // input
+    // 2. vector<Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_; // update this
+
+    // -- Output
+    // 1. generate this:
+    vector<double> &angles = curr_->triangulation_angles_of_inliers_;
+    // 2. update this:
+    //vector<Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_;
+    // 3. generate this:
+    //vector<DMatch> inliers_matches: curr_ -> inliers_matches_for_3d_;
+
+    // -- Compute angles
+    int N = (int)curr_->inliers_pts3d_.size();
+    if (N == 0)
+        return;
+    for (int i = 0; i < N; i++)
+    {
+        Point3f &p_in_curr = curr_->inliers_pts3d_[i];
+        Mat p_in_world = Point3f_to_Mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
+        Mat vec_p_to_cam_curr = getPosFromT(curr_->T_w_c_) - p_in_world;
+        Mat vec_p_to_cam_prev = getPosFromT(ref_->T_w_c_) - p_in_world;
+        double angle = compute_angle_between_2_vectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
+        angles.push_back(angle / 3.1415926 * 180.0);
+    }
+
+    // Get statistics
+    vector<double> sort_a = angles;
+    sort(sort_a.begin(), sort_a.end());
+    double mean_angle = accumulate(sort_a.begin(), sort_a.end(), 0.0) / N;
+    double median_angle = sort_a[N / 2];
+    printf("Triangulation angle: mean=%f, median=%f, min=%f, max=%f\n",
+           mean_angle,   // mean
+           median_angle, // median
+           sort_a[0],    // min
+           sort_a[N - 1] // max
+    );
+
+    // Get good triangulation points
+
+    vector<Point3f> old_inlier_points = curr_->inliers_pts3d_;
+    curr_->inliers_pts3d_.clear();
+
+    vector<double> old_angles = angles;
+    angles.clear();
+
+    for (int i = 0; i < N; i++)
+    {
+        if (old_angles[i] < min_triang_angle ||
+            old_angles[i] / median_angle > max_ratio_between_max_angle_and_median_angle)
+            continue;
+        DMatch dmatch = curr_->inliers_matches_with_ref_[i];
+        curr_->inliers_matches_for_3d_.push_back(dmatch);
+        curr_->inliers_pts3d_.push_back(old_inlier_points[i]);
+        angles.push_back(old_angles[i]);
+    }
+    return;
 }
 
 // ------------------- Tracking -------------------
@@ -216,20 +312,21 @@ void VisualOdometry::callBundleAdjustment()
     static const vector<double> im = my_basics::str2vecdouble(
         my_basics::Config::get<string>("information_matrix"));
     static const bool FIX_MAP_PTS = my_basics::Config::getBool("FIX_MAP_PTS");
-    static const bool UPDATE_MAP_PTS =my_basics::Config::getBool("UPDATE_MAP_PTS");
+    // static const bool UPDATE_MAP_PTS = my_basics::Config::getBool("UPDATE_MAP_PTS");
+    static const bool UPDATE_MAP_PTS = !FIX_MAP_PTS;
     // cout << FIX_MAP_PTS << UPDATE_MAP_PTS << endl;
+
+    // Set params
+    const int TOTAL_FRAMES = frames_buff_.size();
+    const int NUM_FRAMES_FOR_BA = min(MAX_NUM_FRAMES_FOR_BA, TOTAL_FRAMES - 1);
+    const static cv::Mat information_matrix = (cv::Mat_<double>(2, 2) << im[0], im[1], im[2], im[3]);
 
     if (USE_BA != true)
     {
         printf("\nNot using bundle adjustment ... \n");
         return;
     }
-    printf("\nCalling bundle adjustment ... \n");
-    
-    // Set params
-    const int TOTAL_FRAMES = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = min(MAX_NUM_FRAMES_FOR_BA, TOTAL_FRAMES-1);
-    const static cv::Mat information_matrix=(cv::Mat_<double>(2,2)<<im[0],im[1],im[2],im[3]);
+    printf("\nCalling bundle adjustment on %d frames ... \n", NUM_FRAMES_FOR_BA);
 
     // Measurement (which is fixed; truth)
     vector<vector<Point2f *>> v_pts_2d;
@@ -247,10 +344,11 @@ void VisualOdometry::callBundleAdjustment()
     {
         Frame::Ptr frame = frames_buff_[ith_frame_in_buff];
         int num_mappt_in_frame = frame->inliers_to_mappt_connections_.size();
-        if(num_mappt_in_frame<3){
+        if (num_mappt_in_frame < 3)
+        {
             continue; // Too few mappoints. Not optimizing this frame
         }
-        // printf("Frame id: %d, num map points = %d\n", frame->id_, num_mappt_in_frame);
+        printf("Frame id: %d, num map points = %d\n", frame->id_, num_mappt_in_frame);
         v_pts_2d.push_back(vector<Point2f *>());
         v_pts_2d_to_3d_idx.push_back(vector<int>());
 
@@ -298,8 +396,8 @@ void VisualOdometry::callBundleAdjustment()
     // Print result
     Mat pose_new = getPosFromT(curr_->T_w_c_);
     printf("Cam pos: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
-        pose_src.at<double>(0,0), pose_src.at<double>(1,0), pose_src.at<double>(2,0),
-        pose_new.at<double>(0,0), pose_new.at<double>(1,0), pose_new.at<double>(2,0));
+           pose_src.at<double>(0, 0), pose_src.at<double>(1, 0), pose_src.at<double>(2, 0),
+           pose_new.at<double>(0, 0), pose_new.at<double>(1, 0), pose_new.at<double>(2, 0));
     printf("Bundle adjustment finishes... \n\n");
 }
 // ------------------- Mapping -------------------

@@ -38,14 +38,17 @@ public:
   Mat descriptors_;
   vector<vector<unsigned char>> kpts_colors_; // rgb colors
 
-  // -- Matches with reference frame
+  // -- Matches with reference keyframe (for E/H or PnP)
   //  for (1) E/H at initialization stage and (2) triangulating 3d points at all stages.
   vector<DMatch> matches_with_ref_;         // matches with reference frame
   vector<DMatch> inliers_matches_with_ref_; // matches that satisify E or H's constraints, and
+  
+  // -- vectors for triangulation
+  vector<double> triangulation_angles_of_inliers_;
   vector<DMatch> inliers_matches_for_3d_;   // matches whose triangulation result is good.
   vector<Point3f> inliers_pts3d_;           // 3d points triangulated from inliers_matches_for_3d_
   unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
-
+  
   // -- Matches with map points (for PnP)
   vector<DMatch> matches_with_map_; // inliers matches index with respect to all the points
 
@@ -62,7 +65,7 @@ public:
 
 public: // Below are deprecated. These were used in the two-frame-matching vo.
   void clearNoUsed(){
-    rgb_img_.release();
+    // rgb_img_.release();
     kpts_colors_.clear();
     matches_with_ref_.clear();
     inliers_matches_with_ref_.clear();

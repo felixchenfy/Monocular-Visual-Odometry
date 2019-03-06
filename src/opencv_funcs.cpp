@@ -4,29 +4,33 @@
 namespace my_basics
 {
 
-
 // ---------------- image operation ----------------
 vector<unsigned char> getPixelAt(const Mat &image, int x, int y)
 {
-    unsigned char bgr[3]={0,0,0};
-    
-    if(0){
+    unsigned char bgr[3] = {0, 0, 0};
+
+    if (0)
+    {
         const unsigned char *row_ptr = image.ptr<unsigned char>(y);
         const unsigned char *data_ptr = &row_ptr[x * image.channels()];
         for (int c = 0; c != image.channels(); c++)
         {
-            bgr[c]=data_ptr[c];
-        }
-    }else{
-        for (int c=0;c<=3;c++){
-            bgr[c]=image.at<Vec3b>(y, x)[c];        
+            bgr[c] = data_ptr[c];
         }
     }
-    vector<unsigned char> rgb{bgr[2],bgr[1],bgr[0]};
+    else
+    {
+        for (int c = 0; c <= 3; c++)
+        {
+            bgr[c] = image.at<Vec3b>(y, x)[c];
+        }
+    }
+    vector<unsigned char> rgb{bgr[2], bgr[1], bgr[0]};
     return rgb;
 }
 
-unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb){
+unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb)
+{
     return image.at<Vec3b>(row, col)[idx_rgb];
 }
 
@@ -36,14 +40,15 @@ Mat Point3f_to_Mat(const Point3f &p)
 {
     return (Mat_<double>(3, 1) << p.x, p.y, p.z);
 }
-Mat Point3f_to_Mat4x1(const Point3f &p){
+Mat Point3f_to_Mat4x1(const Point3f &p)
+{
     return (Mat_<double>(4, 1) << p.x, p.y, p.z, 1);
 }
 
-Point3f Mat_to_Point3f(const Mat &p){
-    return Point3f(p.at<double>(0,0), p.at<double>(1,0), p.at<double>(2,0));
+Point3f Mat_to_Point3f(const Mat &p)
+{
+    return Point3f(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
-
 
 Mat Point2f_to_Mat(const Point2f &p)
 {
@@ -52,17 +57,18 @@ Mat Point2f_to_Mat(const Point2f &p)
 
 // ---------------- Transformations ----------------
 
-Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4){
-    const Mat &T=T4x4;
-    double p[4]={p3x1.x,p3x1.y,p3x1.z,1};
-    double res[3]={0,0,0};
-    for(int row=0;row<3;row++){
-        for(int j=0; j<4; j++)
-            res[row]+=T.at<double>(row,j)*p[j];
+Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4)
+{
+    const Mat &T = T4x4;
+    double p[4] = {p3x1.x, p3x1.y, p3x1.z, 1};
+    double res[3] = {0, 0, 0};
+    for (int row = 0; row < 3; row++)
+    {
+        for (int j = 0; j < 4; j++)
+            res[row] += T.at<double>(row, j) * p[j];
     }
-    return Point3f(res[0],res[1],res[2]);
+    return Point3f(res[0], res[1], res[2]);
 }
-
 
 // ---------------- Math ----------------
 
@@ -97,14 +103,13 @@ void getRtFromT(const Mat &T, Mat &R, Mat &t)
     t = (Mat_<double>(3, 1) << T.at<double>(0, 3),
          T.at<double>(1, 3),
          T.at<double>(2, 3));
-    // R = T(cv::Rect(0,0,3,3)).clone(); 
+    // R = T(cv::Rect(0,0,3,3)).clone();
     // t = T(cv::Rect(3,0,1,3)).clone(); // x, y, width, height
 }
 
-
-
-Mat getPosFromT(const Mat &T){
-    return T(cv::Rect(3,0,1,3)).clone();
+Mat getPosFromT(const Mat &T)
+{
+    return T(cv::Rect(3, 0, 1, 3)).clone();
 }
 Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t)
 {
@@ -130,24 +135,44 @@ double calcMeanDepth(const vector<Point3f> &pts_3d)
     mean_depth /= pts_3d.size();
     return mean_depth;
 }
-double scalePointPos(Point3f &p, double scale){
+double scalePointPos(Point3f &p, double scale)
+{
     p.x *= scale;
     p.y *= scale;
     p.z *= scale;
 }
-double calcMatNorm(const Mat &mat){
-    double sum=0;
-    for(int i=0;i<mat.rows;i++){
-        for(int j=0;j<mat.cols;j++){
-            sum=sum+mat.at<double>(i,j)*mat.at<double>(i,j);
+double calcMatNorm(const Mat &mat)
+{
+    double sum = 0;
+    for (int i = 0; i < mat.rows; i++)
+    {
+        for (int j = 0; j < mat.cols; j++)
+        {
+            sum = sum + mat.at<double>(i, j) * mat.at<double>(i, j);
         }
     }
-    double norm=sqrt(sum);
+    double norm = sqrt(sum);
     return norm;
 }
-Mat getNormalizedMat(const Mat mat){
+Mat getNormalizedMat(const Mat mat)
+{
     double len = calcMatNorm(mat);
     Mat res = mat / len;
+    return res;
+}
+
+double compute_angle_between_2_vectors(const Mat &vec1, const Mat &vec2)
+{
+    // cos(angle) = vec1.dot(vec2) / (||vec1|| * ||vec2||)
+    assert(vec1.rows == vec2.rows && vec1.rows > vec1.cols);
+    int N = vec1.rows;
+    double res = 0;
+    for(int i = 0; i < N; i++){
+        res += vec1.at<double>(i,0) * vec2.at<double>(i,0); 
+    }
+    double len = calcMatNorm(vec1) * calcMatNorm(vec2);
+    assert( len!=0 );
+    res = acos( res / len );
     return res;
 }
 

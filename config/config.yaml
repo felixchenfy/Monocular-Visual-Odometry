@@ -44,7 +44,7 @@ feature_match_method_index: 1
   #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
   # method 2: the method in Lowe's 2004 paper:
   #           min dis / second min dis < 0.8
-match_ratio: 1.5 # This is for method 1 used in Dr. Xiang Gao's slambook:
+match_ratio: 2 # This is for method 1 used in Dr. Xiang Gao's slambook:
 lowe_dist_ratio: 0.8 # This is for method 2 of Lowe's 2004 SIFT paper
 
 # remove wrong matches
@@ -58,8 +58,15 @@ scale_factor: 1.2
 level_pyramid: 4
 score_threshold: 15
 
+# ------------------- Triangulation -------------------
+min_triang_angle: 0.8
+max_ratio_between_max_angle_and_median_angle: 10
+
 # ------------------- Initialization -------------------
-MIN_PIXEL_DIST_FOR_INIT_VO: 70
+
+# 2 criterias for initializing VO
+min_pixel_dist: 75
+min_median_triangulation_angle: 2.0
 
 # ------------------- Tracking -------------------
 MIN_DIST_BETWEEN_KEYFRAME: 0.08
@@ -67,7 +74,7 @@ MIN_ROTATED_ANGLE: 0.08
 
 # ------------------- Optimization -------------------
 USE_BA: "true"                 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false
-MAX_NUM_FRAMES_FOR_BA: 1      # <= 20. I set the "BUFF_SIZE" in "vo.h" as 20, so only previous 20 frames are stored.
+MAX_NUM_FRAMES_FOR_BA: 5      # <= 20. I set the "BUFF_SIZE" in "vo.h" as 20, so only previous 20 frames are stored.
 information_matrix: "1.0 0.0 0.0 1.0"
 FIX_MAP_PTS: "true" # TO DEBUG: If I set it to true and optimize both camera pose and map points, there is huge error.
-UPDATE_MAP_PTS: "false"
+# UPDATE_MAP_PTS: "" # This equals (!FIX_MAP_PTS) by default

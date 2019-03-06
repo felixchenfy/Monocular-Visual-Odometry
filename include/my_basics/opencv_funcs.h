@@ -43,6 +43,7 @@ double calcMeanDepth(const vector<Point3f> &pts_3d);
 double scalePointPos(Point3f &p, double scale);
 double calcMatNorm(const Mat &mat);
 Mat getNormalizedMat(const Mat mat);
+double compute_angle_between_2_vectors(const Mat& vec1, const Mat& vec2);
 
 // ---------------- Print ----------------
 void print_MatProperty(const cv::Mat &M); // print data type and size

@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
         // run vo
         my_slam::Frame::Ptr frame = my_slam::Frame::createFrame(rgb_img, camera);
-        vo->addFrame(frame);
+        vo->addFrame(frame); // This is the core of my VO !!!
 
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
@@ -156,7 +156,9 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
 {
     cv::Mat img_show = rgb_img.clone();
     const int img_id = frame->id_;
-    if (1) // draw keypoints
+    static bool is_vo_initialized_in_prev_frame = false;
+    
+    if (1) // draw all & inlier keypoints in the current frame
     {
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
         vector<KeyPoint> inliers_kpt;
@@ -170,15 +172,19 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
         cv::drawKeypoints(img_show, frame->keypoints_, img_show, color_g);
         cv::drawKeypoints(img_show, inliers_kpt, img_show, color_r);
     }
-    else if (0 && img_id != 0) // draw matches
+    else if (img_id != 0 && 
+            !vo->isInitialized() ||
+            (vo->isInitialized() && !is_vo_initialized_in_prev_frame) 
+        )// draw matches during initialization stage
     {
         drawMatches(vo->ref_->rgb_img_, vo->ref_->keypoints_,
                     frame->rgb_img_, frame->keypoints_,
-                    frame->inliers_matches_with_ref_,
+                    frame->inliers_matches_for_3d_,
                     img_show);
     }
+    is_vo_initialized_in_prev_frame = vo->isInitialized();
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    waitKey(20);
+    waitKey(1);
 
     // save to file
     if (0)

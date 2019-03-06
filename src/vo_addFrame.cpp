@@ -38,17 +38,17 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
         // Estimae motion and triangulate points
         estimateMotionAnd3DPoints();
+        printf("Number of inlier matches: %d\n", (int)curr_->inliers_matches_for_3d_.size());
 
         // Check initialization condition:
-        const int CRITERIA_INDEX=1;
-        // CRITERIA 1: init vo only when distance between matched keypoints are large
-        if (checkIfVoGoodToInit(CRITERIA_INDEX))
+        if (checkIfVoGoodToInit())
         {
             cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             pushCurrPointsToMap();
             addKeyFrame(curr_);
             vo_state_ = OK;
             cout << "Inilialiation success !!!" << endl;
+            cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
         }
         else // skip this frame
         {
@@ -81,9 +81,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 ref_->keypoints_, curr_->keypoints_,
                 curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
     
-            curr_->inliers_matches_for_3d_ = retainGoodTriangulationResult(
-                ref_, curr_, curr_->inliers_matches_with_ref_, 
-                curr_->inliers_pts3d_/*This will be updated*/);
+            retainGoodTriangulationResult();
 
             // -- Update state
             pushCurrPointsToMap();

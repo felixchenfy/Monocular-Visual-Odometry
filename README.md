@@ -78,7 +78,7 @@ Apply optimization to the previous N frames, where the cost function is the sum 
 
 TODO: Currently, I only do optimization on the camera poses. There is a bug of huge error when I simultaneously optimize the map points, which might due to the wrong weight between mappoints and camera poses. DEBUG later. 
 
-Besides, my result shows that the best result achieves when I optimimze only a single frame (instead of multiple), which is kind of weired. (I don't think its a bug of the program, since Performance of optimizing on 5 or 15 frames is about the same.)
+Besides, it shows that the best result achieves when only single frame is optimimzed (instead of multiple frames), which is kind of weired. (I don't think it's a bug of the program, since Performance of optimizing on 5 or 15 frames is about the same.) TODO: Figure out why this happens.
 
 ## 1.5. Other details
 
