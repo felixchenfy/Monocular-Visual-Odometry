@@ -56,16 +56,16 @@ number_of_keypoints_to_extract: 10000
 max_number_of_keypoints: 1500
 scale_factor: 1.2
 level_pyramid: 4
-score_threshold: 15
+score_threshold: 20
 
 # ------------------- Triangulation -------------------
 min_triang_angle: 0.8
-max_ratio_between_max_angle_and_median_angle: 10
+max_ratio_between_max_angle_and_median_angle: 20
 
 # ------------------- Initialization -------------------
 
 # 2 criterias for initializing VO
-min_pixel_dist: 75
+min_pixel_dist: 50
 min_median_triangulation_angle: 2.0
 
 # ------------------- Tracking -------------------

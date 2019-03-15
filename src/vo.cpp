@@ -153,7 +153,6 @@ bool VisualOdometry::isInitialized()
 
 // Compute the triangulation angle of each point, and get the statistics.
 // Remove those with a too large or too small angle.
-//    Remove these points: change "pts3d_in_curr", and return a new "inlier_matches"
 void VisualOdometry::retainGoodTriangulationResult()
 {
     static const double min_triang_angle = my_basics::Config::get<double>("min_triang_angle");

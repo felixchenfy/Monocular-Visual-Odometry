@@ -53,7 +53,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         else // skip this frame
         {
             curr_->T_w_c_ = ref_->T_w_c_;
-            cout << "Small movement. Not initialize..." << endl;
+            cout << "Not initialize VO ..." << endl;
         }
     }
     else if (vo_state_ == OK)

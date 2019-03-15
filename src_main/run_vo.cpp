@@ -40,8 +40,8 @@ const string IMAGE_WINDOW_NAME = "Green: keypoints; Red: inlier matches with map
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
 
 PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, 
-    PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame,
+                     PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
 
 const bool DEBUG_MODE = false;
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
     // -- Prepare Pcl display
     PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
-    bool DRAW_GROUND_TRUTH_TRAJ =  my_basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
+    bool DRAW_GROUND_TRUTH_TRAJ = my_basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
 
     // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
@@ -110,6 +110,12 @@ int main(int argc, char **argv)
         if (PCL_WAIT_FOR_KEY_PRESS)
             waitPclKeyPress(pcl_displayer);
 
+        if (img_id == 1){ // wait for user's keypress to start
+            cv::imshow(IMAGE_WINDOW_NAME, rgb_img);
+            waitKey(100);
+            waitPclKeyPress(pcl_displayer);
+        }
+
         // Return
         // cout << "Finished an image" << endl;
         cam_pose_history.push_back(frame->T_w_c_.clone());
@@ -117,11 +123,11 @@ int main(int argc, char **argv)
         // if (img_id == 10+3)
         //     break;
     }
-   
+
     // Save camera trajectory
-    const string FILENAME_FOR_RESULT_TRAJECTORY= my_basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
+    const string FILENAME_FOR_RESULT_TRAJECTORY = my_basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
     writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
-    
+
     // Wait for user close
     while (!pcl_displayer->wasStopped())
         pcl_displayer->spinOnce(10);
@@ -157,27 +163,29 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
     cv::Mat img_show = rgb_img.clone();
     const int img_id = frame->id_;
     static bool is_vo_initialized_in_prev_frame = false;
-    
+    bool first_time_vo_init = vo->isInitialized() && !is_vo_initialized_in_prev_frame;
+
     if (1) // draw all & inlier keypoints in the current frame
     {
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
         vector<KeyPoint> inliers_kpt;
-        if(vo->isInitialized()){
-            for (auto &m : frame->matches_with_map_)
-                inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
-        }else{
+        if (!vo->isInitialized() || first_time_vo_init)
+        {
             for (auto &m : frame->matches_with_ref_)
+                inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
+        }
+        else
+        {
+            for (auto &m : frame->matches_with_map_)
                 inliers_kpt.push_back(frame->keypoints_[m.trainIdx]);
         }
         cv::drawKeypoints(img_show, frame->keypoints_, img_show, color_g);
         cv::drawKeypoints(img_show, inliers_kpt, img_show, color_r);
     }
-    else if (img_id != 0 && 
-            !vo->isInitialized() ||
-            (vo->isInitialized() && !is_vo_initialized_in_prev_frame) 
-        )// draw matches during initialization stage
+    else if (img_id != 0 && // draw matches during initialization stage
+             (!vo->isInitialized() || first_time_vo_init)) 
     {
-        drawMatches(vo->ref_->rgb_img_, vo->ref_->keypoints_,
+        drawMatches(vo->ref_->rgb_img_, vo->ref_->keypoints_, // keywords: feature matching / matched features
                     frame->rgb_img_, frame->keypoints_,
                     frame->inliers_matches_for_3d_,
                     img_show);
@@ -196,8 +204,8 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
     return true;
 }
 
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame, 
-    PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
+bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame,
+                     PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
 {
 
     // -- Update camera pose
@@ -205,31 +213,35 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
     pcl_displayer->updateCameraPose(R_vec, t,
-        vo->map_->checkKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
-    
+                                    vo->map_->checkKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
+
     // -- Update truth camera pose
-    if(DRAW_GROUND_TRUTH_TRAJ){
-        static string GROUND_TRUTH_TRAJ_FILENAME =  my_basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
-        static vector<cv::Mat> truth_poses= readPoseToFile(GROUND_TRUTH_TRAJ_FILENAME);
+    if (DRAW_GROUND_TRUTH_TRAJ)
+    {
+        static string GROUND_TRUTH_TRAJ_FILENAME = my_basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
+        static vector<cv::Mat> truth_poses = readPoseToFile(GROUND_TRUTH_TRAJ_FILENAME);
         cv::Mat truth_T = truth_poses[frame->id_], truth_R_vec, truth_t;
         getRtFromT(truth_T, truth_R_vec, truth_t);
-        
+
         // Start drawing only when visual odometry has been initialized. (i.e. The first few frames are not drawn.)
-        // The reason is: we need scale the truth pose to be same as estiamted pose, so we can make comparison between them. 
+        // The reason is: we need scale the truth pose to be same as estiamted pose, so we can make comparison between them.
         // (And the underlying reason is that Mono SLAM cannot estiamte depth of point.)
-        static bool is_made_the_same_scale=false;
+        static bool is_made_the_same_scale = false;
         static double scale;
-        if(is_made_the_same_scale==false && vo->isInitialized()){
-            scale = calcMatNorm(truth_t)/calcMatNorm(t);
+        if (is_made_the_same_scale == false && vo->isInitialized())
+        {
+            scale = calcMatNorm(truth_t) / calcMatNorm(t);
             is_made_the_same_scale = true;
         }
-        if(vo->isInitialized()){
-            truth_t/=scale;
+        if (vo->isInitialized())
+        {
+            truth_t /= scale;
             pcl_displayer->updateCameraTruthPose(truth_R_vec, truth_t);
-        }else{
+        }
+        else
+        {
             // not draw truth camera pose
         }
-
     }
     // ------------------------------- Update points ----------------------------------------
 
@@ -251,7 +263,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
     }
-    if (1 && vo->map_->checkKeyFrame(frame->id_) == true) 
+    if (1 && vo->map_->checkKeyFrame(frame->id_) == true)
     {
         // --  If frame is a keyframe, Draw newly triangulated points with color
         // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;

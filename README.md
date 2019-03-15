@@ -41,17 +41,17 @@ This VO is achieved by the following procedures/algorithms:
 
 ## 1.1. Initialization
 
-**When to initialize**:  
-Given a video, set the 1st frame(image) as reference, and do feature matching with the 2nd frame. If the average displacement in pixel between inlier matched keypoints exceeds a threshold, the initialization will be started. Otherwise, skip to the 3rd, 4th, etc frames until the criteria satisfies at the K_th frame. Then estimate the relative camera pose between the 1st and K_th frame.
-
 **Estimate relative camera pose**:  
-Compute the **Essential Matrix** (E) and **Homography Matrix** (H) between the two frames. Compute their **Symmetric Transfer Error** by method in [ORB-SLAM paper](https://arxiv.org/abs/1502.00956) and choose the better one (i.e., choose H if H/(E+H)>0.45). **Decompose E or H** into the relative pose of rotation (R) and translation (t). By using OpenCV, E gives 1 result, and H gives 2 results, satisfying the criteria that points are in front of camera. For E, only single result to choose; For H, choose the one that makes the image plane and world-points plane more parallel.
+Given a video, set the 1st frame(image) as reference, and do feature matching with the 2nd frame. Compute the **Essential Matrix** (E) and **Homography Matrix** (H) between the two frames. Compute their **Symmetric Transfer Error** by method in [ORB-SLAM paper](https://arxiv.org/abs/1502.00956) and choose the better one (i.e., choose H if H/(E+H)>0.45). **Decompose E or H** into the relative pose of rotation (R) and translation (t). By using OpenCV, E gives 1 result, and H gives 2 results, satisfying the criteria that points are in front of camera. For E, only single result to choose; For H, choose the one that makes the image plane and world-points plane more parallel.
 
 **Recover scale**:  
 Scale the translation t to be either: (1) Features points have average depth of 1m. Or (2) make it same scale as the corresponding groundth data so that I can draw and compare.
 
 **Keyframe and local map**:  
 Insert both 1st and K_th frame as **keyframe**. **Triangulate** their inlier matched keypoints to obtain the points' world positions. These points are called **map points** and are pushed to **local map**.
+
+**Check Triangulation Result**  
+If the median triangulation angle is smaller than threshold, I will abandon this 2nd frame, and repeat the above process on frame 3, 4, etc. If at frame K, the triangulation angle is large than threshold, the initialization is completed.
 
 ## 1.2. Tracking
 
@@ -76,9 +76,7 @@ Since I've built the graph in the previous step, I know what the 3d-2d point cor
 
 Apply optimization to the previous N frames, where the cost function is the sum of reprojection error of each 3d-2d point pair. By computing the deriviate wrt (1) points 3d pos and (2) camera poses, we can solve the optimization problem using Gauss-Newton Method and its variants. These are done by **g2o** and its built-in datatypes of `VertexSBAPointXYZ`, `VertexSE3Expmap`, and `EdgeProjectXYZ2UV`. See Slambook Chapter 4 and Chapter 7.8.2 for more details.
 
-TODO: Currently, I only do optimization on the camera poses. There is a bug of huge error when I simultaneously optimize the map points, which might due to the wrong weight between mappoints and camera poses. DEBUG later. 
-
-Besides, it shows that the best result achieves when only single frame is optimimzed (instead of multiple frames), which is kind of weired. (I don't think it's a bug of the program, since Performance of optimizing on 5 or 15 frames is about the same.) TODO: Figure out why this happens.
+TODO: ADD RESULTS.
 
 ## 1.5. Other details
 
@@ -182,9 +180,8 @@ I also put two video links here which I recorded on my computer:
 [1. VO video, with optimization on single frame](
 https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_with_opti.mp4)  
 [2. VO video, no optimization](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_no_opti.mp4)  
-With bundle adjustment (only on camera pose, and single frame), the result improves, as you can see that the shape of the estimated trajectory is very closer to the truth trajectory.
+With bundle adjustment (Only on camera pose, and single frame. TODO: ADD A GIF OF OPTIMIZING MULTIPLE FRAMES.), the result improves, as you can see that the shape of the estimated trajectory is very closer to the truth trajectory.
 
-TODO: Debug BA, why I failed to optimize map points at the same time.
 
 # 6. Reference
 
