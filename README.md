@@ -2,27 +2,37 @@
 Monocular Visual Odometry
 =======================================
 
-**Content:** A **Monocular Visual Odometry** (VO) with initialization, tracking, local map, and bundle adjustment.
+A monocular visual odometry (VO) with 4 components: initialization, tracking, local map, and bundle adjustment.
 
-**Video demo**: http://feiyuchen.com/wp-content/uploads/vo_with_opti.mp4   
-  On the left: **White line** is the estimated camera trajectory, whose **red dots** are keyframes. **Green line** is ground truth. **Red map points** are triangulated by last keyframe.  
-  On the right: **Green** are keypoints. **Red** are inlier matches with map points.  
+This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). Its also my final project for the course EESC-432 Advanced Computer Vision.
 
-![](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/raw/master/result/vo_with_opti.gif)
+A demo:  
+<p align = "center">
+  <img src = "https://github.com/felixchenfy/Data-Storage/raw/master/Monocular-Visual-Odometry/VO_Opti_5frames.gif" height = "240px">
+</p>
 
-**Project purpose:** This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). This will also be my final project of the course EESC-432 Advanced Computer Vision, so this repo will be kept on updating until and completed by **March 15th**. 
+In the above figure:  
+**Left** is a video and the detected key points.    
+**Right** is the camera trajectory corresponding to the left video: **White** line is from VO; **Green** line is ground truth. Red markers on white line are the keyframes. Points are the map points, where points with red color are newly triangulated.  
+You can download [video](https://github.com/felixchenfy/Data-Storage/raw/master/Monocular-Visual-Odometry/VO_Opti_5frames.avi) here.  
 
-**Data files:** Please download from here: https://github.com/felixchenfy/Monocular-Visual-Odometry-Data
 
-**Directory:**
+# Report
+My pdf-version course report is [here](
+https://github.com/felixchenfy/Data-Storage/blob/master/Monocular-Visual-Odometry/FeiyuChen_Report_EECS432.pdf). It has a more clear decription about the algorithms than this README, so I suggest to read it.
+
+
+# Directory
 <!-- TOC -->
 
 - [Monocular Visual Odometry](#monocular-visual-odometry)
+- [Report](#report)
+- [Directory](#directory)
 - [1. Algorithm](#1-algorithm)
   - [1.1. Initialization](#11-initialization)
   - [1.2. Tracking](#12-tracking)
-  - [1.4. Local Map](#14-local-map)
-  - [1.3. Bundle Adjustment](#13-bundle-adjustment)
+  - [1.3. Local Map](#13-local-map)
+  - [1.4. Bundle Adjustment](#14-bundle-adjustment)
   - [1.5. Other details](#15-other-details)
 - [2. File Structure](#2-file-structure)
   - [2.1. Folders](#21-folders)
@@ -42,25 +52,28 @@ This VO is achieved by the following procedures/algorithms:
 ## 1.1. Initialization
 
 **Estimate relative camera pose**:  
-Given a video, set the 1st frame(image) as reference, and do feature matching with the 2nd frame. Compute the **Essential Matrix** (E) and **Homography Matrix** (H) between the two frames. Compute their **Symmetric Transfer Error** by method in [ORB-SLAM paper](https://arxiv.org/abs/1502.00956) and choose the better one (i.e., choose H if H/(E+H)>0.45). **Decompose E or H** into the relative pose of rotation (R) and translation (t). By using OpenCV, E gives 1 result, and H gives 2 results, satisfying the criteria that points are in front of camera. For E, only single result to choose; For H, choose the one that makes the image plane and world-points plane more parallel.
-
-**Recover scale**:  
-Scale the translation t to be either: (1) Features points have average depth of 1m. Or (2) make it same scale as the corresponding groundth data so that I can draw and compare.
+Given a video, set the 1st frame(image) as reference, and do feature matching with the 2nd frame. Compute the **Essential Matrix** (E) and **Homography Matrix** (H) between the two frames. Compute their **Symmetric Transfer Error** by method in [ORB-SLAM paper](https://arxiv.org/abs/1502.00956) and choose the better one (i.e., choose H if H/(E+H)>0.45). **Decompose E or H** into the relative pose between two frames, which is the rotation (R) and translation (t). By using OpenCV, E gives 1 result, and H gives 2 results, satisfying the criteria that points are in front of camera. For E, only single result to choose; For H, choose the one that makes the image plane and world-points plane more parallel.
 
 **Keyframe and local map**:  
 Insert both 1st and K_th frame as **keyframe**. **Triangulate** their inlier matched keypoints to obtain the points' world positions. These points are called **map points** and are pushed to **local map**.
 
+
 **Check Triangulation Result**  
 If the median triangulation angle is smaller than threshold, I will abandon this 2nd frame, and repeat the above process on frame 3, 4, etc. If at frame K, the triangulation angle is large than threshold, the initialization is completed.
+
+
+**Change scale**:  
+Scale the translation t to be the same length as the ground truth, so that I can make comparison with ground truth. Then, scale the map points correspondingly. 
+
 
 ## 1.2. Tracking
 
 Keep on estimating the next camera pose. First, find map points that are in the camera view. Do feature matching to find 2d-3d correspondance between 3d map points and 2d image keypoints. Estimate camera pose by RANSAC and PnP.
 
-## 1.4. Local Map
+## 1.3. Local Map
 
 **Insert keyframe:** If the relative pose between current frame and previous keyframe is large enough with a translation or rotation larger than the threshold, insert current frame as a keyframe.   
-Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map. All map points have a unique ID.
+Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map.
 
 **Clean up local map:** Remove map points that are: (1) not in current view, (2) whose view_angle is larger than threshold, (3) rarely be matched as inlier point. (See Slambook Chapter 9.4.)
 
@@ -70,19 +83,17 @@ Graphs are built at two stages of the algorithm:
 2) During triangulation, I also update the 2d-3d correspondance between current keypoints and triangulated mappoints, by either a direct link or going through previous keypoints that have been triangulated.
 
 
-## 1.3. Bundle Adjustment
+## 1.4. Bundle Adjustment
 
-Since I've built the graph in the previous step, I know what the 3d-2d point correspondances are in all frames.
+Since I've built the graph in previous step, I know what the 3d-2d point correspondances are in all frames.
 
 Apply optimization to the previous N frames, where the cost function is the sum of reprojection error of each 3d-2d point pair. By computing the deriviate wrt (1) points 3d pos and (2) camera poses, we can solve the optimization problem using Gauss-Newton Method and its variants. These are done by **g2o** and its built-in datatypes of `VertexSBAPointXYZ`, `VertexSE3Expmap`, and `EdgeProjectXYZ2UV`. See Slambook Chapter 4 and Chapter 7.8.2 for more details.
 
-TODO: ADD RESULTS.
 
 ## 1.5. Other details
 
 **Image features**:  
-Extract ORB keypoints and features. Then, a simple grid sampling on keypoint's pixel pos is applied to retain uniform keypoints. See [config/config.yaml](config/config.yaml) for the parameters.
-(Notes: The ORB-SLAM paper says that they do grid sampling in all pyramids, and extract more keypoints if somewhere has few points.)
+Extract ORB keypoints and features. Then, a simple grid sampling is applied to obtain keypoints uniformly distributed across image.
 
 
 **Feature matching**:  
@@ -90,16 +101,16 @@ Two methods are implemented, where good match is:
 (1) Feature's distance is smaller than threshold, described in Slambook.  
 (2) Ratio of smallest and second smallest distance is smaller than threshold, proposed in Prof. Lowe's 2004 SIFT paper.  
 The first one is adopted, which is easier to tune the parameters to generate fewer error matches.  
-(Notes: ORB-SLAM paper is doing guided search for finding matches)
 
 # 2. File Structure
 ## 2.1. Folders
 * [include/](include/): c++ header files.
 * [src/](src/): c++ definitions.
 * [src_main/](src_main/): Main script to run VO.
-* [test/](test/): Test scripts for c++ functions.
+* [test/](test/): Testing scripts for c++ functions.
+* [data/](data/): Store images.
 
-Main scripts and classes for VO are in [include/my_slam/](include/my_slam/). I referenced the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4) for setting this up.
+Main scripts and classes for VO are in [include/my_slam/](include/my_slam/). I referenced this structure from the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4).
 
 ## 2.2. Functions
 Functions are declared in [include/](include/). Some of its folders contain a README. See the tree structure for overview:
@@ -148,13 +159,14 @@ You may need a version newer than 3.4.5, because I used this function:
 It's about matrix arithmetic. See its [official page]( http://eigen.tuxfamily.org/index.php?title=Main_Page). Install by:  
 > $ sudo apt-get install libeigen3-dev 
 
-(Note: Eigen only has header files. No ".so" or ".a".) 
+(Note: Eigen only has header files. No ".so" or ".a" files.) 
 
 
 **(3) Sophus**  
-It's based on Eigen, and contains data type of SE3/SO3/se3/so3.
 
-Download here: https://github.com/strasdat/Sophus. Do cmake and make. Since I failed to make install it, I manually moved “/Sophus/sophus” to “/usr/include/sophus”, and moved “libSophus.so” to “usr/lib”. Then, in my CMakeLists.txt, I do `set (THIRD_PARTY_LIBS libSophus.so )`.
+It's based on Eigen, and contains datatypes for Lie Group and Lie Algebra (SE3/SO3/se3/so3).
+
+Download this lib here: https://github.com/strasdat/Sophus. Do cmake and make. Since I failed to make install it, I manually moved “/Sophus/sophus” to “/usr/include/sophus”, and moved “libSophus.so” to “usr/lib”. Then, in my CMakeLists.txt, I add this: `set (THIRD_PARTY_LIBS libSophus.so )`.
 
 **(4) g2o**  
 Download here: https://github.com/RainerKuemmerle/g2o. Checkout to the last version in year 2017. Do cmake, make, make install.
@@ -171,17 +183,29 @@ Then, set up things in [config/config.yaml](config/config.yaml), and run:
 
 # 5. Results
 
-I tested the current implementation on [TUM](https://vision.in.tum.de/data/datasets/rgbd-dataset/download) fr1_desk and fr1_xyz dataset, but both performances are **bad**. I guess one of the **cause** is that high quality keypoints are too few, so the feature matching returns few matches. The **solution** I guess is to use the ORB-SLAM's method for extracting enough uniformly destributed keypoints, and doing guided matching based on the estimated camera motion. 
+I tested the current implementation on [TUM](https://vision.in.tum.de/data/datasets/rgbd-dataset/download) fr1_desk and fr1_xyz dataset, but both performances are **bad**. I guess its due to too few detected keypoints, which causes too few keypoints matches. The **solution** I guess is to use the ORB-SLAM's method for extracting enough uniformly destributed keypoints across different scales, and doing guided matching based on the estimated camera motion. 
 
-However, my program does work on this [New Tsukuba Stereo Database](http://cvlab.cs.tsukuba.ac.jp/), whose images and scenes are synthetic and have abundant high quality keypoints. The result shows that the VO could roughly estimate camera motion.  
-See the gif **at the beginning of this README**.
+Despite bad performance on fr1 dataset, my program does work well on this [New Tsukuba Stereo Database](http://cvlab.cs.tsukuba.ac.jp/), whose images and scenes are synthetic and have abundant high quality keypoints. The results are shown below.
 
-I also put two video links here which I recorded on my computer:  
-[1. VO video, with optimization on single frame](
-https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_with_opti.mp4)  
-[2. VO video, no optimization](https://github.com/felixchenfy/Monocular-Visual-Odometry-Data/blob/master/result/vo_no_opti.mp4)  
-With bundle adjustment (Only on camera pose, and single frame. TODO: ADD A GIF OF OPTIMIZING MULTIPLE FRAMES.), the result improves, as you can see that the shape of the estimated trajectory is very closer to the truth trajectory.
+I tested my VO with 3 different settings: (1) No optimization. (2) Optimize on map points and current camera pose. (3) Optimize on previous 5 camera poses. See videos below: 
 
+(1) No optimization:
+<p align = "center">
+  <img src = "https://github.com/felixchenfy/Data-Storage/raw/master/Monocular-Visual-Odometry/VO_No_Opti.gif" height = "240px">
+</p>
+
+
+(2) Optimize on points + current pose:
+<p align = "center">
+  <img src = "https://github.com/felixchenfy/Data-Storage/raw/master/Monocular-Visual-Odometry/VO_Opti_1frame_and_points.gif" height = "240px">
+</p>
+
+(2) Optimize on prev 5 poses: 
+<p align = "center">
+  <img src = "https://github.com/felixchenfy/Data-Storage/raw/master/Monocular-Visual-Odometry/VO_Opti_5frames.gif" height = "240px">
+</p>
+
+The result shows: (1) Optimization improves accuracy. (2) The estiamted trajectory is close to the ground truth. 
 
 # 6. Reference
 
@@ -205,9 +229,9 @@ In short, the Slambook provides huge help for me and my this project.
 
 The dataset I used is also the same as this Matlab tutorial, which is the [New Tsukuba Stereo Database](http://cvlab.cs.tsukuba.ac.jp/).
 
-**(3) ORB-SLAM paper**
+**(3) ORB-SLAM/ORB-SLAM2 papers**
 
-I borrowed its code of **the criteria for choosing Essential or Homography** for VO initialization. See the functions of `checkEssentialScore` and `checkHomographyScore` in [motion_estimation.h](include/my_geometry/motion_estimation.h).
+I borrowed its code of the criteria for choosing Essential or Homography (for decomposition to obtain relative camera pose.). The copied functions are `checkEssentialScore` and `checkHomographyScore` in [motion_estimation.h](include/my_geometry/motion_estimation.h).
 
 
 
@@ -219,5 +243,5 @@ I borrowed its code of **the criteria for choosing Essential or Homography** for
   Please run in debug mode.
 
 **Improvements**  
-* Fix bug in bundle adjustment.
+* In bundle adjustment, I cannot optimize  (1) multiple frames and (b) map points **at the same time**. It returns huge error. I haven't figure out why.
 

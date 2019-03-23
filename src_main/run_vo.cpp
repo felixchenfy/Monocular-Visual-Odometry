@@ -110,11 +110,11 @@ int main(int argc, char **argv)
         if (PCL_WAIT_FOR_KEY_PRESS)
             waitPclKeyPress(pcl_displayer);
 
-        if (img_id == 1){ // wait for user's keypress to start
-            cv::imshow(IMAGE_WINDOW_NAME, rgb_img);
-            waitKey(100);
-            waitPclKeyPress(pcl_displayer);
-        }
+        // if (img_id == 1){ // wait for user's keypress to start
+        //     cv::imshow(IMAGE_WINDOW_NAME, rgb_img);
+        //     waitKey(100);
+        //     waitPclKeyPress(pcl_displayer);
+        // }
 
         // Return
         // cout << "Finished an image" << endl;

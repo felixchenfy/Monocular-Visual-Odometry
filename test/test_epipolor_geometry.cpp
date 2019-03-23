@@ -4,6 +4,12 @@
 //  * Triangulation.
 //  * Compute epipolar error and triangulation error in pixel.
 
+/*
+How to run:
+bin/test_epipolor_geometry image0001.jpg image0002.jpg
+bin/test_epipolor_geometry image0001.jpg image0015.jpg
+*/
+
 #include <iostream>
 #include <algorithm> // std::min
 #include <opencv2/core/core.hpp>
