@@ -42,9 +42,7 @@ void doTriangulation(
     const Mat &R_cam2_to_cam1, const Mat &t_cam2_to_cam1,
     const vector<int> &inliers,
     vector<Point3f> &pts3d_in_cam1); // points real pos in camera1's frame
-void removeWrongTriangulations(
-   vector<int> &inliers, 
-   vector<Point3f> &pts3d_in_cam1);
+
 
 // ---------------- validation ----------------
 double computeEpipolarConsError(

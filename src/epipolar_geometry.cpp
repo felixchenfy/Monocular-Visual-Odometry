@@ -214,23 +214,7 @@ void doTriangulation(
     // return
     pts3d_in_cam1 = pts3d_in_world;
 }
-void removeWrongTriangulations(
-    vector<int> &inliers,
-    vector<Point3f> &pts3d_in_cam1)
-{
-    vector<Point3f> pts_good;
-    vector<int> inliers_good;
-    for (int idx : inliers)
-    {
-        if (pts3d_in_cam1[idx].z > 0)
-        {
-            inliers_good.push_back(idx);
-            pts_good.push_back(pts3d_in_cam1[idx]);
-        }
-    }
-    inliers = inliers_good;
-    pts3d_in_cam1 = pts_good;
-}
+
 
 
 double calcErrorSquare(const Point2f &p1, const Point2f &p2)

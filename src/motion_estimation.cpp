@@ -107,7 +107,6 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     {
         vector<Point3f> pts3d_in_cam1;
         doTriangulation(pts_on_np1, pts_on_np2, list_R[i], list_t[i], list_inliers[i], pts3d_in_cam1);
-        // removeWrongTriangulations(list_inliers[i], pts3d_in_cam1);
         sols_pts3d_in_cam1.push_back(pts3d_in_cam1);
     }
 
