@@ -56,7 +56,7 @@ public:
   my_geometry::Camera::Ptr camera_;
 
   // -- Current pose
-  Mat T_w_c_; // transform from camera to world
+  Mat T_w_c_; // transform from world to camera
 
 public:
   Frame() {}

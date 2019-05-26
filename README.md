@@ -168,11 +168,18 @@ It's based on Eigen, and contains datatypes for Lie Group and Lie Algebra (SE3/S
 
 Download this lib here: https://github.com/strasdat/Sophus. Do cmake and make. Since I failed to make install it, I manually moved “/Sophus/sophus” to “/usr/include/sophus”, and moved “libSophus.so” to “usr/lib”. Then, in my CMakeLists.txt, I add this: `set (THIRD_PARTY_LIBS libSophus.so )`.
 
-**(4) g2o**  
-Download here: https://github.com/RainerKuemmerle/g2o. Checkout to the last version in year 2017. Do cmake, make, make install.
+If there is an error of "unit_complex_.real() = 1.;"
+replace it and its following line with "unit_complex_ = std::complex<double>(1,0);"
 
-If the csparse library is not found during cmake, please install the following package:
+
+**(4) g2o**  
+
+First install either of the following two packages:
 > $ sudo apt-get install libsuitesparse
+> $ sudo apt-get install libsuitesparse-dev
+
+Download here: https://github.com/RainerKuemmerle/g2o.  
+Checkout to the last version in year 2017. Do cmake, make, make install.
 
 # 4. How to Run  
 > $ mkdir build && mkdir lib && mkdir bin   

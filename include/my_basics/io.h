@@ -18,7 +18,7 @@ cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res=f
 
 // -- Read/Write camera pose to file
 void writePoseToFile(const string filename, vector<cv::Mat> list_T); // Format: x, y, z, 1st row of R, 2nd row of R, 3rd row of R
-vector<cv::Mat> readPoseToFile(const string filename); // Read pose from file
+vector<cv::Mat> readPoseFromFile(const string filename); // Read pose from file
 
 } // namespace my_basics
 

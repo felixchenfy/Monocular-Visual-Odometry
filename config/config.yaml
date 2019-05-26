@@ -3,15 +3,24 @@
 # ===== Settings for displaying
 MAX_NUM_IMAGES: 300
 PCL_WAIT_FOR_KEY_PRESS: "false" # If true, PCL Viewer will stop and wait for any of your keypress before continueing.
+
+# ===== Save/Load trajectory
 DRAW_GROUND_TRUTH_TRAJ: "true" # Ground truth traj's color is set as green. Estimated is set as white.
-GROUND_TRUTH_TRAJ_FILENAME: /home/feiyu/Desktop/slam/my_vo/my2/data/test_data/cam_traj_truth.txt
-FILENAME_FOR_RESULT_TRAJECTORY: /home/feiyu/Desktop/slam/my_vo/my2/data/test_data/cam_traj.txt
+
+GROUND_TRUTH_TRAJ_FILENAME: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/test_data/cam_traj_truth.txt
+# Format of ground-truth data:
+# In each row, there are 12 numbers representing the transformation matrix T=[R|t].
+# Order of the 12 numbers: tx, ty, tz, R[:,0], R[:,1], R[:,2]
+# Or say: T[0,3], T[1,3], T[2,3], T[0,0],T[1,0],T[2,0],T[0,1],T[1,1],T[2,1],T[0,2],T[1,2],T[2,2]
+# See this "readPoseFromFile" in "io.cpp" for more details.
+
+FILENAME_FOR_RESULT_TRAJECTORY: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/test_data/cam_traj.txt
 
 # ===== Dataset and camera intrinsics
 
 # -- fr1_desk dataset
 # https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
-# dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/data/dataset_images_fr1_desk
+# dataset_dir: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/dataset_images_fr1_desk
 # num_images: 100
 # camera_info.fx: 517.3
 # camera_info.fy: 516.5
@@ -19,7 +28,7 @@ FILENAME_FOR_RESULT_TRAJECTORY: /home/feiyu/Desktop/slam/my_vo/my2/data/test_dat
 # camera_info.cy: 249.7
 
 # -- fr1_xyz dataset
-# dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/data/dataset_images_fr1_xyz
+# dataset_dir: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/dataset_images_fr1_xyz
 # num_images: 100
 # camera_info.fx: 517.3
 # camera_info.fy: 516.5
@@ -27,7 +36,7 @@ FILENAME_FOR_RESULT_TRAJECTORY: /home/feiyu/Desktop/slam/my_vo/my2/data/test_dat
 # camera_info.cy: 249.7
 
 # -- New Tsukuba Stereo dataset used in matlab tutorial
-dataset_dir: /home/feiyu/Desktop/slam/my_vo/my2/data/dataset_images_matlab
+dataset_dir: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/dataset_images_matlab
 num_images: 150
 camera_info.fx: 615
 camera_info.fy: 615

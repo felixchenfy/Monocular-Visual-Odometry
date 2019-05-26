@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     vector<string> image_paths;
     if (DEBUG_MODE)
     {
-        string folder = "/home/feiyu/Desktop/slam/my_vo/my2/data/test_data/";
+        string folder = "/home/feiyu/Documents/Projects/EECS432_CV_VO/data/test_data/";
         vector<string> tmp{
             "image0001.jpg", "image0013.jpg", "image0015.jpg"};
         for (string &filename : tmp)
@@ -219,7 +219,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     if (DRAW_GROUND_TRUTH_TRAJ)
     {
         static string GROUND_TRUTH_TRAJ_FILENAME = my_basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
-        static vector<cv::Mat> truth_poses = readPoseToFile(GROUND_TRUTH_TRAJ_FILENAME);
+        static vector<cv::Mat> truth_poses = readPoseFromFile(GROUND_TRUTH_TRAJ_FILENAME);
         cv::Mat truth_T = truth_poses[frame->id_], truth_R_vec, truth_t;
         getRtFromT(truth_T, truth_R_vec, truth_t);
 

@@ -88,7 +88,7 @@ void writePoseToFile(const string filename, vector<cv::Mat> list_T)
 }
 
 // Read pose from file
-vector<cv::Mat> readPoseToFile(const string filename)
+vector<cv::Mat> readPoseFromFile(const string filename)
 {
     // Output
     vector<cv::Mat> list_T;
