@@ -16,34 +16,54 @@ using namespace std;
 
 class Config
 {
-private:
-  static std::shared_ptr<Config> config_;
-  cv::FileStorage file_;
 
-  Config() {} // private constructor makes a singleton
 public:
-  ~Config(); // close the file when deconstructing
-
   // set a new config file
   static void setParameterFile(const std::string &filename);
 
   // access the parameter values
   template <typename T>
-  static T get(const std::string &key)
+  static T get(const std::string &key);
+
+  template <typename T>
+  static std::vector<T> getVector(const std::string &key);
+
+  static bool getBool(const std::string &key);
+
+  ~Config(); // close the file when deconstructing
+
+private:
+  static std::shared_ptr<Config> config_;
+  cv::FileStorage file_;
+
+  /* @brief: Get content by key. If key doesn't exist, throw runtime error.
+   */
+  static cv::FileNode get_(const std::string &key);
+
+  Config() // private constructor makes a singleton
   {
-    return T(Config::config_->file_[key]);
   }
 
-  static bool getBool(const std::string &key)
-  {
-    string val = string(Config::config_->file_[key]);
-    // cout << "getBool:" << val << endl;
-    if (val == "true" || val == "True")
-      return true; // If I combine this into the above template, the program throws error: could not convert ‘true’ from ‘bool’ to ‘std::__cxx11::basic_string<char>’
-    else
-      return false;
-  }
 };
+
+// Get a content of cv::FileNode. Convert to type T.
+template <typename T>
+T Config::get(const std::string &key) 
+{
+  cv::FileNode content = Config::get_(key);
+  return static_cast<T>(content);
+}
+
+// Get a content of cv::FileNode. Convert to type vector<T>.
+template <typename T>
+std::vector<T> Config::getVector(const std::string &key) 
+{
+  cv::FileNode content = Config::get_(key);
+  std::vector<T> res;
+  content >> res;
+  return res;
+}
+
 } // namespace my_basics
 
 #endif

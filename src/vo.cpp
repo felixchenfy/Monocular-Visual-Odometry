@@ -259,7 +259,7 @@ void VisualOdometry::poseEstimationPnP()
         pts_2d.push_back(curr_->keypoints_[match.trainIdx].pt);
     }
 
-    // -- Solve PnP, get T_cam1_to_cam2
+    // -- Solve PnP, get T_world_to_camera
     Mat R_vec, R, t;
     bool useExtrinsicGuess = false;
     int iterationsCount = 100;
