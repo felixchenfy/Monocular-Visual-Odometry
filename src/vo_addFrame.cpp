@@ -1,7 +1,7 @@
 
-#include "my_slam/vo.h"
+#include "my_slam/vo/vo.h"
 
-namespace my_slam
+namespace vo
 {
 
 void VisualOdometry::addFrame(Frame::Ptr frame)
@@ -33,7 +33,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     else if (vo_state_ == INITIALIZATION)
     {
         // Match features
-        my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+        geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
         printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_with_ref_.size());
 
         // Estimae motion and triangulate points
@@ -66,7 +66,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         if (checkLargeMoveForAddKeyFrame(curr_, ref_))
         {
             // Feature matching
-            my_geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+            geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
 
             // Find inliers by epipolar constraint
             curr_->inliers_matches_with_ref_ = helperFindInlierMatchesByEpipolarCons(
@@ -105,4 +105,4 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     cout << "\nEnd of a frame" << endl;
 }
 
-} // namespace my_slam
+} // namespace vo

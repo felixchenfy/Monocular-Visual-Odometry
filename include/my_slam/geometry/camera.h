@@ -2,9 +2,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "my_geometry/common_include.h"
+#include "my_slam/geometry/common_include.h"
 
-namespace my_geometry
+namespace geometry
 {
 // ---------------- transformations (by OpenCV) ----------------
 Point2f pixel2camNormPlane(const Point2f &p, const Mat &K);
@@ -41,5 +41,5 @@ public:
   }
 
 };
-} // namespace my_slam
+} // namespace vo
 #endif

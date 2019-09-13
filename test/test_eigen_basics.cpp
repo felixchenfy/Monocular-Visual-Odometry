@@ -9,7 +9,7 @@
 // 1. Datatype conversions between:
 //      OpenCV and Matrix3d/Vector3d/Isometry3d/Affine3d.
 
-#include "my_basics/eigen_funcs.h" // namespce my
+#include "my_slam/basics/eigen_funcs.h" // namespce my
 
 using namespace std;
 using namespace cv;

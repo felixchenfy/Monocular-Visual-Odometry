@@ -4,12 +4,12 @@
 #include <boost/format.hpp> // for setting image filename
 #include <fstream>
 
-#include "my_basics/io.h"
-#include "my_basics/config.h"
+#include "my_slam/basics/io.h"
+#include "my_slam/basics/config.h"
 
 using namespace std;
 
-namespace my_basics
+namespace basics
 {
 
 // -- Read in from config file: image paths, camera intrinsics
@@ -17,12 +17,12 @@ namespace my_basics
 // Read image paths
 vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
 {
-    my_basics::Config::setParameterFile(path_of_config_file);
+    basics::Config::setParameterFile(path_of_config_file);
 
     // Set up image_paths
     vector<string> image_paths;
-    string dataset_dir = my_basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
-    int num_images = my_basics::Config::get<int>("num_images");
+    string dataset_dir = basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
+    int num_images = basics::Config::get<int>("num_images");
     boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
     for (int i = 0; i < num_images; i++)
     {
@@ -47,11 +47,11 @@ vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
 // Read camera intrinsics
 cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res)
 {
-    my_basics::Config::setParameterFile(path_of_config_file);
-    double fx = my_basics::Config::get<double>("camera_info.fx");
-    double fy = my_basics::Config::get<double>("camera_info.fy");
-    double cx = my_basics::Config::get<double>("camera_info.cx");
-    double cy = my_basics::Config::get<double>("camera_info.cy");
+    basics::Config::setParameterFile(path_of_config_file);
+    double fx = basics::Config::get<double>("camera_info.fx");
+    double fy = basics::Config::get<double>("camera_info.fy");
+    double cx = basics::Config::get<double>("camera_info.cx");
+    double cy = basics::Config::get<double>("camera_info.cy");
     cv::Mat K = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
     return K;
 }
@@ -129,4 +129,4 @@ vector<cv::Mat> readPoseFromFile(const string filename)
     return list_T;
 }
 
-} // namespace my_basics
+} // namespace basics

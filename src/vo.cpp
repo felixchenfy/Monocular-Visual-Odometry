@@ -1,9 +1,9 @@
 
-#include "my_slam/vo.h"
-#include "my_optimization/g2o_ba.h"
+#include "my_slam/vo/vo.h"
+#include "my_slam/optimization/g2o_ba.h"
 #include <numeric>
 
-namespace my_slam
+namespace vo
 {
 
 VisualOdometry::VisualOdometry() : map_(new (Map))
@@ -100,8 +100,8 @@ bool VisualOdometry::checkIfVoGoodToInit()
     const vector<DMatch> &matches = curr_->inliers_matches_for_3d_;
 
     // Params
-    static const double min_pixel_dist = my_basics::Config::get<double>("min_pixel_dist");
-    static const double min_median_triangulation_angle = my_basics::Config::get<double>("min_median_triangulation_angle");
+    static const double min_pixel_dist = basics::Config::get<double>("min_pixel_dist");
+    static const double min_median_triangulation_angle = basics::Config::get<double>("min_median_triangulation_angle");
 
     // -- Check CRITERIA_0: num inliers should be large
     if (matches.size() < 20)
@@ -155,9 +155,9 @@ bool VisualOdometry::isInitialized()
 // Remove those with a too large or too small angle.
 void VisualOdometry::retainGoodTriangulationResult()
 {
-    static const double min_triang_angle = my_basics::Config::get<double>("min_triang_angle");
+    static const double min_triang_angle = basics::Config::get<double>("min_triang_angle");
     static const double max_ratio_between_max_angle_and_median_angle =
-        my_basics::Config::get<double>("max_ratio_between_max_angle_and_median_angle");
+        basics::Config::get<double>("max_ratio_between_max_angle_and_median_angle");
 
     // -- Input
     // 1. vector<DMatch>  curr_ -> inliers_matches_with_ref_; // input
@@ -226,8 +226,8 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     getRtFromT(T_key_to_curr, R, t);
     cv::Rodrigues(R, R_vec);
 
-    static const double MIN_DIST_BETWEEN_KEYFRAME = my_basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
-    static const double MIN_ROTATED_ANGLE = my_basics::Config::get<double>("MIN_ROTATED_ANGLE");
+    static const double MIN_DIST_BETWEEN_KEYFRAME = basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
+    static const double MIN_ROTATED_ANGLE = basics::Config::get<double>("MIN_ROTATED_ANGLE");
 
     double moved_dist = calcMatNorm(t);
     double rotated_angle = calcMatNorm(R_vec);
@@ -247,7 +247,7 @@ void VisualOdometry::poseEstimationPnP()
     getMappointsInCurrentView(candidate_mappoints_in_map, corresponding_mappoints_descriptors);
 
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
-    my_geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
+    geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
     cout << "Number of 3d-2d pairs: " << curr_->matches_with_map_.size() << endl;
     vector<Point3f> pts_3d;
     vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
@@ -306,12 +306,12 @@ void VisualOdometry::poseEstimationPnP()
 void VisualOdometry::callBundleAdjustment()
 {
     // Read settings from config.yaml
-    static const bool USE_BA = my_basics::Config::getBool("USE_BA");
-    static const int MAX_NUM_FRAMES_FOR_BA = my_basics::Config::get<int>("MAX_NUM_FRAMES_FOR_BA");
-    static const vector<double> im = my_basics::str2vecdouble(
-        my_basics::Config::get<string>("information_matrix"));
-    static const bool FIX_MAP_PTS = my_basics::Config::getBool("FIX_MAP_PTS");
-    // static const bool UPDATE_MAP_PTS = my_basics::Config::getBool("UPDATE_MAP_PTS");
+    static const bool USE_BA = basics::Config::getBool("USE_BA");
+    static const int MAX_NUM_FRAMES_FOR_BA = basics::Config::get<int>("MAX_NUM_FRAMES_FOR_BA");
+    static const vector<double> im = basics::str2vecdouble(
+        basics::Config::get<string>("information_matrix"));
+    static const bool FIX_MAP_PTS = basics::Config::getBool("FIX_MAP_PTS");
+    // static const bool UPDATE_MAP_PTS = basics::Config::getBool("UPDATE_MAP_PTS");
     static const bool UPDATE_MAP_PTS = !FIX_MAP_PTS;
     // cout << FIX_MAP_PTS << UPDATE_MAP_PTS << endl;
 
@@ -378,7 +378,7 @@ void VisualOdometry::callBundleAdjustment()
     Mat pose_src = getPosFromT(curr_->T_w_c_);
     if (1)
     {
-        my_optimization::bundleAdjustment(
+        optimization::bundleAdjustment(
             v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
             um_pts_3d, v_camera_poses,
             information_matrix,
@@ -386,7 +386,7 @@ void VisualOdometry::callBundleAdjustment()
     }
     else
     {
-        my_optimization::optimizeSingleFrame(
+        optimization::optimizeSingleFrame(
             v_pts_2d[0], curr_->camera_->K_,
             v_pts_3d_only_in_curr, curr_->T_w_c_,
             FIX_MAP_PTS, UPDATE_MAP_PTS); // Update pts_3d and curr_->T_w_c_
@@ -504,4 +504,4 @@ double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
     return acos(vector_dot_product.at<double>(0, 0));
 }
 
-} // namespace my_slam
+} // namespace vo

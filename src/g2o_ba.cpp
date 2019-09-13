@@ -2,8 +2,8 @@
 https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 */
 
-#include "my_optimization/g2o_ba.h"
-#include "my_basics/eigen_funcs.h"
+#include "my_slam/optimization/g2o_ba.h"
+#include "my_slam/basics/eigen_funcs.h"
 
 #include <cmath>
 #include <stdio.h>
@@ -21,7 +21,7 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 
 #include <chrono> // timer
 
-namespace my_optimization
+namespace optimization
 {
 
 Eigen::Matrix2d mat2eigen(const cv::Mat &mat){
@@ -40,7 +40,7 @@ void optimizeSingleFrame(
 
     // Change pose format from OpenCV to Sophus::SE3
     Mat T_cam_to_world_cv = pose_src.inv();
-    Sophus::SE3 T_cam_to_world = my_basics::transT_cv2sophus(T_cam_to_world_cv);
+    Sophus::SE3 T_cam_to_world = basics::transT_cv2sophus(T_cam_to_world_cv);
 
     // Init g2o
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> Block; // dim(pose) = 6, dim(landmark) = 3
@@ -123,7 +123,7 @@ void optimizeSingleFrame(
         pose->estimate().rotation(),
         pose->estimate().translation());
     // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
-    pose_src = my_basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
+    pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
 
 
     // 2. Points 3d world pos
@@ -187,7 +187,7 @@ void bundleAdjustment(
     for (int i = 0; i < num_frames; i++)
     {
         v_T_cam_to_world.push_back(
-            my_basics::transT_cv2sophus((*v_camera_g2o_poses[i]).inv()));
+            basics::transT_cv2sophus((*v_camera_g2o_poses[i]).inv()));
     }
 
     // Init g2o
@@ -301,7 +301,7 @@ void bundleAdjustment(
         Sophus::SE3 T_cam_to_world = Sophus::SE3(
             g2o_poses[i]->estimate().rotation(),
             g2o_poses[i]->estimate().translation());
-        Mat pose_src = my_basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
+        Mat pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
         pose_src.copyTo(*v_camera_g2o_poses[i]);
     }
 
@@ -317,4 +317,4 @@ void bundleAdjustment(
     }
 }
 
-} // namespace my_optimization
+} // namespace optimization

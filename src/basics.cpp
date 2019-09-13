@@ -1,13 +1,13 @@
 
 
-#include "my_basics/basics.h"
+#include "my_slam/basics/basics.h"
 #include <string>
 #include <vector>
 #include <iterator>
 #include <sstream>
 #include <assert.h>
 
-namespace my_basics
+namespace basics
 {
 bool str2bool(const string &s)
 {
@@ -55,4 +55,4 @@ vector<int> getIntersection(vector<int> v1, vector<int> v2)
     return v;
 }
 
-} // namespace my_basics
+} // namespace basics

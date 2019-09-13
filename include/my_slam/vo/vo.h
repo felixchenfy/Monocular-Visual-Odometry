@@ -10,26 +10,26 @@
 
 // my
 
-#include "my_basics/basics.h"
-#include "my_basics/io.h"
-#include "my_basics/config.h"
-#include "my_basics/opencv_funcs.h"
+#include "my_slam/basics/basics.h"
+#include "my_slam/basics/io.h"
+#include "my_slam/basics/config.h"
+#include "my_slam/basics/opencv_funcs.h"
 
-#include "my_geometry/camera.h"
-#include "my_geometry/feature_match.h"
-#include "my_geometry/motion_estimation.h"
+#include "my_slam/geometry/camera.h"
+#include "my_slam/geometry/feature_match.h"
+#include "my_slam/geometry/motion_estimation.h"
 
-#include "my_slam/common_include.h"
-#include "my_slam/frame.h"
-#include "my_slam/map.h"
-#include "my_slam/mappoint.h"
-#include "my_slam/commons.h"
+#include "my_slam/vo/common_include.h"
+#include "my_slam/vo/frame.h"
+#include "my_slam/vo/map.h"
+#include "my_slam/vo/mappoint.h"
+#include "my_slam/vo/commons.h"
 
-namespace my_slam
+namespace vo
 {
 using namespace std;
 using namespace cv;
-using namespace my_geometry;
+using namespace geometry;
 
 class VisualOdometry
 {
@@ -66,7 +66,7 @@ public: // ------------------------------- Member variables --------------------
 // ================================ Functions ================================
 public: // basics
   VisualOdometry();
-  void addFrame(my_slam::Frame::Ptr frame);
+  void addFrame(vo::Frame::Ptr frame);
   void pushFrameToBuff(Frame::Ptr frame){
     const int BUFF_SIZE=20;
     frames_buff_.push_back(frame);
@@ -102,6 +102,6 @@ public: // ------------------------------- BundleAdjustment --------------------
   void callBundleAdjustment();
 };
 
-} // namespace my_slam
+} // namespace vo
 
 #endif // FRAME_H

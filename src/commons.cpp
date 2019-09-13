@@ -1,7 +1,7 @@
 
-#include "my_slam/commons.h"
+#include "my_slam/vo/commons.h"
 
-namespace my_slam
+namespace vo
 {
 
 Mat getMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2){
@@ -15,4 +15,4 @@ void getMotionFromFrame1to2(const Frame::Ptr f1, const Frame::Ptr f2, Mat &R, Ma
     getRtFromT(T, R, t);
 }
 
-} // namespace my_slam
+} // namespace vo

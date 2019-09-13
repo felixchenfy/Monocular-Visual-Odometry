@@ -1,6 +1,6 @@
 
-#include "my_display/pcl_display.h"
-#include "my_display/pcl_display_lib.h"
+#include "my_slam/display/pcl_display.h"
+#include "my_slam/display/pcl_display_lib.h"
 #include <unordered_map>
 
 using namespace std;
@@ -10,7 +10,7 @@ using namespace Eigen;
 typedef boost::shared_ptr<pcl::visualization::PCLVisualizer> ViewerPtr;
 typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr;
 
-namespace my_display_private
+namespace display_private
 { // store pcl related class members here instead of .h, in order to speed up compiling.
 
 ViewerPtr viewer_;
@@ -54,13 +54,13 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void 
     }
 }
 
-} // namespace my_display_private
+} // namespace display_private
 
 // --------------------- Class definition -----------------------
 
-namespace my_display
+namespace display
 {
-using namespace my_display_private;
+using namespace display_private;
 
 // constructor
 PclViewer::PclViewer(double x, double y, double z,
@@ -223,12 +223,12 @@ void PclViewer::update()
     static int cnt_frame = 0;
 
     // Update camera
-    Eigen::Affine3f T_affine = my_basics::transT_CVRt_to_EigenAffine3d(cam_R_vec_, cam_t_).cast<float>();
+    Eigen::Affine3f T_affine = basics::transT_CVRt_to_EigenAffine3d(cam_R_vec_, cam_t_).cast<float>();
     viewer_->removeCoordinateSystem(camera_frame_name_);
     viewer_->addCoordinateSystem(LEN_COORD_AXIS, T_affine, camera_frame_name_, 0);
 
     // Update truth camera
-    Eigen::Affine3f T_affine_truth = my_basics::transT_CVRt_to_EigenAffine3d(truth_cam_R_vec_, truth_cam_t_).cast<float>();
+    Eigen::Affine3f T_affine_truth = basics::transT_CVRt_to_EigenAffine3d(truth_cam_R_vec_, truth_cam_t_).cast<float>();
     viewer_->removeCoordinateSystem(truth_camera_frame_name_);
     viewer_->addCoordinateSystem(LEN_COORD_AXIS_TRUTH_TRAJ, T_affine_truth, truth_camera_frame_name_, 0);
 
@@ -263,4 +263,4 @@ bool PclViewer::wasStopped()
     return viewer_->wasStopped();
 }
 
-} // namespace my_display
+} // namespace display

@@ -2,11 +2,11 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "my_slam/common_include.h"
-#include "my_slam/frame.h"
-#include "my_slam/mappoint.h"
+#include "my_slam/vo/common_include.h"
+#include "my_slam/vo/frame.h"
+#include "my_slam/vo/mappoint.h"
 
-namespace my_slam
+namespace vo
 {
 using namespace std; 
 using namespace cv;

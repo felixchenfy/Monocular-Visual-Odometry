@@ -1,6 +1,6 @@
 
-#ifndef MY_GEOMETRY_COMMON_INCLUDE_H
-#define MY_GEOMETRY_COMMON_INCLUDE_H
+#ifndef geometry_COMMON_INCLUDE_H
+#define geometry_COMMON_INCLUDE_H
 
 // for cv
 #include <opencv2/core/core.hpp>
@@ -21,11 +21,11 @@
 #include <deque>
 
 // my
-#include "my_basics/opencv_funcs.h"
+#include "my_slam/basics/opencv_funcs.h"
 
 
 using namespace std; 
 using namespace cv;
-using namespace my_basics;
+using namespace basics;
 
 #endif

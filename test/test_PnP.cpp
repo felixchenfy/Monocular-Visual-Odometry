@@ -8,14 +8,14 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "my_geometry/feature_match.h"
-#include "my_geometry/epipolar_geometry.h"
-#include "my_geometry/motion_estimation.h"
-#include "my_basics/config.h"
+#include "my_slam/geometry/feature_match.h"
+#include "my_slam/geometry/epipolar_geometry.h"
+#include "my_slam/geometry/motion_estimation.h"
+#include "my_slam/basics/config.h"
 
 using namespace std;
 using namespace cv;
-using namespace my_geometry;
+using namespace geometry;
 
 int main ( int argc, char** argv )
 {
@@ -36,7 +36,7 @@ int main ( int argc, char** argv )
     vector<DMatch> matches;
     Mat descriptors_1, descriptors_2;
     string filename = "config/config.yaml";
-    my_basics::Config::setParameterFile(filename);
+    basics::Config::setParameterFile(filename);
     extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
     extractKeyPoints(img_2, keypoints_2);
     cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;

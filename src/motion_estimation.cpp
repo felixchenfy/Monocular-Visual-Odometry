@@ -1,10 +1,10 @@
 
-#include "my_geometry/motion_estimation.h"
-using namespace my_basics;
+#include "my_slam/geometry/motion_estimation.h"
+using namespace basics;
 
 #define DEBUG_PRINT_RESULT false
 
-namespace my_geometry
+namespace geometry
 {
 
 int helperEstimatePossibleRelativePosesByEpipolarGeometry(
@@ -696,4 +696,4 @@ double checkHomographyScore(const Mat &H21, const vector<Point2f> &pts_img1, con
     return score;
 }
 
-} // namespace my_geometry
+} // namespace geometry

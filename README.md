@@ -110,32 +110,32 @@ The first one is adopted, which is easier to tune the parameters to generate few
 * [test/](test/): Testing scripts for c++ functions.
 * [data/](data/): Store images.
 
-Main scripts and classes for VO are in [include/my_slam/](include/my_slam/). I referenced this structure from the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4).
+Main scripts and classes for VO are in [include/vo/](include/vo/). I referenced this structure from the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4).
 
 ## 2.2. Functions
 Functions are declared in [include/](include/). Some of its folders contain a README. See the tree structure for overview:
 
 ```
 include
-├── my_basics
+├── basics
 │   ├── basics.h
 │   ├── config.h
 │   ├── eigen_funcs.h
 │   ├── io.h
 │   ├── opencv_funcs.h
 │   └── README.md
-├── my_display
+├── display
 │   ├── pcl_display.h
 │   └── pcl_display_lib.h
-├── my_geometry
+├── geometry
 │   ├── camera.h
 │   ├── common_include.h
 │   ├── epipolar_geometry.h
 │   ├── feature_match.h
 │   └── motion_estimation.h
-├── my_optimization
+├── optimization
 │   └── g2o_ba.h
-└── my_slam
+└── vo
     ├── common_include.h
     ├── commons.h
     ├── frame.h
@@ -219,12 +219,12 @@ The result shows: (1) Optimization improves accuracy. (2) The estiamted trajecto
 **(1) Slambook**:    
 I read this Dr. Xiang Gao's [Slambook](https://github.com/gaoxiang12/slambook) before writing code. The book provides both vSLAM theory as well as easy-to-read code examples in every chapter. 
 
-The framework of my program is based on Chapter 9 of Slambook, which is a RGB-D visual odometry project. Classes declared in [include/my_slam/](include/my_slam/) are based on this Chapter.
+The framework of my program is based on Chapter 9 of Slambook, which is a RGB-D visual odometry project. Classes declared in [include/vo/](include/vo/) are based on this Chapter.
 
 These files are mainly copied or built on top of the Slambook's code:
 * CMakeLists.txt
-* [include/my_basics/config.h](include/my_basics/config.h).
-*  [include/my_optimization/g2o_ba.h](include/my_optimization/g2o_ba.h).
+* [include/basics/config.h](include/basics/config.h).
+*  [include/optimization/g2o_ba.h](include/optimization/g2o_ba.h).
 
 I also borrowed other codes from the slambook. But since they are small pieces and lines, I didn't list them here.
 
@@ -238,7 +238,7 @@ The dataset I used is also the same as this Matlab tutorial, which is the [New T
 
 **(3) ORB-SLAM/ORB-SLAM2 papers**
 
-I borrowed its code of the criteria for choosing Essential or Homography (for decomposition to obtain relative camera pose.). The copied functions are `checkEssentialScore` and `checkHomographyScore` in [motion_estimation.h](include/my_geometry/motion_estimation.h).
+I borrowed its code of the criteria for choosing Essential or Homography (for decomposition to obtain relative camera pose.). The copied functions are `checkEssentialScore` and `checkHomographyScore` in [motion_estimation.h](include/geometry/motion_estimation.h).
 
 
 

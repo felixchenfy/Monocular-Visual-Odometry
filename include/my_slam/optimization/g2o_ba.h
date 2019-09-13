@@ -13,7 +13,7 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 #include <opencv2/core/core.hpp>
 
 
-namespace my_optimization
+namespace optimization
 {
 using namespace std;
 using namespace cv;
@@ -34,5 +34,5 @@ void bundleAdjustment(
     const Mat &information_matrix,
     bool fix_map_pts=false, bool update_map_pts=true);
 
-} // namespace my_optimization
+} // namespace optimization
 #endif

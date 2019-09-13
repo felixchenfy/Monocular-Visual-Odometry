@@ -3,17 +3,17 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include "my_slam/common_include.h"
-#include "my_basics/opencv_funcs.h"
-#include "my_geometry/camera.h"
-#include "my_geometry/feature_match.h"
+#include "my_slam/vo/common_include.h"
+#include "my_slam/basics/opencv_funcs.h"
+#include "my_slam/geometry/camera.h"
+#include "my_slam/geometry/feature_match.h"
 
-namespace my_slam
+namespace vo
 {
 using namespace std;
 using namespace cv;
-using namespace my_basics;
-using namespace my_geometry;
+using namespace basics;
+using namespace geometry;
 
 typedef struct PtConn_
 {
@@ -53,7 +53,7 @@ public:
   vector<DMatch> matches_with_map_; // inliers matches index with respect to all the points
 
   // -- Camera
-  my_geometry::Camera::Ptr camera_;
+  geometry::Camera::Ptr camera_;
 
   // -- Current pose
   Mat T_w_c_; // transform from world to camera
@@ -61,7 +61,7 @@ public:
 public:
   Frame() {}
   ~Frame() {}
-  static Frame::Ptr createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp = -1);
+  static Frame::Ptr createFrame(Mat rgb_img, geometry::Camera::Ptr camera, double time_stamp = -1);
 
 public: // Below are deprecated. These were used in the two-frame-matching vo.
   void clearNoUsed(){
@@ -74,11 +74,11 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   }
   void extractKeyPoints()
   {
-    my_geometry::extractKeyPoints(rgb_img_, keypoints_);
+    geometry::extractKeyPoints(rgb_img_, keypoints_);
   }
   void computeDescriptors()
   {
-    my_geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
+    geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
     kpts_colors_.clear();
     for (KeyPoint kpt : keypoints_)
     {
@@ -88,7 +88,7 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   };
   void matchFeatures(Frame::Ptr prev_frame)
   {
-    my_geometry::matchFeatures(
+    geometry::matchFeatures(
         // descriptors_, prev_frame->descriptors_,
         prev_frame->descriptors_, descriptors_,
         matches_with_ref_,
@@ -104,6 +104,6 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   Mat getCamCenter();
 };
 
-} // namespace my_slam
+} // namespace vo
 
 #endif // FRAME_H

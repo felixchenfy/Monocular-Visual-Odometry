@@ -1,7 +1,7 @@
 
-#include "my_basics/config.h"
+#include "my_slam/basics/config.h"
 
-namespace my_basics
+namespace basics
 {
 
 shared_ptr<Config> Config::config_ = nullptr;
@@ -43,4 +43,4 @@ bool Config::getBool(const std::string &key)
         return false;
 }
 
-} // namespace my_basics
+} // namespace basics

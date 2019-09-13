@@ -19,7 +19,7 @@ Instead of 15+ seconds, the linking only takes like a 3 seconds.
 
 
 
-namespace my_display
+namespace display
 {
 using namespace std;
 typedef unsigned char uchar;

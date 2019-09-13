@@ -16,31 +16,31 @@
 #include <opencv2/features2d/features2d.hpp>
 
 // my
-#include "my_basics/io.h"
-#include "my_basics/config.h"
-#include "my_basics/basics.h"
+#include "my_slam/basics/io.h"
+#include "my_slam/basics/config.h"
+#include "my_slam/basics/basics.h"
 
-#include "my_geometry/motion_estimation.h"
-#include "my_slam/frame.h"
-#include "my_slam/vo.h"
+#include "my_slam/geometry/motion_estimation.h"
+#include "my_slam/vo/frame.h"
+#include "my_slam/vo/vo.h"
 
 // display
-#include "my_display/pcl_display.h"
-using namespace my_display;
+#include "my_slam/display/pcl_display.h"
+using namespace display;
 
 using namespace std;
 using namespace cv;
-using namespace my_geometry;
-using namespace my_slam;
+using namespace geometry;
+using namespace vo;
 
 // functions for this script
 bool checkInputArguments(int argc, char **argv);
 
 const string IMAGE_WINDOW_NAME = "Green: keypoints; Red: inlier matches with map points";
-bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo);
+bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, const vo::VisualOdometry::Ptr vo);
 
 PclViewer::Ptr setUpPclDisplay();
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame,
+bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
                      PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
 void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
 
@@ -64,29 +64,29 @@ int main(int argc, char **argv)
     }
     else
     {
-        image_paths = my_basics::readImagePaths(CONFIG_FILE, PRINT_RES);
+        image_paths = basics::readImagePaths(CONFIG_FILE, PRINT_RES);
     }
-    cv::Mat K = my_basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
+    cv::Mat K = basics::readCameraIntrinsics(CONFIG_FILE); // camera intrinsics
 
     // Init a camera class to store K, and might be used to provide common transformations
-    my_geometry::Camera::Ptr camera(new my_geometry::Camera(K));
+    geometry::Camera::Ptr camera(new geometry::Camera(K));
 
     // Just to remind to set this config file. Following algorithms will read from it for setting params.
-    my_basics::Config::setParameterFile(CONFIG_FILE);
+    basics::Config::setParameterFile(CONFIG_FILE);
 
     // -- Prepare Pcl display
     PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
-    bool DRAW_GROUND_TRUTH_TRAJ = my_basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
+    bool DRAW_GROUND_TRUTH_TRAJ = basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
 
     // -- Prepare opencv display
     cv::namedWindow(IMAGE_WINDOW_NAME, cv::WINDOW_AUTOSIZE);
     cv::moveWindow(IMAGE_WINDOW_NAME, 500, 50);
 
     // -- Setup for vo
-    my_slam::VisualOdometry::Ptr vo(new my_slam::VisualOdometry);
+    vo::VisualOdometry::Ptr vo(new vo::VisualOdometry);
 
     // -- Iterate through images
-    int MAX_NUM_IMAGES = my_basics::Config::get<int>("MAX_NUM_IMAGES");
+    int MAX_NUM_IMAGES = basics::Config::get<int>("MAX_NUM_IMAGES");
     vector<cv::Mat> cam_pose_history;
     for (int img_id = 0; img_id < min(MAX_NUM_IMAGES, (int)image_paths.size()); img_id++)
     {
@@ -95,18 +95,18 @@ int main(int argc, char **argv)
         cv::Mat rgb_img = cv::imread(image_paths[img_id]);
         if (rgb_img.data == nullptr)
         {
-            cout << "The image file <<" << image_paths[img_id] << "<< is empty. Finished." << endl;
+            cout << "The image file " << image_paths[img_id] << " is empty. Finished." << endl;
             break;
         }
 
         // run vo
-        my_slam::Frame::Ptr frame = my_slam::Frame::createFrame(rgb_img, camera);
+        vo::Frame::Ptr frame = vo::Frame::createFrame(rgb_img, camera);
         vo->addFrame(frame); // This is the core of my VO !!!
 
         // Display
         bool cv2_draw_good = drawResultByOpenCV(rgb_img, frame, vo);
         bool pcl_draw_good = drawResultByPcl(vo, frame, pcl_displayer, DRAW_GROUND_TRUTH_TRAJ);
-        static const bool PCL_WAIT_FOR_KEY_PRESS = my_basics::Config::getBool("PCL_WAIT_FOR_KEY_PRESS");
+        static const bool PCL_WAIT_FOR_KEY_PRESS = basics::Config::getBool("PCL_WAIT_FOR_KEY_PRESS");
         if (PCL_WAIT_FOR_KEY_PRESS)
             waitPclKeyPress(pcl_displayer);
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     }
 
     // Save camera trajectory
-    const string FILENAME_FOR_RESULT_TRAJECTORY = my_basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
+    const string FILENAME_FOR_RESULT_TRAJECTORY = basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
     writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
 
     // Wait for user close
@@ -158,7 +158,7 @@ PclViewer::Ptr setUpPclDisplay()
     return pcl_displayer;
 }
 
-bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame, const my_slam::VisualOdometry::Ptr vo)
+bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, const vo::VisualOdometry::Ptr vo)
 {
     cv::Mat img_show = rgb_img.clone();
     const int img_id = frame->id_;
@@ -197,14 +197,14 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const my_slam::Frame::Ptr frame,
     // save to file
     if (0)
     {
-        string str_img_id = my_basics::int2str(img_id, 4);
+        string str_img_id = basics::int2str(img_id, 4);
         imwrite("result/" + str_img_id + ".png", img_show);
     }
 
     return true;
 }
 
-bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr frame,
+bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
                      PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
 {
 
@@ -218,7 +218,7 @@ bool drawResultByPcl(const my_slam::VisualOdometry::Ptr vo, my_slam::Frame::Ptr 
     // -- Update truth camera pose
     if (DRAW_GROUND_TRUTH_TRAJ)
     {
-        static string GROUND_TRUTH_TRAJ_FILENAME = my_basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
+        static string GROUND_TRUTH_TRAJ_FILENAME = basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
         static vector<cv::Mat> truth_poses = readPoseFromFile(GROUND_TRUTH_TRAJ_FILENAME);
         cv::Mat truth_T = truth_poses[frame->id_], truth_R_vec, truth_t;
         getRtFromT(truth_T, truth_R_vec, truth_t);

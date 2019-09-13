@@ -1,8 +1,8 @@
 
-#include "my_geometry/feature_match.h"
-#include "my_basics/config.h"
+#include "my_slam/geometry/feature_match.h"
+#include "my_slam/basics/config.h"
 
-namespace my_geometry
+namespace geometry
 {
 
 // set default ORB params
@@ -29,10 +29,10 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     static double scale_factor=_scale_factor;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = my_basics::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = my_basics::Config::get<double>("scale_factor");
-        level_pyramid = my_basics::Config::get<int>("level_pyramid");
-        score_threshold = my_basics::Config::get<int>("score_threshold");
+        num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = basics::Config::get<double>("scale_factor");
+        level_pyramid = basics::Config::get<int>("level_pyramid");
+        score_threshold = basics::Config::get<int>("score_threshold");
     }
     // int 	nlevels = 8,
     // int 	edgeThreshold = 31,
@@ -56,9 +56,9 @@ void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat
     static double scale_factor=_scale_factor;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        num_keypoints = my_basics::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = my_basics::Config::get<double>("scale_factor");
-        level_pyramid = my_basics::Config::get<int>("level_pyramid");
+        num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
+        scale_factor = basics::Config::get<double>("scale_factor");
+        level_pyramid = basics::Config::get<int>("level_pyramid");
     }
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
@@ -75,9 +75,9 @@ void selectUniformByGrid(vector<cv::KeyPoint>& keypoints,
     static int max_num_keypoints = _max_num_keypoints;
     static int cnt_call_times_=0;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        max_num_keypoints = my_basics::Config::get<int>("max_number_of_keypoints");
-        GRID_SIZE = my_basics::Config::get<int>("GRID_SIZE");
-        MAX_PTS_IN_GRID = my_basics::Config::get<int>("MAX_PTS_IN_GRID");
+        max_num_keypoints = basics::Config::get<int>("max_number_of_keypoints");
+        GRID_SIZE = basics::Config::get<int>("GRID_SIZE");
+        MAX_PTS_IN_GRID = basics::Config::get<int>("MAX_PTS_IN_GRID");
     }
     static int rows=image_rows/GRID_SIZE, cols=image_cols/GRID_SIZE;
     static vector<vector<int>> grid(rows,vector<int>(cols,0));
@@ -115,9 +115,9 @@ void matchFeatures(
     static double MATCH_RATIO = _match_ratio, DIST_RATIO = _lowe_dist_ratio;
     static int cnt_call_times_=0, METHOD_INDEX=2;
     if (cnt_call_times_++==0 && SET_PARAM_BY_YAML){
-        MATCH_RATIO = my_basics::Config::get<int>("match_ratio");
-        DIST_RATIO = my_basics::Config::get<int>("lowe_dist_ratio");
-        METHOD_INDEX = my_basics::Config::get<int>("feature_match_method_index");
+        MATCH_RATIO = basics::Config::get<int>("match_ratio");
+        DIST_RATIO = basics::Config::get<int>("lowe_dist_ratio");
+        METHOD_INDEX = basics::Config::get<int>("feature_match_method_index");
     }
 
     double min_dis = 9999999, max_dis = 0, distance_threshold=-1;
@@ -242,4 +242,4 @@ vector<KeyPoint> pts2keypts(const vector<Point2f> pts){
     return keypts;
 }
 
-} // namespace my_geometry
+} // namespace geometry

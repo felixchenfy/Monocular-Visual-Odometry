@@ -15,7 +15,7 @@
 #include <iomanip>
 
 
-namespace my_basics
+namespace basics
 {
 using namespace std;
 
@@ -33,6 +33,6 @@ vector<int> getIntersection(vector<int> v1, vector<int> v2);
 
 
 
-} // namespace my_basics
+} // namespace basics
 
 #endif

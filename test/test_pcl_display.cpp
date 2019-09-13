@@ -6,18 +6,18 @@
 
 #include <iostream>
 
-// #include "my_basics/eigen_funcs.h"
+// #include "my_slam/basics/eigen_funcs.h"
 
 // cv
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include "my_display/pcl_display.h"
+#include "my_slam/display/pcl_display.h"
 
 using namespace std;
 using namespace cv;
 // using namespace Eigen;
 
-using namespace my_display;
+using namespace display;
 
 int main()
 {
@@ -28,8 +28,8 @@ int main()
             z = -1.0*dis_scale;
     double rot_axis_x = -0.5, rot_axis_y = 0, rot_axis_z = 0;
     string viewer_name = "my pcl viewer";
-    my_display::PclViewer::Ptr pcl_displayer(
-        new my_display::PclViewer(
+    display::PclViewer::Ptr pcl_displayer(
+        new display::PclViewer(
             viewer_name, x, y, z, rot_axis_x, rot_axis_y, rot_axis_z));
 
     // Set up camera pos.

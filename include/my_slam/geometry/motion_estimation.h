@@ -2,17 +2,17 @@
 #ifndef MOTION_ESTIMATION_H
 #define MOTION_ESTIMATION_H
 
-#include "my_geometry/common_include.h"
+#include "my_slam/geometry/common_include.h"
 
-#include "my_geometry/camera.h"
-#include "my_geometry/feature_match.h"
-#include "my_geometry/epipolar_geometry.h"
-#include "my_basics/opencv_funcs.h"
+#include "my_slam/geometry/camera.h"
+#include "my_slam/geometry/feature_match.h"
+#include "my_slam/geometry/epipolar_geometry.h"
+#include "my_slam/basics/opencv_funcs.h"
 
 
-namespace my_geometry
+namespace geometry
 {
-using namespace my_basics;
+using namespace basics;
 
 // This is a giant function, which computes: E21/H21, all their decompositions, all corresponding triangulation results,
 //      Then, choose between E/H based on ORB-SLAM2 paper. 
@@ -115,5 +115,5 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
     const vector<vector<int>> &list_inliers,
     const vector<Mat> &list_R, const vector<Mat> &list_t, const Mat &K);
 
-} // namespace my_geometry
+} // namespace geometry
 #endif

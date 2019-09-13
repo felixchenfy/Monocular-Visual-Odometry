@@ -1,4 +1,4 @@
-// Test functions in "include/my_geometry", including:
+// Test functions in "include/geometry", including:
 //  * Keypoint extraction and feature matching.
 //  * Estimate camera motion by Essential/Homography matrix (totally 1+2=3 solutions). All returned in a vector.
 //  * Triangulation.
@@ -17,14 +17,14 @@ bin/test_epipolor_geometry image0001.jpg image0015.jpg
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "my_geometry/feature_match.h"
-#include "my_geometry/epipolar_geometry.h"
-#include "my_geometry/motion_estimation.h"
-#include "my_basics/config.h"
+#include "my_slam/geometry/feature_match.h"
+#include "my_slam/geometry/epipolar_geometry.h"
+#include "my_slam/geometry/motion_estimation.h"
+#include "my_slam/basics/config.h"
 
 using namespace std;
 using namespace cv;
-using namespace my_geometry;
+using namespace geometry;
 
 int main(int argc, char **argv)
 {
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     else
     { // use settings in .yaml file
         string filename = "config/config.yaml";
-        my_basics::Config::setParameterFile(filename);
+        basics::Config::setParameterFile(filename);
         extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
         extractKeyPoints(img_2, keypoints_2);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;

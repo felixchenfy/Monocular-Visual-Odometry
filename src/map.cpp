@@ -1,7 +1,7 @@
 
-#include "my_slam/map.h"
+#include "my_slam/vo/map.h"
 
-namespace my_slam
+namespace vo
 {
 
 void Map::insertKeyFrame(Frame::Ptr frame)
@@ -45,4 +45,4 @@ bool Map::checkKeyFrame(int frame_id)
         return true;
 }
 
-} // namespace my_slam
+} // namespace vo

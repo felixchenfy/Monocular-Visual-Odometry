@@ -1,12 +1,12 @@
 
-#include "my_display/pcl_display_lib.h"
-#include "my_basics/eigen_funcs.h"
+#include "my_slam/display/pcl_display_lib.h"
+#include "my_slam/basics/eigen_funcs.h"
 
 using namespace std;
 using namespace cv;
 using namespace Eigen;
 
-namespace my_display
+namespace display
 {
 
 
@@ -49,7 +49,7 @@ void setViewerPose(visualization::PCLVisualizer& viewer, const Eigen::Affine3f& 
 
 void setViewerPose(visualization::PCLVisualizer& viewer,
     double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z){
-    Eigen::Affine3d T = my_basics::getAffine3d(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z); 
+    Eigen::Affine3d T = basics::getAffine3d(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z); 
     setViewerPose(viewer, T.cast<float>());
 }
 
@@ -89,4 +89,4 @@ void setPointPos(PointXYZ &point, cv::Mat p)
 {
     setPointPos(point, p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
-} // namespace my_display
+} // namespace display

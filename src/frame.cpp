@@ -1,12 +1,12 @@
 
-#include "my_slam/frame.h"
+#include "my_slam/vo/frame.h"
 
-namespace my_slam
+namespace vo
 {
 
 int Frame::factory_id_ = 0;
 
-Frame::Ptr Frame::createFrame(Mat rgb_img, my_geometry::Camera::Ptr camera, double time_stamp)
+Frame::Ptr Frame::createFrame(Mat rgb_img, geometry::Camera::Ptr camera, double time_stamp)
 {
     Frame::Ptr frame(new Frame());
     frame->rgb_img_ = rgb_img;
@@ -32,4 +32,4 @@ Mat Frame::getCamCenter(){
     return getPosFromT(T_w_c_);
 }
 
-} // namespace my_slam
+} // namespace vo

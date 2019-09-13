@@ -1,9 +1,9 @@
 
 
-#include "my_slam/common_include.h"
-#include "my_slam/mappoint.h"
+#include "my_slam/vo/common_include.h"
+#include "my_slam/vo/mappoint.h"
 
-namespace my_slam
+namespace vo
 {
 
 int MapPoint::factory_id_ = 0;
@@ -21,4 +21,4 @@ MapPoint::MapPoint(
 //     pos_ = (Mat_<double>(3,1) << pos.x, pos.y, pos.z);
 // }
 
-} // namespace my_slam
+} // namespace vo

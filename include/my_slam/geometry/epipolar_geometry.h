@@ -2,17 +2,17 @@
 #ifndef EPIPOLAR_GEOMETRY_H
 #define EPIPOLAR_GEOMETRY_H
 
-#include "my_geometry/common_include.h"
+#include "my_slam/geometry/common_include.h"
 
-#include "my_basics/opencv_funcs.h"
-#include "my_geometry/camera.h" // transformations related to camera
+#include "my_slam/basics/opencv_funcs.h"
+#include "my_slam/geometry/camera.h" // transformations related to camera
 
 
-namespace my_geometry
+namespace geometry
 {
 using namespace std;
 using namespace cv;
-using namespace my_basics;
+using namespace basics;
 
 // ---------------- main: essential, homography, triangulation ----------------
 void estiMotionByEssential(
@@ -80,5 +80,5 @@ double ptPosInNormPlane(const Point3f &pt_3d_pos_in_cam1,
     Point2f &pt_pos_on_cam1_nplane, double &depth1,
     Point2f &pt_pos_on_cam2_nplane, double &depth2);
 
-} // namespace my_geometry
+} // namespace geometry
 #endif

@@ -17,7 +17,7 @@
 #include <opencv2/calib3d/calib3d.hpp> // for cv::Rodrigues
 
 
-namespace my_basics
+namespace basics
 {
 
 // --------------  Eigen --------------
@@ -34,6 +34,6 @@ Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const cv::Mat &R, const cv::Mat &t)
 Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv);
 cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus);
 
-} // namespace my_basics
+} // namespace basics
 
 #endif

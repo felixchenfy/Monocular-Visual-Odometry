@@ -1,12 +1,12 @@
 
-#include "my_basics/eigen_funcs.h"
-#include "my_basics/opencv_funcs.h"
+#include "my_slam/basics/eigen_funcs.h"
+#include "my_slam/basics/opencv_funcs.h"
 
 using namespace std;
 using namespace cv;
 using namespace Eigen;
 
-namespace my_basics
+namespace basics
 {
     
 // --------------  Eigen --------------

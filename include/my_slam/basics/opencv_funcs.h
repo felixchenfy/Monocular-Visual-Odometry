@@ -12,7 +12,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-namespace my_basics
+namespace basics
 {
 using namespace std;
 using namespace cv;
@@ -50,5 +50,5 @@ void print_MatProperty(const cv::Mat &M); // print data type and size
 void print_R_t(const Mat &R, const Mat &t);
 string cvMatType2str(int cvMatType);
 
-} // namespace my_basics
+} // namespace basics
 #endif

@@ -10,7 +10,7 @@ The modification is that in OpenCV 4.0, I have to use "new" to create a cv::File
 #include <memory>
 #include <opencv2/core/core.hpp>
 
-namespace my_basics
+namespace basics
 {
 using namespace std;
 
@@ -64,6 +64,6 @@ std::vector<T> Config::getVector(const std::string &key)
   return res;
 }
 
-} // namespace my_basics
+} // namespace basics
 
 #endif

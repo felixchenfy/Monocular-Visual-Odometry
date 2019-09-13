@@ -15,9 +15,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp> // for cv::Rodrigues
 
-#include "my_basics/eigen_funcs.h"
+#include "my_slam/basics/eigen_funcs.h"
 
-namespace my_display
+namespace display
 {
 using namespace std;
 using namespace pcl;
@@ -48,6 +48,6 @@ void setViewerPose (visualization::PCLVisualizer& viewer, const Eigen::Affine3f&
 void setViewerPose (visualization::PCLVisualizer& viewer,
     double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z);
 
-} // namespace my_display
+} // namespace display
 
 #endif

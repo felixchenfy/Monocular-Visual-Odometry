@@ -1,7 +1,7 @@
 
-#include "my_basics/opencv_funcs.h"
+#include "my_slam/basics/opencv_funcs.h"
 
-namespace my_basics
+namespace basics
 {
 
 // ---------------- image operation ----------------
@@ -240,4 +240,4 @@ string cvMatType2str(int cvMatType)
     return r;
 }
 
-} // namespace my_basics
+} // namespace basics

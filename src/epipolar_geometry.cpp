@@ -1,11 +1,11 @@
 
-#include "my_geometry/epipolar_geometry.h"
+#include "my_slam/geometry/epipolar_geometry.h"
 
 using namespace std;
 using namespace cv;
 
 #define PRINT_DEBUG_RESULT true
-namespace my_geometry
+namespace geometry
 {
 
 void estiMotionByEssential(
@@ -282,4 +282,4 @@ void extractPtsFromMatches(
     }
 }
 
-} // namespace my_geometry
+} // namespace geometry

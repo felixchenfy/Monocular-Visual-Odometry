@@ -2,10 +2,10 @@
 #ifndef COMMONS_H
 #define COMMONS_H
 
-#include "my_slam/common_include.h"
-#include "my_slam/frame.h"
+#include "my_slam/vo/common_include.h"
+#include "my_slam/vo/frame.h"
 
-namespace my_slam
+namespace vo
 {
 using namespace std; 
 using namespace cv;

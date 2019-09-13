@@ -8,7 +8,7 @@
 #include <opencv2/core/core.hpp>
 
 
-namespace my_basics
+namespace basics
 {
 using namespace std;
 
@@ -20,6 +20,6 @@ cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res=f
 void writePoseToFile(const string filename, vector<cv::Mat> list_T); // Format: x, y, z, 1st row of R, 2nd row of R, 3rd row of R
 vector<cv::Mat> readPoseFromFile(const string filename); // Read pose from file
 
-} // namespace my_basics
+} // namespace basics
 
 #endif

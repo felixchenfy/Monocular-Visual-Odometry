@@ -2,9 +2,9 @@
 #ifndef FEATURE_MATCH_H
 #define FEATURE_MATCH_H
 
-#include "my_geometry/common_include.h"
+#include "my_slam/geometry/common_include.h"
 
-namespace my_geometry
+namespace geometry
 {
 using namespace std;
 
@@ -38,6 +38,6 @@ double computeMeanDistBetweenKeypoints(
 vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);
 vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts);
 
-} // namespace my_geometry
+} // namespace geometry
 
 #endif
