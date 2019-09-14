@@ -323,7 +323,7 @@ void helperEvalEppiAndTriangErrors(
         {
             const Point2f &p1 = inlpts1[idx_inlier], &p2 = inlpts2[idx_inlier];
             // print triangulation result
-            Mat pts3dc1 = Point3f_to_Mat(pts3d[idx_inlier]); // 3d pos in camera 1
+            Mat pts3dc1 = point3f_to_mat(pts3d[idx_inlier]); // 3d pos in camera 1
             Mat pts3dc2 = R * pts3dc1 + t;
             Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             Point2f pts2dc2 = cam2pixel(pts3dc2, K);
@@ -466,7 +466,7 @@ void print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
             else
                 ith_in_curr_sol = ith_in_h_inliers;
 
-            Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][ith_in_curr_sol]); // 3d pos in camera 1
+            Mat pts3dc1 = point3f_to_mat(sols_pts3d_in_cam1[j][ith_in_curr_sol]); // 3d pos in camera 1
             Mat pts3dc2 = R * pts3dc1 + t;
             Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             Point2f pts2dc2 = cam2pixel(pts3dc2, K);
@@ -517,7 +517,7 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
             cout << "===solu " << j << ": epipolar_error*1e6 is " << err_epipolar * 1e6 << endl;
 
             // print triangulation result
-            Mat pts3dc1 = Point3f_to_Mat(sols_pts3d_in_cam1[j][idx_inlier]); // 3d pos in camera 1
+            Mat pts3dc1 = point3f_to_mat(sols_pts3d_in_cam1[j][idx_inlier]); // 3d pos in camera 1
             Mat pts3dc2 = R * pts3dc1 + t;
             Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             // Point2f pts2dc1 = cam2pixel(sols_pts3d_in_cam1[j][idx_inlier], K);

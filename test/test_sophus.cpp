@@ -18,7 +18,7 @@
 
 using namespace std;
 
-cv::Mat transRt2T(const cv::Mat &R, const cv::Mat &t)
+cv::Mat convertRt2T(const cv::Mat &R, const cv::Mat &t)
 {
     cv::Mat T = (cv::Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
                  R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
@@ -45,7 +45,7 @@ cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
     eigen2cv(eigen_t, cv_t);
     eigen2cv(eigen_R, cv_R);
 
-    return transRt2T(cv_R, cv_t);
+    return convertRt2T(cv_R, cv_t);
 }
 
 int main(int argc, char **argv)
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     cout << cv_R << endl;
 
     // -------------------- Direct trans from T_cv to T_Sophus --------------------
-    cv::Mat T_cv = transRt2T(R, tvec);
+    cv::Mat T_cv = convertRt2T(R, tvec);
     Sophus::SE3 T_SE3 = transT_cv2sophus(T_cv);
     cout << "\nDirect trans from T_cv to T_Sophus: \n"
          << T_SE3 << endl;

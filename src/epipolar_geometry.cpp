@@ -188,7 +188,7 @@ void doTriangulation(
         (Mat_<float>(3, 4) << 1, 0, 0, 0,
          0, 1, 0, 0,
          0, 0, 1, 0);
-    Mat T_cam2_to_world = transRt2T_3x4(R_cam2_to_cam1, t_cam2_to_cam1);
+    Mat T_cam2_to_world = convertRt2T_3x4(R_cam2_to_cam1, t_cam2_to_cam1);
 
     // triangulartion
     Mat pts4d_in_world;
@@ -207,7 +207,7 @@ void doTriangulation(
             x.at<float>(1, 0),
             x.at<float>(2, 0));
         pts3d_in_world.push_back(pt3d_in_world);
-        // pts3d_in_world.push_back( preTranslatePoint3f(pt3d_in_world, transRt2T(R_cam2_to_cam1,t_cam2_to_cam1).inv())); // This is wrong
+        // pts3d_in_world.push_back( preTranslatePoint3f(pt3d_in_world, convertRt2T(R_cam2_to_cam1,t_cam2_to_cam1).inv())); // This is wrong
         // if(i<3)cout<<"in tri, i="<<i<<","<<"p="<<p<<endl;
     }
 

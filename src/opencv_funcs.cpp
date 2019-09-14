@@ -36,11 +36,11 @@ unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb)
 
 // ---------------- datatype conversion ----------------
 
-Mat Point3f_to_Mat(const Point3f &p)
+Mat point3f_to_mat(const Point3f &p)
 {
     return (Mat_<double>(3, 1) << p.x, p.y, p.z);
 }
-Mat Point3f_to_Mat4x1(const Point3f &p)
+Mat point3f_to_mat4x1(const Point3f &p)
 {
     return (Mat_<double>(4, 1) << p.x, p.y, p.z, 1);
 }
@@ -50,7 +50,7 @@ Point3f Mat_to_Point3f(const Mat &p)
     return Point3f(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
 
-Mat Point2f_to_Mat(const Point2f &p)
+Mat point2f_to_mat(const Point2f &p)
 {
     return (Mat_<double>(2, 1) << p.x, p.y);
 }
@@ -80,7 +80,7 @@ Mat skew(const Mat &t)
     return t_x;
 }
 
-Mat transRt2T(const Mat &R, const Mat &t)
+Mat convertRt2T(const Mat &R, const Mat &t)
 {
     Mat T = (Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
              R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
@@ -88,7 +88,7 @@ Mat transRt2T(const Mat &R, const Mat &t)
              0, 0, 0, 1);
     return T;
 }
-Mat transRt2T_3x4(const Mat &R, const Mat &t)
+Mat convertRt2T_3x4(const Mat &R, const Mat &t)
 {
     Mat T = (Mat_<double>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
              R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
@@ -113,12 +113,12 @@ Mat getPosFromT(const Mat &T)
 }
 Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t)
 {
-    Mat p2 = R * Point3f_to_Mat(p) + t; // 3d pos in camera 2
+    Mat p2 = R * point3f_to_mat(p) + t; // 3d pos in camera 2
     return Point3f(p2.at<double>(0, 0), p2.at<double>(1, 0), p2.at<double>(2, 0));
 }
 void invRt(Mat &R, Mat &t)
 {
-    Mat T = transRt2T(R, t);
+    Mat T = convertRt2T(R, t);
     getRtFromT(T.inv(), R, t);
 }
 
@@ -161,7 +161,7 @@ Mat getNormalizedMat(const Mat mat)
     return res;
 }
 
-double compute_angle_between_2_vectors(const Mat &vec1, const Mat &vec2)
+double calcAngleBetweenTwoVectors(const Mat &vec1, const Mat &vec2)
 {
     // cos(angle) = vec1.dot(vec2) / (||vec1|| * ||vec2||)
     assert(vec1.rows == vec2.rows && vec1.rows > vec1.cols);

@@ -54,7 +54,7 @@ cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
     eigen2cv(eigen_t, cv_t);
     eigen2cv(eigen_R, cv_R);
 
-    return transRt2T(cv_R, cv_t);
+    return convertRt2T(cv_R, cv_t);
 }
 
 }

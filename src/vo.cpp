@@ -70,7 +70,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     // -- Output
 
     // compute camera pose
-    T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv();
+    T = ref_->T_w_c_ * convertRt2T(R_curr_to_prev, t_curr_to_prev).inv();
 
     // Get points that are used for triangulating new map points
     retainGoodTriangulationResult();
@@ -87,7 +87,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     t_curr_to_prev /= mean_depth;
     for (Point3f &p : curr_->inliers_pts3d_)
         scalePointPos(p, 1 / mean_depth);
-    T = ref_->T_w_c_ * transRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
+    T = ref_->T_w_c_ * convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
 
 bool VisualOdometry::checkIfVoGoodToInit()
@@ -178,10 +178,10 @@ void VisualOdometry::retainGoodTriangulationResult()
     for (int i = 0; i < N; i++)
     {
         Point3f &p_in_curr = curr_->inliers_pts3d_[i];
-        Mat p_in_world = Point3f_to_Mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
+        Mat p_in_world = point3f_to_mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
         Mat vec_p_to_cam_curr = getPosFromT(curr_->T_w_c_) - p_in_world;
         Mat vec_p_to_cam_prev = getPosFromT(ref_->T_w_c_) - p_in_world;
-        double angle = compute_angle_between_2_vectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
+        double angle = calcAngleBetweenTwoVectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
         angles.push_back(angle / 3.1415926 * 180.0);
     }
 
@@ -299,7 +299,7 @@ void VisualOdometry::poseEstimationPnP()
     curr_->matches_with_map_.swap(tmp_matches_with_map_);
 
     // -- Update current camera pos
-    curr_->T_w_c_ = transRt2T(R, t).inv();
+    curr_->T_w_c_ = convertRt2T(R, t).inv();
 }
 
 // bundle adjustment
@@ -481,7 +481,7 @@ void VisualOdometry::pushCurrPointsToMap()
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
                 descriptors.row(pt_idx).clone(),                                       // descriptor
-                getNormalizedMat(Point3f_to_Mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
+                getNormalizedMat(point3f_to_mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
             map_point_id = map_point->id_;
@@ -498,7 +498,7 @@ void VisualOdometry::pushCurrPointsToMap()
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
-    Mat n = Point3f_to_Mat(point->pos_) - frame->getCamCenter();
+    Mat n = point3f_to_mat(point->pos_) - frame->getCamCenter();
     n = getNormalizedMat(n);
     Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));

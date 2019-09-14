@@ -68,7 +68,7 @@ int main ( int argc, char** argv )
     Rodrigues ( R_vec, R );
 
     // Get cam1 to cam2
-    Mat T_cam1_to_cam2 = transRt2T(R,t).inv();
+    Mat T_cam1_to_cam2 = convertRt2T(R,t).inv();
 
     // Print result
     printf("Print result of PnP:\n");
