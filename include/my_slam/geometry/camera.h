@@ -1,8 +1,8 @@
 
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef MY_SLAM_CAMERA_H
+#define MY_SLAM_CAMERA_H
 
-#include "my_slam/geometry/common_include.h"
+#include "my_slam/common_include.h"
 
 namespace my_slam
 {

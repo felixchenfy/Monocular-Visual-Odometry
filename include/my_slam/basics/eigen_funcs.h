@@ -1,8 +1,8 @@
 
 // Eigen geometrical transformations and datatype conversions to/from OpenCV
 
-#ifndef EIGEN_TRANS_H
-#define EIGEN_TRANS_H
+#ifndef MY_SLAM_EIGEN_FUNCS_H
+#define MY_SLAM_EIGEN_FUNCS_H
 
 #include "my_slam/common_include.h"
 
@@ -13,9 +13,6 @@
 #include <sophus/se3.h>
 
 #include <opencv2/core/eigen.hpp>
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/calib3d/calib3d.hpp> // for cv::Rodrigues
 
 namespace my_slam
 {

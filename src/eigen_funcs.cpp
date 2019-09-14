@@ -1,10 +1,6 @@
-
 #include "my_slam/basics/eigen_funcs.h"
-#include "my_slam/basics/opencv_funcs.h"
 
-using namespace std;
-using namespace cv;
-using namespace Eigen;
+#include "my_slam/basics/opencv_funcs.h"
 
 namespace my_slam
 {
@@ -55,7 +51,7 @@ cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
     eigen2cv(eigen_t, cv_t);
     eigen2cv(eigen_R, cv_R);
 
-    return convertRt2T(cv_R, cv_t);
+    return basics::convertRt2T(cv_R, cv_t);
 }
 
 } // namespace basics

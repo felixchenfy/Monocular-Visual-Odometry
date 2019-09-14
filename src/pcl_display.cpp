@@ -1,11 +1,6 @@
 
 #include "my_slam/display/pcl_display.h"
 #include "my_slam/display/pcl_display_lib.h"
-#include <unordered_map>
-
-using namespace std;
-using namespace cv;
-using namespace Eigen;
 
 typedef boost::shared_ptr<pcl::visualization::PCLVisualizer> ViewerPtr;
 typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr;
@@ -17,7 +12,7 @@ ViewerPtr viewer_;
 const double LEN_COORD_AXIS = 0.1;
 const double LEN_COORD_AXIS_TRUTH_TRAJ = 0.05;
 
-// -- Point clouds to display
+// -- Global variables: Point clouds to display
 
 // 1. camera truth trajectory
 string pc_cam_traj = "pc_cam_traj";
@@ -35,7 +30,7 @@ string pc_pts_curr = "pc_pts_curr";
 
 // Store the above into a vector and a unordered_map
 vector<string> point_clouds_names = {pc_cam_traj, pc_cam_traj_ground_truth, pc_pts_map, pc_pts_curr};
-unordered_map<string, CloudPtr> point_clouds;
+std::unordered_map<string, CloudPtr> point_clouds;
 
 // -- Functions
 
@@ -56,11 +51,16 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void 
 
 } // namespace display_private
 
-// --------------------- Class definition -----------------------
+// ======================================================================
+// ======================================================================
+// ======================================================================
 
-namespace my_slam{
+namespace my_slam
+{
 namespace display
 {
+
+typedef unsigned char uchar;
 using namespace display_private;
 
 // constructor
@@ -95,7 +95,6 @@ PclViewer::PclViewer(double x, double y, double z,
     cam_t_ = cv::Mat::zeros(3, 1, CV_64F);
     truth_cam_R_vec_ = cv::Mat::eye(3, 3, CV_64F);
     truth_cam_t_ = cv::Mat::zeros(3, 1, CV_64F);
-
 }
 
 bool PclViewer::checkKeyPressed()
@@ -114,7 +113,7 @@ bool PclViewer::checkKeyPressed()
 // -- Update camera pose ---------------------------------------------------------------------
 void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
                             ViewerPtr viewer, cv::Mat &R_vec_curr, cv::Mat &t_curr,
-                            const string cam_traj_name, const unsigned char color[3], 
+                            const string cam_traj_name, const unsigned char color[3],
                             int cnt_cam, int line_width, double line_color[3])
 {
     // Add a line between new_pos and old_pos. Also, add a point.
@@ -127,9 +126,9 @@ void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
         string line_name = cam_traj_name + "-line" + to_string(cnt_cam);
         viewer_->addLine<pcl::PointXYZ>(
             cam_pos_old, cam_pos_new, line_color[0], line_color[1], line_color[2], line_name);
-        viewer_->setShapeRenderingProperties (
+        viewer_->setShapeRenderingProperties(
             pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, line_width, line_name);
-        
+
         // add a point of the new camera pos
         pcl::PointXYZRGB point;
         setPointPos(point, t_new);
@@ -140,20 +139,22 @@ void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
     R_vec_curr = R_vec_new.clone();
     t_curr = t_new.clone();
 }
-void copyColor(const unsigned char c1[3], double c2[3]){
-    for(int i=0;i<3;i++)
-        c2[i]=c1[i]/255.0;    
+void copyColor(const unsigned char c1[3], double c2[3])
+{
+    for (int i = 0; i < 3; i++)
+        c2[i] = c1[i] / 255.0;
 }
 void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_keyframe)
 {
     static int cnt_cam = 0;
     const int line_width = 3;
     double line_color[3];
-    unsigned char point_color[3]={pc_cam_traj_color[0], pc_cam_traj_color[1], pc_cam_traj_color[2]};
-    if(is_keyframe==true){
-        point_color[0]=255;
-        point_color[1]=0;
-        point_color[2]=0;
+    unsigned char point_color[3] = {pc_cam_traj_color[0], pc_cam_traj_color[1], pc_cam_traj_color[2]};
+    if (is_keyframe == true)
+    {
+        point_color[0] = 255;
+        point_color[1] = 0;
+        point_color[2] = 0;
     }
     copyColor(pc_cam_traj_color, line_color);
     addNewCameraPoseToTraj(
@@ -164,7 +165,7 @@ void PclViewer::updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t)
 {
     static int cnt_cam = 0;
     const int line_width = 1;
-    double line_color[3]; 
+    double line_color[3];
     copyColor(pc_cam_traj_ground_truth_color, line_color);
     addNewCameraPoseToTraj(
         R_vec, t, viewer_, truth_cam_R_vec_, truth_cam_t_,
@@ -259,7 +260,7 @@ void PclViewer::spinOnce(unsigned int millisecond)
 {
     viewer_->spinOnce(millisecond);
 }
-bool PclViewer::wasStopped()
+bool PclViewer::isStopped()
 {
     return viewer_->wasStopped();
 }

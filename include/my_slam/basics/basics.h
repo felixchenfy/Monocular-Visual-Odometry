@@ -1,8 +1,8 @@
 /* @brief Some basic common functions.
  */
 
-#ifndef BASICS_H
-#define BASICS_H
+#ifndef MY_SLAM_BASICS_H
+#define MY_SLAM_BASICS_H
 
 #include "my_slam/common_include.h"
 

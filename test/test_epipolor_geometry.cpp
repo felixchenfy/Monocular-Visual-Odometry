@@ -1,5 +1,5 @@
 // Test functions in "include/geometry", including:
-//  * Keypoint extraction and feature matching.
+//  * cv::KeyPoint extraction and feature matching.
 //  * Estimate camera motion by Essential/Homography matrix (totally 1+2=3 solutions). All returned in a vector.
 //  * Triangulation.
 //  * Compute epipolar error and triangulation error in pixel.
@@ -78,8 +78,8 @@ int main(int argc, char **argv)
     cv::Mat img_2 = imread(folder + img_file2);
 
     // Extract keypoints and features. Match keypoints
-    vector<KeyPoint> keypoints_1, keypoints_2;
-    vector<DMatch> matches;
+    vector<cv::KeyPoint> keypoints_1, keypoints_2;
+    vector<cv::DMatch> matches;
     cv::Mat descriptors_1, descriptors_2;
     // doFeatureMatching(img_1, img_2, keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches);
 
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
     // Estimation motion
     vector<cv::Mat> list_R, list_t, list_normal;
-    vector<vector<DMatch>> list_matches;
+    vector<vector<cv::DMatch>> list_matches;
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
     const bool print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
     // -- I spot some wrong inliers, I'm going to show it.
     // int cnt=0;
-    // for (const DMatch &d:list_matches[0]){
+    // for (const cv::DMatch &d:list_matches[0]){
     //     cv::Point2f p1=keypoints_1[d.queryIdx].pt;
     //     cv::Point2f p2=keypoints_2[d.trainIdx].pt;
     //     if(abs(p1.x-p2.x)>20){

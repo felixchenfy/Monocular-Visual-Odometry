@@ -1,8 +1,8 @@
 /* @brief Read data from file, or write data to file.
  */
 
-#ifndef IO_H
-#define IO_H
+#ifndef MY_SLAM_IO_H
+#define MY_SLAM_IO_H
 
 #include "my_slam/common_include.h"
 

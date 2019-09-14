@@ -1,7 +1,8 @@
 
 #include "my_slam/basics/opencv_funcs.h"
 
-namespace my_slam{
+namespace my_slam
+{
 namespace basics
 {
 
@@ -76,24 +77,24 @@ cv::Point3f preTranslatePoint3f(const cv::Point3f &p3x1, const cv::Mat &T4x4)
 cv::Mat skew(const cv::Mat &t)
 {
     cv::Mat t_x = (cv::Mat_<double>(3, 3) << 0, -t.at<double>(2, 0), t.at<double>(1, 0),
-               t.at<double>(2, 0), 0, -t.at<double>(0, 0),
-               -t.at<double>(1, 0), t.at<double>(0, 0), 0);
+                   t.at<double>(2, 0), 0, -t.at<double>(0, 0),
+                   -t.at<double>(1, 0), t.at<double>(0, 0), 0);
     return t_x;
 }
 
 cv::Mat convertRt2T(const cv::Mat &R, const cv::Mat &t)
 {
     cv::Mat T = (cv::Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
-             R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
-             R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0),
-             0, 0, 0, 1);
+                 R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
+                 R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0),
+                 0, 0, 0, 1);
     return T;
 }
 cv::Mat convertRt2T_3x4(const cv::Mat &R, const cv::Mat &t)
 {
     cv::Mat T = (cv::Mat_<double>(3, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
-             R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
-             R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0));
+                 R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
+                 R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0));
     return T;
 }
 void getRtFromT(const cv::Mat &T, cv::Mat &R, cv::Mat &t)
@@ -128,6 +129,7 @@ double calcDist(const cv::Point2f &p1, const cv::Point2f &p2)
     double dx = p1.x - p2.x, dy = p1.y - p2.y;
     return sqrt(dx * dx + dy * dy);
 }
+
 double calcMeanDepth(const vector<cv::Point3f> &pts_3d)
 {
     double mean_depth = 0;
@@ -136,6 +138,7 @@ double calcMeanDepth(const vector<cv::Point3f> &pts_3d)
     mean_depth /= pts_3d.size();
     return mean_depth;
 }
+
 double scalePointPos(cv::Point3f &p, double scale)
 {
     p.x *= scale;
@@ -168,20 +171,21 @@ double calcAngleBetweenTwoVectors(const cv::Mat &vec1, const cv::Mat &vec2)
     assert(vec1.rows == vec2.rows && vec1.rows > vec1.cols);
     int N = vec1.rows;
     double res = 0;
-    for(int i = 0; i < N; i++){
-        res += vec1.at<double>(i,0) * vec2.at<double>(i,0); 
+    for (int i = 0; i < N; i++)
+    {
+        res += vec1.at<double>(i, 0) * vec2.at<double>(i, 0);
     }
     double len = calcMatNorm(vec1) * calcMatNorm(vec2);
-    assert( len!=0 );
-    res = acos( res / len );
+    assert(len != 0);
+    res = acos(res / len);
     return res;
 }
 
 // ---------------- Print ----------------
-
+string getCvMatType(int cvMatType);
 void print_MatProperty(const cv::Mat &M)
 {
-    string ty = cvMatType2str(M.type());
+    string ty = getCvMatType(M.type());
     printf("cv::Mat: type = %s, size = %dx%d \n", ty.c_str(), M.rows, M.cols);
 }
 
@@ -195,12 +199,12 @@ void print_R_t(const cv::Mat &R, const cv::Mat &t)
     cout << "t is: " << t.t() << endl;
 }
 
-string cvMatType2str(int cvMatType)
+string getCvMatType(int cvMatType)
 {
     /*
     https://stackoverflow.com/questions/10167534/how-to-find-out-what-type-of-a-mat-object-is-with-mattype-in-opencv
     example:
-    string ty =  cvMatType2str( M.type() );
+    string ty =  getCvMatType( M.type() );
     printf("Matrix: %s %dx%d \n", ty.c_str(), M.cols, M.rows );
     */
     string r;

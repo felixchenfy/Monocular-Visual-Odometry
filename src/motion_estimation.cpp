@@ -9,12 +9,12 @@ namespace geometry
 {
 
 int helperEstimatePossibleRelativePosesByEpipolarGeometry(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const vector<cv::DMatch> &matches,
     const cv::Mat &K,
     vector<cv::Mat> &list_R, vector<cv::Mat> &list_t,
-    vector<vector<DMatch>> &list_matches,
+    vector<vector<cv::DMatch>> &list_matches,
     vector<cv::Mat> &list_normal,
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
     const bool print_res,
@@ -29,8 +29,8 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
 
     // Get matched points: pts_img1 & pts_img2
     // All computations after this step are operated on these matched points
-    vector<cv::Point2f> pts_img1_all = convertKeypointsToPoint2f(keypoints_1);
-    vector<cv::Point2f> pts_img2_all = convertKeypointsToPoint2f(keypoints_2);
+    vector<cv::Point2f> pts_img1_all = convertkeypointsToPoint2f(keypoints_1);
+    vector<cv::Point2f> pts_img2_all = convertkeypointsToPoint2f(keypoints_2);
     vector<cv::Point2f> pts_img1, pts_img2; // matched points
     extractPtsFromMatches(pts_img1_all, pts_img2_all, matches, pts_img1, pts_img2);
     vector<cv::Point2f> pts_on_np1, pts_on_np2; // matched points on camera normalized plane
@@ -90,15 +90,15 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     }
     int num_solutions = list_R.size();
 
-    // Convert [inliers of matches] to the [DMatch of all kpts]
+    // Convert [inliers of matches] to the [cv::DMatch of all kpts]
     for (int i = 0; i < num_solutions; i++)
     {
-        list_matches.push_back(vector<DMatch>());
+        list_matches.push_back(vector<cv::DMatch>());
         const vector<int> &inliers = list_inliers[i];
         for (const int &idx : inliers)
         {
             list_matches[i].push_back(
-                DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
+                cv::DMatch(matches[idx].queryIdx, matches[idx].trainIdx, matches[idx].distance));
         }
     }
 
@@ -158,12 +158,12 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
 
 // Estimate camera motion by Essential matrix.
 void helperEstiMotionByEssential(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const vector<cv::DMatch> &matches,
     const cv::Mat &K,
     cv::Mat &R, cv::Mat &t,
-    vector<DMatch> &inlier_matches,
+    vector<cv::DMatch> &inlier_matches,
     const bool print_res)
 {
     vector<cv::Point2f> pts_in_img1, pts_in_img2;
@@ -174,21 +174,21 @@ void helperEstiMotionByEssential(
     inlier_matches.clear();
     for (int idx : inliers_index)
     {
-        const DMatch &m = matches[idx];
+        const cv::DMatch &m = matches[idx];
         inlier_matches.push_back(
-            DMatch(m.queryIdx, m.trainIdx, m.distance));
+            cv::DMatch(m.queryIdx, m.trainIdx, m.distance));
     }
 }
 
 // After feature matching, find inlier matches by using epipolar constraint to exclude wrong matches
-vector<DMatch> helperFindInlierMatchesByEpipolarCons(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
+vector<cv::DMatch> helperFindInlierMatchesByEpipolarCons(
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const vector<cv::DMatch> &matches,
     const cv::Mat &K)
 {
     // Output
-    vector<DMatch> inlier_matches;
+    vector<cv::DMatch> inlier_matches;
 
     // Estimate Essential to get inlier matches
     cv::Mat dummy_R, dummy_t;
@@ -202,8 +202,8 @@ vector<DMatch> helperFindInlierMatchesByEpipolarCons(
 // Get the 3d-2d corrsponding points
 // First find curr_inlier_matches.train that appears also in prev_dmatch.query,
 void helperFind3Dto2DCorrespondences(
-    const vector<DMatch> &curr_inlier_matches, const vector<KeyPoint> &curr_kpts,
-    const vector<DMatch> &prev_inlier_matches, const vector<cv::Point3f> &prev_inliers_pts3d,
+    const vector<cv::DMatch> &curr_inlier_matches, const vector<cv::KeyPoint> &curr_kpts,
+    const vector<cv::DMatch> &prev_inlier_matches, const vector<cv::Point3f> &prev_inliers_pts3d,
     vector<cv::Point3f> &pts_3d, vector<cv::Point2f> &pts_2d)
 {
     pts_3d.clear();
@@ -214,7 +214,7 @@ void helperFind3Dto2DCorrespondences(
     int cnt_inliers = 0;
     for (int i = 0; i < prev_inlier_matches.size(); i++)
     {
-        const DMatch &m = prev_inlier_matches[i];
+        const cv::DMatch &m = prev_inlier_matches[i];
         table[m.trainIdx] = i;
     }
 
@@ -233,8 +233,8 @@ void helperFind3Dto2DCorrespondences(
 
 // Triangulate points
 vector<cv::Point3f> helperTriangulatePoints(
-    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
-    const vector<DMatch> &curr_inlier_matches,
+    const vector<cv::KeyPoint> &prev_kpts, const vector<cv::KeyPoint> &curr_kpts,
+    const vector<cv::DMatch> &curr_inlier_matches,
     const cv::Mat &T_curr_to_prev,
     const cv::Mat &K)
 {
@@ -246,8 +246,8 @@ vector<cv::Point3f> helperTriangulatePoints(
 }
 
 vector<cv::Point3f> helperTriangulatePoints(
-    const vector<KeyPoint> &prev_kpts, const vector<KeyPoint> &curr_kpts,
-    const vector<DMatch> &curr_inlier_matches,
+    const vector<cv::KeyPoint> &prev_kpts, const vector<cv::KeyPoint> &curr_kpts,
+    const vector<cv::DMatch> &curr_inlier_matches,
     const cv::Mat &R_curr_to_prev, const cv::Mat &t_curr_to_prev,
     const cv::Mat &K)
 {
@@ -291,9 +291,9 @@ double computeScoreForEH(double d2, double TM)
 
 // (Deprecated) Choose EH by triangulation error. This helps nothing.
 void helperEvalEppiAndTriangErrors(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<vector<DMatch>> &list_matches,
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const vector<vector<cv::DMatch>> &list_matches,
     const vector<vector<cv::Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<cv::Mat> &list_R, const vector<cv::Mat> &list_t, const vector<cv::Mat> &list_normal,
     const cv::Mat &K,
@@ -308,7 +308,7 @@ void helperEvalEppiAndTriangErrors(
     for (int i = 0; i < num_solutions; i++)
     {
         const cv::Mat &R = list_R[i], &t = list_t[i];
-        const vector<DMatch> &matches = list_matches[i];
+        const vector<cv::DMatch> &matches = list_matches[i];
         const vector<cv::Point3f> &pts3d = sols_pts3d_in_cam1_by_triang[i];
         vector<cv::Point2f> inlpts1, inlpts2;
         extractPtsFromMatches(keypoints_1, keypoints_2, matches, inlpts1, inlpts2);
@@ -506,7 +506,7 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
             int idx_pts = inliers[idx_inlier];
             cout << "\n--------------" << endl;
             printf("Printing the %dth last inlier point in solution %d\n", _idx_inlier, j);
-            printf("which is %dth keypoint\n", idx_pts);
+            printf("which is %dth cv::KeyPoint\n", idx_pts);
 
             // Print point pos in image frame.
             cv::Point2f p1 = pts_img1[idx_pts], p2 = pts_img2[idx_pts];

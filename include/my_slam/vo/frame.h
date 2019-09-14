@@ -1,9 +1,9 @@
 
 
-#ifndef FRAME_H
-#define FRAME_H
+#ifndef MY_SLAM_FRAME_H
+#define MY_SLAM_FRAME_H
 
-#include "my_slam/vo/common_include.h"
+#include "my_slam/common_include.h"
 #include "my_slam/basics/opencv_funcs.h"
 #include "my_slam/geometry/camera.h"
 #include "my_slam/geometry/feature_match.h"
@@ -34,23 +34,23 @@ public:
 
   // -- image features
   cv::Mat rgb_img_;
-  vector<KeyPoint> keypoints_;
+  vector<cv::KeyPoint> keypoints_;
   cv::Mat descriptors_;
   vector<vector<unsigned char>> kpts_colors_; // rgb colors
 
   // -- Matches with reference keyframe (for E/H or PnP)
   //  for (1) E/H at initialization stage and (2) triangulating 3d points at all stages.
-  vector<DMatch> matches_with_ref_;         // matches with reference frame
-  vector<DMatch> inliers_matches_with_ref_; // matches that satisify E or H's constraints, and
+  vector<cv::DMatch> matches_with_ref_;         // matches with reference frame
+  vector<cv::DMatch> inliers_matches_with_ref_; // matches that satisify E or H's constraints, and
 
   // -- vectors for triangulation
   vector<double> triangulation_angles_of_inliers_;
-  vector<DMatch> inliers_matches_for_3d_;                   // matches whose triangulation result is good.
+  vector<cv::DMatch> inliers_matches_for_3d_;                   // matches whose triangulation result is good.
   vector<cv::Point3f> inliers_pts3d_;                           // 3d points triangulated from inliers_matches_for_3d_
   unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
 
   // -- Matches with map points (for PnP)
-  vector<DMatch> matches_with_map_; // inliers matches index with respect to all the points
+  vector<cv::DMatch> matches_with_map_; // inliers matches index with respect to all the points
 
   // -- Camera
   geometry::Camera::Ptr camera_;
@@ -81,7 +81,7 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
   {
     geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
     kpts_colors_.clear();
-    for (KeyPoint kpt : keypoints_)
+    for (cv::KeyPoint kpt : keypoints_)
     {
       int x = floor(kpt.pt.x), y = floor(kpt.pt.y);
       kpts_colors_.push_back(basics::getPixelAt(rgb_img_, x, y));

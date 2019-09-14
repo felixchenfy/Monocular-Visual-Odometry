@@ -1,8 +1,8 @@
 
-#ifndef COMMONS_H
-#define COMMONS_H
+#ifndef MY_SLAM_COMMONS_H
+#define MY_SLAM_COMMONS_H
 
-#include "my_slam/vo/common_include.h"
+#include "my_slam/common_include.h"
 #include "my_slam/vo/frame.h"
 namespace my_slam
 {

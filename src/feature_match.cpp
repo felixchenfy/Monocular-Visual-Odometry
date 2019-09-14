@@ -1,5 +1,6 @@
 
 #include "my_slam/geometry/feature_match.h"
+#include "my_slam/basics/opencv_funcs.h"
 #include "my_slam/basics/config.h"
 
 namespace my_slam
@@ -90,7 +91,7 @@ void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
     for (auto &row : grid) //clear grid
         std::fill(row.begin(), row.end(), 0);
 
-    // Insert keypoints to grid. If not full, insert this keypoint to result
+    // Insert keypoints to grid. If not full, insert this cv::KeyPoint to result
     vector<cv::KeyPoint> tmp_keypoints;
     int cnt = 0;
     for (auto &kpt : keypoints)
@@ -157,7 +158,7 @@ void matchFeatures(
     { // method in Lowe's 2004 paper
         static Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
         // Calculate the features's distance of the two images.
-        vector<vector<DMatch>> knn_matches;
+        vector<vector<cv::DMatch>> knn_matches;
         vector<cv::Mat> train_desc(1, descriptors_2);
         matcher->add(train_desc);
         matcher->train();
@@ -222,12 +223,12 @@ void removeDuplicatedMatches(vector<cv::DMatch> &matches)
 }
 
 // --------------------- Other assistant functions ---------------------
-double computeMeanDistBetweenKeypoints(
-    const vector<KeyPoint> &kpts1, const vector<KeyPoint> &kpts2, const vector<DMatch> &matches)
+double computeMeanDistBetweenkeypoints(
+    const vector<cv::KeyPoint> &kpts1, const vector<cv::KeyPoint> &kpts2, const vector<cv::DMatch> &matches)
 {
 
     vector<double> dists_between_kpts;
-    for (const DMatch &d : matches)
+    for (const cv::DMatch &d : matches)
     {
         cv::Point2f p1 = kpts1[d.queryIdx].pt;
         cv::Point2f p2 = kpts2[d.trainIdx].pt;
@@ -242,24 +243,24 @@ double computeMeanDistBetweenKeypoints(
 
 // --------------------- datatype transform ---------------------
 
-vector<DMatch> inliers2DMatches(const vector<int> inliers)
+vector<cv::DMatch> inliers2DMatches(const vector<int> inliers)
 {
-    vector<DMatch> matches;
+    vector<cv::DMatch> matches;
     for (auto idx : inliers)
     {
-        // DMatch (int _queryIdx, int _trainIdx, float _distance)
-        matches.push_back(DMatch(idx, idx, 0.0));
+        // cv::DMatch (int _queryIdx, int _trainIdx, float _distance)
+        matches.push_back(cv::DMatch(idx, idx, 0.0));
     }
     return matches;
 }
-vector<KeyPoint> pts2keypts(const vector<cv::Point2f> pts)
+vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts)
 {
-    // cv.KeyPoint(	x, y, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
-    // cv.KeyPoint(	pt, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
-    vector<KeyPoint> keypts;
+    // cv.cv::KeyPoint(	x, y, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
+    // cv.cv::KeyPoint(	pt, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
+    vector<cv::KeyPoint> keypts;
     for (cv::Point2f pt : pts)
     {
-        keypts.push_back(KeyPoint(pt, 10));
+        keypts.push_back(cv::KeyPoint(pt, 10));
     }
     return keypts;
 }

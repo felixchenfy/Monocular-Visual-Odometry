@@ -1,8 +1,8 @@
 
-#ifndef EPIPOLAR_GEOMETRY_H
-#define EPIPOLAR_GEOMETRY_H
+#ifndef MY_SLAM_EPIPOLAR_GEOMETRY_H
+#define MY_SLAM_EPIPOLAR_GEOMETRY_H
 
-#include "my_slam/geometry/common_include.h"
+#include "my_slam/common_include.h"
 
 #include "my_slam/basics/opencv_funcs.h"
 #include "my_slam/geometry/camera.h" // transformations related to camera
@@ -56,24 +56,24 @@ double calcErrorSquare(const cv::Point2f &p1, const cv::Point2f &p2);
 
 // ---------------- datatype conversion ----------------
 
-vector<cv::Point2f> convertKeypointsToPoint2f(const vector<KeyPoint> kpts);
+vector<cv::Point2f> convertkeypointsToPoint2f(const vector<cv::KeyPoint> kpts);
 
 vector<cv::Point2f> getInlierPts(
     const vector<cv::Point2f> &pts,
     const vector<int> &inliers_idx);
 
-vector<KeyPoint> getInlierKpts(
-    const vector<KeyPoint> &kpts,
+vector<cv::KeyPoint> getInlierKpts(
+    const vector<cv::KeyPoint> &kpts,
     const vector<int> &inliers_idx);
 
 void extractPtsFromMatches(
     const vector<cv::Point2f> &points_1, const vector<cv::Point2f> &points_2,
-    const vector<DMatch> &matches,
+    const vector<cv::DMatch> &matches,
     vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2);
 
 void extractPtsFromMatches(
-    const vector<KeyPoint> &keypoints_1, const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
+    const vector<cv::KeyPoint> &keypoints_1, const vector<cv::KeyPoint> &keypoints_2,
+    const vector<cv::DMatch> &matches,
     vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2);
 // ---------------- assist ----------------
 // compute a point's pos on both cam1 and cam2's normalized plane

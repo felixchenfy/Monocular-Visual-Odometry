@@ -1,6 +1,6 @@
 
 
-#include "my_slam/vo/common_include.h"
+#include "my_slam/common_include.h"
 #include "my_slam/vo/mappoint.h"
 
 namespace my_slam{

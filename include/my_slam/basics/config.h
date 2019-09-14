@@ -2,8 +2,8 @@
  *    Modified from: https://github.com/gaoxiang12/slambook/blob/master/project/0.4/include/myslam/config.h
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef MY_SLAM_CONFIG_H
+#define MY_SLAM_CONFIG_H
 
 #include "my_slam/common_include.h"
 

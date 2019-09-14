@@ -73,7 +73,7 @@ Keep on estimating the next camera pose. First, find map points that are in the 
 ## 1.3. Local Map
 
 **Insert keyframe:** If the relative pose between current frame and previous keyframe is large enough with a translation or rotation larger than the threshold, insert current frame as a keyframe.   
-Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier keypoint hasn't been triangulated before, then triangulate it and push it to local map.
+Do feature matching between current and previous keyframe. Get inliers by epipoloar constraint. If a inlier cv::KeyPoint hasn't been triangulated before, then triangulate it and push it to local map.
 
 **Clean up local map:** Remove map points that are: (1) not in current view, (2) whose view_angle is larger than threshold, (3) rarely be matched as inlier point. (See Slambook Chapter 9.4.)
 

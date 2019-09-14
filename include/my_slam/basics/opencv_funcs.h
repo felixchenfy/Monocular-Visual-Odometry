@@ -2,8 +2,8 @@
 //  * Geometrical transformations.
 //  * Printing out result.
 
-#ifndef OPENCV_FUNCS_H
-#define OPENCV_FUNCS_H
+#ifndef MY_SLAM_OPENCV_FUNCS_H
+#define MY_SLAM_OPENCV_FUNCS_H
 
 #include "my_slam/common_include.h"
 
@@ -43,7 +43,7 @@ double calcAngleBetweenTwoVectors(const cv::Mat &vec1, const cv::Mat &vec2);
 // ---------------- Print ----------------
 void print_MatProperty(const cv::Mat &M); // print data type and size
 void print_R_t(const cv::Mat &R, const cv::Mat &t);
-string cvMatType2str(int cvMatType);
+string getCvMatType(int cvMatType);
 
 } // namespace basics
 } // namespace my_slam

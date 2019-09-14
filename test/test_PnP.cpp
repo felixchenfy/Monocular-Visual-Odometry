@@ -32,8 +32,8 @@ int main ( int argc, char** argv )
     cv::Mat d1 = imread ( folder+img_file3, IMREAD_UNCHANGED ); // 16 bit unsigned char, single channel
 
     // Extract keypoints and features. Match keypoints.
-    vector<KeyPoint> keypoints_1, keypoints_2;
-    vector<DMatch> matches;
+    vector<cv::KeyPoint> keypoints_1, keypoints_2;
+    vector<cv::DMatch> matches;
     cv::Mat descriptors_1, descriptors_2;
     string filename = "config/config.yaml";
     basics::Config::setParameterFile(filename);
@@ -49,7 +49,7 @@ int main ( int argc, char** argv )
     // Get points 3d and 2d correspondance
     vector<cv::Point3f> pts_3d; // a point's 3d pos in cam1 frame
     vector<cv::Point2f> pts_2d; // a point's 2d pos in image2 pixel frame
-    for ( DMatch m:matches )
+    for ( cv::DMatch m:matches )
     {
         ushort d = d1.ptr<unsigned short> (int ( keypoints_1[m.queryIdx].pt.y )) [ int ( keypoints_1[m.queryIdx].pt.x ) ];
         if ( d == 0 )   // bad depth

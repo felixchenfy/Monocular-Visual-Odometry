@@ -1,6 +1,6 @@
 
 
-#ifndef VO_H
+#ifndef MY_SLAM_VO_H
 #define VO_H
 
 // cv
@@ -19,7 +19,7 @@
 #include "my_slam/geometry/feature_match.h"
 #include "my_slam/geometry/motion_estimation.h"
 
-#include "my_slam/vo/common_include.h"
+#include "my_slam/common_include.h"
 #include "my_slam/vo/frame.h"
 #include "my_slam/vo/map.h"
 #include "my_slam/vo/mappoint.h"
@@ -59,7 +59,7 @@ public: // ------------------------------- Member variables --------------------
   Map::Ptr map_;
 
   // Map features
-  vector<KeyPoint> keypoints_curr_;
+  vector<cv::KeyPoint> keypoints_curr_;
   cv::Mat descriptors_curr_;
 
   vector<cv::Point3f> matched_pts_3d_in_map_;

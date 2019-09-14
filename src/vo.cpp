@@ -39,15 +39,15 @@ void VisualOdometry::getMappointsInCurrentView(
 void VisualOdometry::estimateMotionAnd3DPoints()
 {
     // -- Rename output
-    vector<DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
+    vector<cv::DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
     vector<cv::Point3f> &pts3d_in_curr = curr_->inliers_pts3d_;
-    vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
+    vector<cv::DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
     cv::Mat &T = curr_->T_w_c_;
 
     // -- Start: call this big function to compute everything
     // (1) motion from Essential && Homography, (2) inliers indices, (3) triangulated points
     vector<cv::Mat> list_R, list_t, list_normal;
-    vector<vector<DMatch>> list_matches; // these are the inliers matches
+    vector<vector<cv::DMatch>> list_matches; // these are the inliers matches
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
     const bool print_res = false, is_frame_cam2_to_cam1 = true;
     const bool compute_homography = true;
@@ -96,10 +96,10 @@ bool VisualOdometry::checkIfVoGoodToInit()
 {
 
     // -- Rename input
-    const vector<KeyPoint> &init_kpts = ref_->keypoints_;
-    const vector<KeyPoint> &curr_kpts = curr_->keypoints_;
-    // const vector<DMatch> &matches = curr_->inliers_matches_with_ref_;
-    const vector<DMatch> &matches = curr_->inliers_matches_for_3d_;
+    const vector<cv::KeyPoint> &init_kpts = ref_->keypoints_;
+    const vector<cv::KeyPoint> &curr_kpts = curr_->keypoints_;
+    // const vector<cv::DMatch> &matches = curr_->inliers_matches_with_ref_;
+    const vector<cv::DMatch> &matches = curr_->inliers_matches_for_3d_;
 
     // Params
     static const double min_pixel_dist = basics::Config::get<double>("min_pixel_dist");
@@ -116,7 +116,7 @@ bool VisualOdometry::checkIfVoGoodToInit()
     bool CRITERIA_1 = false; // init vo only when distance between matched keypoints are large
     {
         vector<double> dists_between_kpts;
-        double mean_dist = computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
+        double mean_dist = computeMeanDistBetweenkeypoints(init_kpts, curr_kpts, matches);
         printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
 
         CRITERIA_1 = mean_dist > min_pixel_dist;
@@ -162,7 +162,7 @@ void VisualOdometry::retainGoodTriangulationResult()
         basics::Config::get<double>("max_ratio_between_max_angle_and_median_angle");
 
     // -- Input
-    // 1. vector<DMatch>  curr_ -> inliers_matches_with_ref_; // input
+    // 1. vector<cv::DMatch>  curr_ -> inliers_matches_with_ref_; // input
     // 2. vector<cv::Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_; // update this
 
     // -- Output
@@ -171,7 +171,7 @@ void VisualOdometry::retainGoodTriangulationResult()
     // 2. update this:
     //vector<cv::Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_;
     // 3. generate this:
-    //vector<DMatch> inliers_matches: curr_ -> inliers_matches_for_3d_;
+    //vector<cv::DMatch> inliers_matches: curr_ -> inliers_matches_for_3d_;
 
     // -- Compute angles
     int N = (int)curr_->inliers_pts3d_.size();
@@ -212,7 +212,7 @@ void VisualOdometry::retainGoodTriangulationResult()
         if (old_angles[i] < min_triang_angle ||
             old_angles[i] / median_angle > max_ratio_between_max_angle_and_median_angle)
             continue;
-        DMatch dmatch = curr_->inliers_matches_with_ref_[i];
+        cv::DMatch dmatch = curr_->inliers_matches_with_ref_[i];
         curr_->inliers_matches_for_3d_.push_back(dmatch);
         curr_->inliers_pts3d_.push_back(old_inlier_points[i]);
         angles.push_back(old_angles[i]);
@@ -255,7 +255,7 @@ void VisualOdometry::poseEstimationPnP()
     vector<cv::Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
     for (int i = 0; i < curr_->matches_with_map_.size(); i++)
     {
-        DMatch &match = curr_->matches_with_map_[i];
+        cv::DMatch &match = curr_->matches_with_map_[i];
         MapPoint::Ptr mappoint = candidate_mappoints_in_map[match.queryIdx];
         pts_3d.push_back(mappoint->pos_);
         pts_2d.push_back(curr_->keypoints_[match.trainIdx].pt);
@@ -276,14 +276,14 @@ void VisualOdometry::poseEstimationPnP()
     vector<cv::Point2f> tmp_pts_2d;
     vector<cv::Point3f *> inlier_candidates_pos;
     vector<MapPoint::Ptr> inlier_candidates;
-    vector<DMatch> tmp_matches_with_map_;
+    vector<cv::DMatch> tmp_matches_with_map_;
     int num_inliers = pnp_inliers_mask.rows;
     for (int i = 0; i < num_inliers; i++)
     {
         int good_idx = pnp_inliers_mask.at<int>(i, 0);
 
         // good match
-        DMatch &match = curr_->matches_with_map_[good_idx];
+        cv::DMatch &match = curr_->matches_with_map_[good_idx];
         tmp_matches_with_map_.push_back(match);
 
         // good pts 2d
@@ -455,7 +455,7 @@ void VisualOdometry::pushCurrPointsToMap()
     const cv::Mat &T_w_curr = curr_->T_w_c_;
     const cv::Mat &descriptors = curr_->descriptors_;
     const vector<vector<unsigned char>> &kpts_colors = curr_->kpts_colors_;
-    const vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
+    const vector<cv::DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
 
     // -- Output
     unordered_map<int, PtConn> &inliers_to_mappt_connections = curr_->inliers_to_mappt_connections_;
@@ -463,7 +463,7 @@ void VisualOdometry::pushCurrPointsToMap()
     // -- Start
     for (int i = 0; i < inliers_matches_for_3d.size(); i++)
     {
-        const DMatch &dm = inliers_matches_for_3d[i];
+        const cv::DMatch &dm = inliers_matches_for_3d[i];
         int pt_idx = dm.trainIdx;
         int map_point_id;
 

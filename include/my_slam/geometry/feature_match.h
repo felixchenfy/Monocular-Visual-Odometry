@@ -1,8 +1,8 @@
 
-#ifndef FEATURE_MATCH_H
-#define FEATURE_MATCH_H
+#ifndef MY_SLAM_FEATURE_MATCH_H
+#define MY_SLAM_FEATURE_MATCH_H
 
-#include "my_slam/geometry/common_include.h"
+#include "my_slam/common_include.h"
 
 namespace my_slam
 {
@@ -33,8 +33,8 @@ void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
                          const bool SET_PARAM_BY_YAML = true);
 
 // --------------------- Other assistant functions ---------------------
-double computeMeanDistBetweenKeypoints(
-    const vector<KeyPoint> &kpts1, const vector<KeyPoint> &kpts2, const vector<DMatch> &matches);
+double computeMeanDistBetweenkeypoints(
+    const vector<cv::KeyPoint> &kpts1, const vector<cv::KeyPoint> &kpts2, const vector<cv::DMatch> &matches);
 
 // --------------------- datatype transform ---------------------
 vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);

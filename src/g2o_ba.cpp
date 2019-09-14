@@ -3,10 +3,8 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 */
 
 #include "my_slam/optimization/g2o_ba.h"
-#include "my_slam/basics/eigen_funcs.h"
 
-#include <cmath>
-#include <stdio.h>
+#include "my_slam/basics/eigen_funcs.h"
 
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_unary_edge.h>
@@ -32,6 +30,7 @@ Eigen::Matrix2d mat2eigen(const cv::Mat &mat)
     mat_eigen << mat.at<double>(0, 0), mat.at<double>(0, 1), mat.at<double>(1, 0), mat.at<double>(1, 1);
     return mat_eigen;
 }
+
 void optimizeSingleFrame(
     const vector<cv::Point2f *> &points_2d,
     const cv::Mat &K,
@@ -105,12 +104,12 @@ void optimizeSingleFrame(
     int optimize_iters = 50;
     if (IF_PRINT_TIME)
     {
-        chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         optimizer.setVerbose(true);
         optimizer.initializeOptimization();
         optimizer.optimize(optimize_iters);
-        chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-        chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
         cout << "optimization costs time: " << time_used.count() << " seconds." << endl;
     }
     else
@@ -174,7 +173,7 @@ void bundleAdjustment(
     const vector<vector<cv::Point2f *>> &v_pts_2d,
     const vector<vector<int>> &v_pts_2d_to_3d_idx,
     const cv::Mat &K,
-    unordered_map<int, cv::Point3f *> &pts_3d,
+    std::unordered_map<int, cv::Point3f *> &pts_3d,
     vector<cv::Mat *> &v_camera_g2o_poses,
     const cv::Mat &information_matrix,
     bool fix_map_pts, bool update_map_pts)
@@ -223,8 +222,8 @@ void bundleAdjustment(
     optimizer.addParameter(camera);
 
     // Points pos in world frame
-    unordered_map<int, g2o::VertexSBAPointXYZ *> g2o_points_3d;
-    unordered_map<int, int> pts3dID_to_vertexID;
+    std::unordered_map<int, g2o::VertexSBAPointXYZ *> g2o_points_3d;
+    std::unordered_map<int, int> pts3dID_to_vertexID;
     for (auto it = pts_3d.begin(); it != pts_3d.end(); it++) // landmarks
     {
         int pt3d_id = it->first;
@@ -276,12 +275,12 @@ void bundleAdjustment(
     int optimize_iters = 50;
     if (IF_PRINT_TIME_AND_RES)
     {
-        chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         optimizer.setVerbose(true);
         optimizer.initializeOptimization();
         optimizer.optimize(optimize_iters);
-        chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-        chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_used = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
         cout << "optimization costs time: " << time_used.count() << " seconds." << endl;
     }
     else

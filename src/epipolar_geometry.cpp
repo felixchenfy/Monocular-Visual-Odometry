@@ -227,7 +227,7 @@ double calcErrorSquare(const cv::Point2f &p1, const cv::Point2f &p2)
 
 // ---------------- datatype conversion ----------------
 
-vector<cv::Point2f> convertKeypointsToPoint2f(const vector<KeyPoint> kpts)
+vector<cv::Point2f> convertkeypointsToPoint2f(const vector<cv::KeyPoint> kpts)
 {
     vector<cv::Point2f> pts;
     for (auto &kpt : kpts)
@@ -245,18 +245,18 @@ vector<cv::Point2f> getInlierPts(
     return res;
 }
 
-vector<KeyPoint> getInlierKpts(
-    const vector<KeyPoint> &kpts,
+vector<cv::KeyPoint> getInlierKpts(
+    const vector<cv::KeyPoint> &kpts,
     const vector<int> &inliers_idx)
 {
-    vector<KeyPoint> res;
+    vector<cv::KeyPoint> res;
     for (auto idx : inliers_idx)
         res.push_back(kpts[idx]);
     return res;
 }
 void extractPtsFromMatches(
     const vector<cv::Point2f> &points_1, const vector<cv::Point2f> &points_2,
-    const vector<DMatch> &matches,
+    const vector<cv::DMatch> &matches,
     vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
 {
     pts1.clear();
@@ -269,9 +269,9 @@ void extractPtsFromMatches(
 }
 
 void extractPtsFromMatches(
-    const vector<KeyPoint> &keypoints_1,
-    const vector<KeyPoint> &keypoints_2,
-    const vector<DMatch> &matches,
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const vector<cv::DMatch> &matches,
     vector<cv::Point2f> &pts1,
     vector<cv::Point2f> &pts2)
 {

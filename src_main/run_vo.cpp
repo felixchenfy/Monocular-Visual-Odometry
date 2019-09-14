@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     basics::writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
 
     // Wait for user close
-    while (!pcl_displayer->wasStopped())
+    while (!pcl_displayer->isStopped())
         pcl_displayer->spinOnce(10);
     cv::destroyAllWindows();
 }
@@ -165,7 +165,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     if (1) // draw all & inlier keypoints in the current frame
     {
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
-        vector<KeyPoint> inliers_kpt;
+        vector<cv::KeyPoint> inliers_kpt;
         if (!vo->isInitialized() || first_time_vo_init)
         {
             for (auto &m : frame->matches_with_ref_)
@@ -282,7 +282,7 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
     // -- Display
     pcl_displayer->update();
     pcl_displayer->spinOnce(10);
-    if (pcl_displayer->wasStopped())
+    if (pcl_displayer->isStopped())
         return false;
     else
         return true;

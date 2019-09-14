@@ -1,8 +1,8 @@
 
-#ifndef MAP_H
-#define MAP_H
+#ifndef MY_SLAM_MAP_H
+#define MY_SLAM_MAP_H
 
-#include "my_slam/vo/common_include.h"
+#include "my_slam/common_include.h"
 #include "my_slam/vo/frame.h"
 #include "my_slam/vo/mappoint.h"
 

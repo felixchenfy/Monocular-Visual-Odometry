@@ -1,7 +1,7 @@
 // Test my wrapped up pcl functions for displaying:
 //  * A moving camera.
 //  * Trajecotry of the camera.
-//  * Keep on adding a keypoint into the cloud.
+//  * Keep on adding a cv::KeyPoint into the cloud.
 // If this works, the lib funcs can be used for my SLAM project.
 
 #include <iostream>
@@ -71,7 +71,7 @@ int main()
         // pcl_displayer->addPoint(kpt_3d_pos_in_world, r, g, b); // This function is deprecated
         pcl_displayer->update();
         pcl_displayer->spinOnce(150);
-        if (pcl_displayer->wasStopped())
+        if (pcl_displayer->isStopped())
             break;
     }
     return (1);
