@@ -6,6 +6,7 @@ using namespace std;
 using namespace cv;
 using namespace Eigen;
 
+namespace my_slam{
 namespace display
 {
 
@@ -90,3 +91,4 @@ void setPointPos(PointXYZ &point, cv::Mat p)
     setPointPos(point, p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
 } // namespace display
+} // namespace my_slam

@@ -17,6 +17,8 @@
 
 #include "my_slam/basics/eigen_funcs.h"
 
+namespace my_slam
+{
 namespace display
 {
 using namespace std;
@@ -49,5 +51,6 @@ void setViewerPose (visualization::PCLVisualizer& viewer,
     double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z);
 
 } // namespace display
+} // namespace my_slam
 
 #endif

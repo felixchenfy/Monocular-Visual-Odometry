@@ -58,6 +58,7 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &event, void 
 
 // --------------------- Class definition -----------------------
 
+namespace my_slam{
 namespace display
 {
 using namespace display_private;
@@ -264,3 +265,4 @@ bool PclViewer::wasStopped()
 }
 
 } // namespace display
+} // namespace my_slam

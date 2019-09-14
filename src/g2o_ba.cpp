@@ -21,29 +21,32 @@ https://github.com/gaoxiang12/slambook/blob/master/ch7/pose_estimation_3d2d.cpp
 
 #include <chrono> // timer
 
+namespace my_slam
+{
 namespace optimization
 {
 
-Eigen::Matrix2d mat2eigen(const cv::Mat &mat){
+Eigen::Matrix2d mat2eigen(const cv::Mat &mat)
+{
     Eigen::Matrix2d mat_eigen;
-    mat_eigen<<mat.at<double>(0,0), mat.at<double>(0,1), mat.at<double>(1,0), mat.at<double>(1,1);
+    mat_eigen << mat.at<double>(0, 0), mat.at<double>(0, 1), mat.at<double>(1, 0), mat.at<double>(1, 1);
     return mat_eigen;
 }
 void optimizeSingleFrame(
-    const vector<Point2f*> &points_2d,
-    const Mat &K,
-    vector<Point3f*> &points_3d,
-    Mat &pose_src,
+    const vector<cv::Point2f *> &points_2d,
+    const cv::Mat &K,
+    vector<cv::Point3f *> &points_3d,
+    cv::Mat &pose_src,
     bool fix_map_pts, bool update_map_pts)
 {
-    const Mat pose_src0 = pose_src.clone();
+    const cv::Mat pose_src0 = pose_src.clone();
 
     // Change pose format from OpenCV to Sophus::SE3
-    Mat T_cam_to_world_cv = pose_src.inv();
+    cv::Mat T_cam_to_world_cv = pose_src.inv();
     Sophus::SE3 T_cam_to_world = basics::transT_cv2sophus(T_cam_to_world_cv);
 
     // Init g2o
-    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> Block; // dim(pose) = 6, dim(landmark) = 3
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> Block;                                  // dim(pose) = 6, dim(landmark) = 3
     Block::LinearSolverType *linearSolver = new g2o::LinearSolverCSparse<Block::PoseMatrixType>(); // solver for linear equation
     Block *solver_ptr = new Block(linearSolver);                                                   // solver for matrix block
     g2o::OptimizationAlgorithmLevenberg *solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
@@ -64,10 +67,10 @@ void optimizeSingleFrame(
     // Points pos in world frame
     int index = 1;
     vector<g2o::VertexSBAPointXYZ *> g2o_points_3d;
-    for (const Point3f* p : points_3d) // landmarks
+    for (const cv::Point3f *p : points_3d) // landmarks
     {
         g2o::VertexSBAPointXYZ *point = new g2o::VertexSBAPointXYZ();
-        if(fix_map_pts)
+        if (fix_map_pts)
             point->setFixed(true);
         point->setId(index++);
         point->setEstimate(Eigen::Vector3d(p->x, p->y, p->z));
@@ -84,7 +87,7 @@ void optimizeSingleFrame(
 
     // -- Add edges, which define the error/cost function.
     index = 1;
-    for (const Point2f *p : points_2d)
+    for (const cv::Point2f *p : points_2d)
     {
         g2o::EdgeProjectXYZ2UV *edge = new g2o::EdgeProjectXYZ2UV();
         edge->setId(index);
@@ -125,10 +128,9 @@ void optimizeSingleFrame(
     // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
     pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
 
-
     // 2. Points 3d world pos
     int N = points_3d.size();
-    Point3f point_src0(*points_3d[0]);
+    cv::Point3f point_src0(*points_3d[0]);
     Eigen::Vector3d point_dst0 = g2o_points_3d[0]->estimate();
     for (int i = 0; update_map_pts && i < N; i++)
     {
@@ -139,11 +141,9 @@ void optimizeSingleFrame(
     }
 
     printf("Point 0: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
-                point_src0.x, point_src0.y, point_src0.z,
-                point_dst0(0, 0), point_dst0(1, 0), point_dst0(2, 0));
-
+           point_src0.x, point_src0.y, point_src0.z,
+           point_dst0(0, 0), point_dst0(1, 0), point_dst0(2, 0));
 }
-
 
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
@@ -171,12 +171,12 @@ void optimizeSingleFrame(
 //------------------------------------------------------------------------------------------
 
 void bundleAdjustment(
-    const vector<vector<Point2f *>> &v_pts_2d,
+    const vector<vector<cv::Point2f *>> &v_pts_2d,
     const vector<vector<int>> &v_pts_2d_to_3d_idx,
-    const Mat &K,
-    unordered_map<int, Point3f *> &pts_3d,
-    vector<Mat *> &v_camera_g2o_poses,
-    const Mat &information_matrix,
+    const cv::Mat &K,
+    unordered_map<int, cv::Point3f *> &pts_3d,
+    vector<cv::Mat *> &v_camera_g2o_poses,
+    const cv::Mat &information_matrix,
     bool fix_map_pts, bool update_map_pts)
 {
 
@@ -194,7 +194,7 @@ void bundleAdjustment(
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> Block; // dim(pose) = 6, dim(landmark) = 3
     Block::LinearSolverType *linearSolver;
     // linearSolver = new g2o::LinearSolverCSparse<Block::PoseMatrixType>(); // solver for linear equation
-    linearSolver =  new g2o::LinearSolverDense<Block::PoseMatrixType>();
+    linearSolver = new g2o::LinearSolverDense<Block::PoseMatrixType>();
     Block *solver_ptr = new Block(linearSolver); // solver for matrix block
     g2o::OptimizationAlgorithmLevenberg *solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
     g2o::SparseOptimizer optimizer;
@@ -209,7 +209,7 @@ void bundleAdjustment(
         g2o::VertexSE3Expmap *pose = new g2o::VertexSE3Expmap(); // camera pose
         pose->setId(vertex_id++);
         // if (num_frames > 1 && ith_frame == num_frames - 1)
-            // pose->setFixed(true); // Fix the last one -- which is the earliest frame
+        // pose->setFixed(true); // Fix the last one -- which is the earliest frame
         pose->setEstimate(g2o::SE3Quat(
             v_T_cam_to_world[ith_frame].rotation_matrix(),
             v_T_cam_to_world[ith_frame].translation()));
@@ -228,11 +228,11 @@ void bundleAdjustment(
     for (auto it = pts_3d.begin(); it != pts_3d.end(); it++) // landmarks
     {
         int pt3d_id = it->first;
-        Point3f *p = it->second;
-        
+        cv::Point3f *p = it->second;
+
         g2o::VertexSBAPointXYZ *point = new g2o::VertexSBAPointXYZ();
         point->setId(vertex_id);
-        if(fix_map_pts)
+        if (fix_map_pts)
             point->setFixed(true);
 
         pts3dID_to_vertexID[pt3d_id] = vertex_id;
@@ -244,7 +244,7 @@ void bundleAdjustment(
     }
 
     // -- Add edges, which define the error/cost function.
-    
+
     // Set information matrix
     int edge_id = 0;
     Eigen::Matrix2d information_matrix_eigen = mat2eigen(information_matrix);
@@ -253,7 +253,7 @@ void bundleAdjustment(
         int num_pts_2d = v_pts_2d[ith_frame].size();
         for (int j = 0; j < num_pts_2d; j++)
         {
-            const Point2f *p = v_pts_2d[ith_frame][j];
+            const cv::Point2f *p = v_pts_2d[ith_frame][j];
             int pt3d_id = v_pts_2d_to_3d_idx[ith_frame][j];
 
             g2o::EdgeProjectXYZ2UV *edge = new g2o::EdgeProjectXYZ2UV();
@@ -261,12 +261,12 @@ void bundleAdjustment(
             edge->setVertex(0, // XYZ point
                             dynamic_cast<g2o::VertexSBAPointXYZ *>(optimizer.vertex(pts3dID_to_vertexID[pt3d_id])));
             edge->setVertex(1, // camera pose
-                            dynamic_cast<g2o::VertexSE3Expmap*> (optimizer.vertex(ith_frame)));
+                            dynamic_cast<g2o::VertexSE3Expmap *>(optimizer.vertex(ith_frame)));
 
             edge->setMeasurement(Eigen::Vector2d(p->x, p->y));
             edge->setParameterId(0, 0);
             edge->setInformation(information_matrix_eigen);
-            edge->setRobustKernel( new g2o::RobustKernelHuber() );
+            edge->setRobustKernel(new g2o::RobustKernelHuber());
             optimizer.addEdge(edge);
         }
     }
@@ -301,7 +301,7 @@ void bundleAdjustment(
         Sophus::SE3 T_cam_to_world = Sophus::SE3(
             g2o_poses[i]->estimate().rotation(),
             g2o_poses[i]->estimate().translation());
-        Mat pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
+        cv::Mat pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
         pose_src.copyTo(*v_camera_g2o_poses[i]);
     }
 
@@ -309,7 +309,7 @@ void bundleAdjustment(
     for (auto it = pts_3d.begin(); update_map_pts && it != pts_3d.end(); it++)
     {
         int pt3d_id = it->first;
-        Point3f *p = it->second;
+        cv::Point3f *p = it->second;
         Eigen::Vector3d p_res = g2o_points_3d[pt3d_id]->estimate();
         p->x = p_res(0, 0);
         p->y = p_res(1, 0);
@@ -318,3 +318,4 @@ void bundleAdjustment(
 }
 
 } // namespace optimization
+} // namespace my_slam

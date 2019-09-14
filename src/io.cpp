@@ -9,21 +9,24 @@
 
 using namespace std;
 
+namespace my_slam
+{
 namespace basics
 {
 
-// -- Read in from config file: image paths, camera intrinsics
-
-// Read image paths
-vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
+vector<string> readImagePaths(
+    const string &config_file, bool print_res, 
+    const string &key_dataset_dir, 
+    const string &key_num_images,
+    const string &image_formatting)
 {
-    basics::Config::setParameterFile(path_of_config_file);
+    basics::Config::setParameterFile(config_file);
 
     // Set up image_paths
     vector<string> image_paths;
-    string dataset_dir = basics::Config::get<string>("dataset_dir"); // get dataset_dir from config
-    int num_images = basics::Config::get<int>("num_images");
-    boost::format filename_fmt(dataset_dir + "/rgb_%05d.png");
+    string dataset_dir = basics::Config::get<string>(key_dataset_dir);
+    int num_images = basics::Config::get<int>(key_num_images);
+    boost::format filename_fmt(dataset_dir + image_formatting);
     for (int i = 0; i < num_images; i++)
     {
         image_paths.push_back((filename_fmt % i).str());
@@ -40,14 +43,12 @@ vector<string> readImagePaths(const string &path_of_config_file, bool print_res)
             cout << s << endl;
         cout << endl;
     }
-    // Return
     return image_paths;
 }
 
-// Read camera intrinsics
-cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res)
+cv::Mat readCameraIntrinsics(const string &config_file, bool print_res)
 {
-    basics::Config::setParameterFile(path_of_config_file);
+    basics::Config::setParameterFile(config_file);
     double fx = basics::Config::get<double>("camera_info.fx");
     double fy = basics::Config::get<double>("camera_info.fy");
     double cx = basics::Config::get<double>("camera_info.cx");
@@ -56,9 +57,7 @@ cv::Mat readCameraIntrinsics(const string &path_of_config_file, bool print_res)
     return K;
 }
 
-// -- Read/Write camera pose to file
 
-// Write pose to file: x, y, z, 1st row of R, 2nd row of R, 3rd row of R
 void writePoseToFile(const string filename, vector<cv::Mat> list_T)
 {
     ofstream fout;
@@ -87,7 +86,6 @@ void writePoseToFile(const string filename, vector<cv::Mat> list_T)
     fout.close();
 }
 
-// Read pose from file
 vector<cv::Mat> readPoseFromFile(const string filename)
 {
     // Output
@@ -115,8 +113,7 @@ vector<cv::Mat> readPoseFromFile(const string filename)
             //              pose[6], pose[7], pose[8], pose[1],
             //              pose[9], pose[10], pose[11], pose[2],
             //              0, 0, 0, 1);
-            cv::Mat T = (cv::Mat_<double>(4, 4) << 
-                        pose[3], pose[6], pose[9], pose[0],
+            cv::Mat T = (cv::Mat_<double>(4, 4) << pose[3], pose[6], pose[9], pose[0],
                          pose[4], pose[7], pose[10], pose[1],
                          pose[5], pose[8], pose[11], pose[2],
                          0, 0, 0, 1);
@@ -130,3 +127,4 @@ vector<cv::Mat> readPoseFromFile(const string filename)
 }
 
 } // namespace basics
+} // namespace my_slam

@@ -9,7 +9,6 @@ In this way, there is no compiling but only linking to pcl when compiling "main.
 Instead of 15+ seconds, the linking only takes like a 3 seconds.
 */
 
-
 #ifndef pcl_display_H
 #define pcl_display_H
 
@@ -17,8 +16,8 @@ Instead of 15+ seconds, the linking only takes like a 3 seconds.
 #include <string>
 #include <opencv2/core/core.hpp>
 
-
-
+namespace my_slam
+{
 namespace display
 {
 using namespace std;
@@ -27,40 +26,39 @@ typedef unsigned char uchar;
 class PclViewer
 {
 
-  public:
-    // ----------------- variables -----------------
-    typedef shared_ptr<PclViewer> Ptr;
+public:
+  // ----------------- variables -----------------
+  typedef shared_ptr<PclViewer> Ptr;
 
-    string viewer_name_;
+  string viewer_name_;
 
-    string camera_frame_name_;
-    cv::Mat cam_R_vec_;
-    cv::Mat cam_t_;
+  string camera_frame_name_;
+  cv::Mat cam_R_vec_;
+  cv::Mat cam_t_;
 
-    string truth_camera_frame_name_;
-    cv::Mat truth_cam_R_vec_;
-    cv::Mat truth_cam_t_;
+  string truth_camera_frame_name_;
+  cv::Mat truth_cam_R_vec_;
+  cv::Mat truth_cam_t_;
 
-  public:
-    // ----------------- constructor -----------------
-    PclViewer( 
-      double x = 1.0, double y = -1.0, double z = -1.0, 
-      double rot_axis_x = -0.5, double rot_axis_y = 0, double rot_axis_z = 0
-    );
+public:
+  // ----------------- constructor -----------------
+  PclViewer(
+      double x = 1.0, double y = -1.0, double z = -1.0,
+      double rot_axis_x = -0.5, double rot_axis_y = 0, double rot_axis_z = 0);
 
-  public:
-    void updateMapPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
-    void updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
-    void updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+public:
+  void updateMapPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+  void updateCurrPoints(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
+  void updatePointsInView(const vector<cv::Point3f> &vec_pos, const vector<vector<unsigned char>> &vec_color);
 
-    void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_keyframe);
-    void updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t); 
-    void update();
-    void spinOnce(unsigned int millisecond);
-    bool wasStopped();
-    bool checkKeyPressed();
-
+  void updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_keyframe);
+  void updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t);
+  void update();
+  void spinOnce(unsigned int millisecond);
+  bool wasStopped();
+  bool checkKeyPressed();
 };
-}
+} // namespace display
+} // namespace my_slam
 
 #endif

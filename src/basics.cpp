@@ -6,7 +6,10 @@
 #include <iterator>
 #include <sstream>
 #include <assert.h>
+#include <algorithm>    // std::set_intersection, std::sort
 
+namespace my_slam
+{
 namespace basics
 {
 bool str2bool(const string &s)
@@ -28,7 +31,7 @@ bool str2bool(const string &s)
 
 string int2str(int num, int width, char char_to_fill)
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << std::setw(width) << std::setfill(char_to_fill) << num;
     return ss.str();
 }
@@ -56,3 +59,4 @@ vector<int> getIntersection(vector<int> v1, vector<int> v2)
 }
 
 } // namespace basics
+} // namespace my_slam

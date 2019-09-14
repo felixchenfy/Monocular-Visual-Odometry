@@ -23,8 +23,10 @@
 #include "my_slam/vo/frame.h"
 #include "my_slam/vo/map.h"
 #include "my_slam/vo/mappoint.h"
-#include "my_slam/vo/commons.h"
+#include "my_slam/vo/vo_commons.h"
 
+namespace my_slam
+{
 namespace vo
 {
 using namespace std;
@@ -35,7 +37,7 @@ class VisualOdometry
 {
 
 public: // ------------------------------- Member variables -------------------------------
-  typedef shared_ptr<VisualOdometry> Ptr;
+  typedef std::shared_ptr<VisualOdometry> Ptr;
 
   enum VOState
   {
@@ -50,7 +52,7 @@ public: // ------------------------------- Member variables --------------------
   Frame::Ptr curr_;
   Frame::Ptr ref_;
   Frame::Ptr newest_frame_; // temporarily store the newest frame
-  Mat prev_T_w_c_;          // pos of previous frame
+  cv::Mat prev_T_w_c_;          // pos of previous frame
   deque<Frame::Ptr> frames_buff_;
 
   // Map
@@ -58,21 +60,23 @@ public: // ------------------------------- Member variables --------------------
 
   // Map features
   vector<KeyPoint> keypoints_curr_;
-  Mat descriptors_curr_;
-  
-  vector<Point3f> matched_pts_3d_in_map_;
+  cv::Mat descriptors_curr_;
+
+  vector<cv::Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
-// ================================ Functions ================================
+  // ================================ Functions ================================
 public: // basics
   VisualOdometry();
   void addFrame(vo::Frame::Ptr frame);
-  void pushFrameToBuff(Frame::Ptr frame){
-    const int BUFF_SIZE=20;
+  void pushFrameToBuff(Frame::Ptr frame)
+  {
+    const int BUFF_SIZE = 20;
     frames_buff_.push_back(frame);
-    if(frames_buff_.size()>BUFF_SIZE)
+    if (frames_buff_.size() > BUFF_SIZE)
       frames_buff_.pop_front();
   }
+
 public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
   bool checkIfVoGoodToInit();
@@ -94,14 +98,14 @@ public: // ------------------------------- Mapping -----------------------------
   void addKeyFrame(Frame::Ptr frame);
   void getMappointsInCurrentView(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
-      Mat &corresponding_mappoints_descriptors);
+      cv::Mat &corresponding_mappoints_descriptors);
   void pushCurrPointsToMap();
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
-  
+
 public: // ------------------------------- BundleAdjustment -------------------------------
   void callBundleAdjustment();
 };
 
 } // namespace vo
-
+} // namespace my_slam
 #endif // FRAME_H

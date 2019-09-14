@@ -21,13 +21,13 @@ using namespace Eigen;
 void printRtT(Eigen::Matrix3d &Re, Eigen::Vector3d &te,
               Eigen::Isometry3d &Te, Eigen::Affine3d &Te_affine);
 
-void transRtFromCV2Eigen_good_method(const Mat &R, const Mat &t,
+void transRtFromCV2Eigen_good_method(const cv::Mat &R, const cv::Mat &t,
                                      Eigen::Matrix3d &Re, Eigen::Vector3d &te,
                                      Eigen::Isometry3d &Te, Eigen::Affine3d &Te_affine);
-void transRtFromCV2Eigen_manually(const Mat &R_vec, const Mat &t,
+void transRtFromCV2Eigen_manually(const cv::Mat &R_vec, const cv::Mat &t,
                                   Eigen::Matrix3d &Re, Eigen::Vector3d &te,
                                   Eigen::Isometry3d &Te, Eigen::Affine3d &Te_affine);
-void transRtFromCV2Eigen_copy_elements(const Mat &R, const Mat &t,
+void transRtFromCV2Eigen_copy_elements(const cv::Mat &R, const cv::Mat &t,
                                        Eigen::Isometry3d &Te);
 void notes_about_AngelAxis();
 
@@ -35,9 +35,9 @@ int main(void)
 {
 
     // Suppose I get camera pose from OpenCV.
-    Mat t = (Mat_<double>(3, 1) << 1, 2, 3);
-    Mat R_vec = (Mat_<double>(3, 1) << 0, 0.1, 0);
-    Mat R;
+    cv::Mat t = (cv::Mat_<double>(3, 1) << 1, 2, 3);
+    cv::Mat R_vec = (cv::Mat_<double>(3, 1) << 0, 0.1, 0);
+    cv::Mat R;
     cv::Rodrigues(R_vec, R);
 
     // Print
@@ -72,7 +72,7 @@ void printRtT(Eigen::Matrix3d &Re, Eigen::Vector3d &te,
     cout << "--------------------------------------" << endl;
 }
 
-void transRtFromCV2Eigen_good_method(const Mat &R, const Mat &t,
+void transRtFromCV2Eigen_good_method(const cv::Mat &R, const cv::Mat &t,
                                      Eigen::Matrix3d &Re, Eigen::Vector3d &te,
                                      Eigen::Isometry3d &Te, Eigen::Affine3d &Te_affine)
 {
@@ -97,7 +97,7 @@ void transRtFromCV2Eigen_good_method(const Mat &R, const Mat &t,
     printRtT(Re, te, Te, Te_affine);
 }
 
-void transRtFromCV2Eigen_manually(const Mat &R_vec, const Mat &t,
+void transRtFromCV2Eigen_manually(const cv::Mat &R_vec, const cv::Mat &t,
                                   Eigen::Matrix3d &Re, Eigen::Vector3d &te,
                                   Eigen::Isometry3d &Te, Eigen::Affine3d &Te_affine)
 {
@@ -123,18 +123,18 @@ void transRtFromCV2Eigen_manually(const Mat &R_vec, const Mat &t,
     // print result
     printRtT(Re, te, Te, Te_affine);
 }
-Mat convertRt2T(const Mat &R, const Mat &t)
+cv::Mat convertRt2T(const cv::Mat &R, const cv::Mat &t)
 {
-    Mat T = (Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
+    cv::Mat T = (cv::Mat_<double>(4, 4) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
              R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
              R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0),
              0, 0, 0, 1);
     return T;
 }
-void transRtFromCV2Eigen_copy_elements(const Mat &R, const Mat &t,
+void transRtFromCV2Eigen_copy_elements(const cv::Mat &R, const cv::Mat &t,
                                        Eigen::Isometry3d &Te)
 {
-    Mat T_cv2 = convertRt2T(R, t);
+    cv::Mat T_cv2 = convertRt2T(R, t);
     for (int row = 0; row < 4; ++row)
         for (int col = 0; col < 4; ++col)
             Te.matrix()(row, col) = T_cv2.at<double>(row, col);

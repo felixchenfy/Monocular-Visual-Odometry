@@ -4,6 +4,8 @@
 
 #include "my_slam/geometry/common_include.h"
 
+namespace my_slam
+{
 namespace geometry
 {
 using namespace std;
@@ -39,5 +41,6 @@ vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);
 vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts);
 
 } // namespace geometry
+} // namespace my_slam
 
 #endif

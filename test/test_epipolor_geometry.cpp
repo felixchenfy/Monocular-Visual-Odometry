@@ -23,17 +23,16 @@ bin/test_epipolor_geometry image0001.jpg image0015.jpg
 #include "my_slam/basics/config.h"
 
 using namespace std;
-using namespace cv;
-using namespace geometry;
+using namespace my_slam;
 
 int main(int argc, char **argv)
 {
 
     // camera intrinsics
-    Mat K_fr1 = (Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
-    Mat K_fr2 = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1); // fr2 dataset
-    Mat K_mtb = (Mat_<double>(3, 3) << 615, 0, 320, 0, 615, 240, 0, 0, 1);         // fr2 dataset
-    Mat K;
+    cv::Mat K_fr1 = (cv::Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
+    cv::Mat K_fr2 = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1); // fr2 dataset
+    cv::Mat K_mtb = (cv::Mat_<double>(3, 3) << 615, 0, 320, 0, 615, 240, 0, 0, 1);         // fr2 dataset
+    cv::Mat K;
 
     // read in images
     string img_file1, img_file2;
@@ -53,7 +52,7 @@ int main(int argc, char **argv)
         K = K_mtb;
     }
 
-    if (IDX_TEST_CASE == 1) // keypoints are not on the same plane.
+    else if (IDX_TEST_CASE == 1) // keypoints are not on the same plane.
     {
         img_file1 = "fr1_1_1.png";
         img_file2 = "fr1_1_2.png";
@@ -72,45 +71,48 @@ int main(int argc, char **argv)
         K = K_fr2;
     }
 
-    Mat img_1 = imread(folder + img_file1);
-    Mat img_2 = imread(folder + img_file2);
+    //====================================== Main program starts =========================================
+
+    // Read image
+    cv::Mat img_1 = imread(folder + img_file1);
+    cv::Mat img_2 = imread(folder + img_file2);
 
     // Extract keypoints and features. Match keypoints
     vector<KeyPoint> keypoints_1, keypoints_2;
     vector<DMatch> matches;
-    Mat descriptors_1, descriptors_2;
+    cv::Mat descriptors_1, descriptors_2;
     // doFeatureMatching(img_1, img_2, keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches);
 
     bool PRINT_RES = true, SET_PARAM_BY_YAML = false;
     if (0)
     {                                                            // use default settings
-        extractKeyPoints(img_1, keypoints_1, SET_PARAM_BY_YAML); // Choose the config file before running this
-        extractKeyPoints(img_2, keypoints_2, SET_PARAM_BY_YAML);
+        geometry::extractKeyPoints(img_1, keypoints_1, SET_PARAM_BY_YAML); // Choose the config file before running this
+        geometry::extractKeyPoints(img_2, keypoints_2, SET_PARAM_BY_YAML);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        computeDescriptors(img_1, keypoints_1, descriptors_1, SET_PARAM_BY_YAML);
-        computeDescriptors(img_2, keypoints_2, descriptors_2, SET_PARAM_BY_YAML);
-        matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES, SET_PARAM_BY_YAML);
+        geometry::computeDescriptors(img_1, keypoints_1, descriptors_1, SET_PARAM_BY_YAML);
+        geometry::computeDescriptors(img_2, keypoints_2, descriptors_2, SET_PARAM_BY_YAML);
+        geometry::matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES, SET_PARAM_BY_YAML);
     }
     else
     { // use settings in .yaml file
         string filename = "config/config.yaml";
         basics::Config::setParameterFile(filename);
-        extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
-        extractKeyPoints(img_2, keypoints_2);
+        geometry::extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
+        geometry::extractKeyPoints(img_2, keypoints_2);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        computeDescriptors(img_1, keypoints_1, descriptors_1);
-        computeDescriptors(img_2, keypoints_2, descriptors_2);
-        matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES);
+        geometry::computeDescriptors(img_1, keypoints_1, descriptors_1);
+        geometry::computeDescriptors(img_2, keypoints_2, descriptors_2);
+        geometry::matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES);
         printf("Number of matches: %d\n", (int)matches.size());
 
     }
 
     // Estimation motion
-    vector<Mat> list_R, list_t, list_normal;
+    vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches;
-    vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
+    vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
     const bool print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
-    int best_sol = helperEstimatePossibleRelativePosesByEpipolarGeometry(
+    int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
@@ -120,7 +122,7 @@ int main(int argc, char **argv)
     cout << "Best solution is: " << best_sol << endl;
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)
-    helperEvalEppiAndTriangErrors(
+    geometry::helperEvalEppiAndTriangErrors(
         keypoints_1, keypoints_2, list_matches,
         sols_pts3d_in_cam1_by_triang,
         list_R, list_t, list_normal,
@@ -128,28 +130,28 @@ int main(int argc, char **argv)
         false); // print result
 
     // plot image
-    Mat Idst;
+    cv::Mat Idst;
     string window_name;
 
     window_name = "Detected and matched keypoints";
-    drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, Idst);
+    cv::drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, Idst);
     cv::namedWindow(window_name, WINDOW_AUTOSIZE);
     cv::imshow(window_name, Idst);
-    imwrite(window_name + ".png", Idst);
-    waitKey(1);
+    cv::imwrite(window_name + ".png", Idst);
+    cv::waitKey(1);
 
     window_name = "Detected and inliers keypoints";
-    drawMatches(img_1, keypoints_1, img_2, keypoints_2, list_matches[0], Idst);
+    cv::drawMatches(img_1, keypoints_1, img_2, keypoints_2, list_matches[0], Idst);
     cv::namedWindow(window_name, WINDOW_AUTOSIZE);
     cv::imshow(window_name, Idst);
-    imwrite(window_name + ".png", Idst);
-    waitKey(1);
+    cv::imwrite(window_name + ".png", Idst);
+    cv::waitKey(1);
 
     // -- I spot some wrong inliers, I'm going to show it.
     // int cnt=0;
     // for (const DMatch &d:list_matches[0]){
-    //     Point2f p1=keypoints_1[d.queryIdx].pt;
-    //     Point2f p2=keypoints_2[d.trainIdx].pt;
+    //     cv::Point2f p1=keypoints_1[d.queryIdx].pt;
+    //     cv::Point2f p2=keypoints_2[d.trainIdx].pt;
     //     if(abs(p1.x-p2.x)>20){
     //         cout << endl;
     //         printf("The %dth kpt, p1(%.2f, %.2f), p2(%.2f, %.2f)\n",
@@ -161,7 +163,7 @@ int main(int argc, char **argv)
     //     cnt++;
     // }
     // return
-    waitKey();
+    cv::waitKey();
     cv::destroyAllWindows();
     return 0;
 }

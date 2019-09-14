@@ -1,6 +1,7 @@
 
 #include "my_slam/vo/vo.h"
 
+namespace my_slam{
 namespace vo
 {
 
@@ -13,7 +14,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     // Renamed vars
     curr_ = frame;
     const int img_id = curr_->id_;
-    const Mat &K = curr_->camera_->K_;
+    const cv::Mat &K = curr_->camera_->K_;
 
     // Start
     printf("\n\n=============================================\n");
@@ -26,7 +27,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     // vo_state_: BLANK -> INITIALIZATION
     if (vo_state_ == BLANK)
     {
-        curr_->T_w_c_ = Mat::eye(4, 4, CV_64F);
+        curr_->T_w_c_ = cv::Mat::eye(4, 4, CV_64F);
         vo_state_ = INITIALIZATION;
         addKeyFrame(curr_);
     }
@@ -93,10 +94,10 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     // Print relative motion
     if (vo_state_ == OK)
     {
-        static Mat T_w_to_prev = Mat::eye(4, 4, CV_64F);
-        const Mat &T_w_to_curr = curr_->T_w_c_;
-        Mat T_prev_to_curr = T_w_to_prev.inv() * T_w_to_curr;
-        Mat R, t;
+        static cv::Mat T_w_to_prev = cv::Mat::eye(4, 4, CV_64F);
+        const cv::Mat &T_w_to_curr = curr_->T_w_c_;
+        cv::Mat T_prev_to_curr = T_w_to_prev.inv() * T_w_to_curr;
+        cv::Mat R, t;
         getRtFromT(T_prev_to_curr, R, t);
         cout << "\nCamera motion:" << endl;
         cout << "R_prev_to_curr: " << R << endl;
@@ -106,3 +107,4 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 }
 
 } // namespace vo
+} // namespace my_slam

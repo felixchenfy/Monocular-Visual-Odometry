@@ -26,12 +26,9 @@
 
 // display
 #include "my_slam/display/pcl_display.h"
-using namespace display;
-
 using namespace std;
 using namespace cv;
-using namespace geometry;
-using namespace vo;
+using namespace my_slam;
 
 // functions for this script
 bool checkInputArguments(int argc, char **argv);
@@ -39,10 +36,10 @@ bool checkInputArguments(int argc, char **argv);
 const string IMAGE_WINDOW_NAME = "Green: keypoints; Red: inlier matches with map points";
 bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, const vo::VisualOdometry::Ptr vo);
 
-PclViewer::Ptr setUpPclDisplay();
+display::PclViewer::Ptr setUpPclDisplay();
 bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
-                     PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
-void waitPclKeyPress(PclViewer::Ptr pcl_displayer);
+                     display::PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ);
+void waitPclKeyPress(display::PclViewer::Ptr pcl_displayer);
 
 const bool DEBUG_MODE = false;
 
@@ -75,7 +72,7 @@ int main(int argc, char **argv)
     basics::Config::setParameterFile(CONFIG_FILE);
 
     // -- Prepare Pcl display
-    PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
+    display::PclViewer::Ptr pcl_displayer = setUpPclDisplay(); // Prepare pcl display
     bool DRAW_GROUND_TRUTH_TRAJ = basics::Config::getBool("DRAW_GROUND_TRUTH_TRAJ");
 
     // -- Prepare opencv display
@@ -126,7 +123,7 @@ int main(int argc, char **argv)
 
     // Save camera trajectory
     const string FILENAME_FOR_RESULT_TRAJECTORY = basics::Config::get<string>("FILENAME_FOR_RESULT_TRAJECTORY");
-    writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
+    basics::writePoseToFile(FILENAME_FOR_RESULT_TRAJECTORY, cam_pose_history);
 
     // Wait for user close
     while (!pcl_displayer->wasStopped())
@@ -146,15 +143,15 @@ bool checkInputArguments(int argc, char **argv)
     return true;
 }
 
-PclViewer::Ptr setUpPclDisplay()
+display::PclViewer::Ptr setUpPclDisplay()
 {
     double view_point_dist = 0.3;
     double x = 0.5 * view_point_dist,
            y = -1.0 * view_point_dist,
            z = -1.0 * view_point_dist;
     double rot_axis_x = -0.5, rot_axis_y = 0, rot_axis_z = 0;
-    PclViewer::Ptr pcl_displayer(
-        new PclViewer(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z));
+    display::PclViewer::Ptr pcl_displayer(
+        new display::PclViewer(x, y, z, rot_axis_x, rot_axis_y, rot_axis_z));
     return pcl_displayer;
 }
 
@@ -205,12 +202,12 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
 }
 
 bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
-                     PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
+                     display::PclViewer::Ptr pcl_displayer, bool DRAW_GROUND_TRUTH_TRAJ)
 {
 
     // -- Update camera pose
-    Mat R, R_vec, t;
-    getRtFromT(frame->T_w_c_, R, t);
+    cv::Mat R, R_vec, t;
+    basics::getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
     pcl_displayer->updateCameraPose(R_vec, t,
                                     vo->map_->checkKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
@@ -219,9 +216,9 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
     if (DRAW_GROUND_TRUTH_TRAJ)
     {
         static string GROUND_TRUTH_TRAJ_FILENAME = basics::Config::get<string>("GROUND_TRUTH_TRAJ_FILENAME");
-        static vector<cv::Mat> truth_poses = readPoseFromFile(GROUND_TRUTH_TRAJ_FILENAME);
+        static vector<cv::Mat> truth_poses = basics::readPoseFromFile(GROUND_TRUTH_TRAJ_FILENAME);
         cv::Mat truth_T = truth_poses[frame->id_], truth_R_vec, truth_t;
-        getRtFromT(truth_T, truth_R_vec, truth_t);
+        basics::getRtFromT(truth_T, truth_R_vec, truth_t);
 
         // Start drawing only when visual odometry has been initialized. (i.e. The first few frames are not drawn.)
         // The reason is: we need scale the truth pose to be same as estiamted pose, so we can make comparison between them.
@@ -230,7 +227,7 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
         static double scale;
         if (is_made_the_same_scale == false && vo->isInitialized())
         {
-            scale = calcMatNorm(truth_t) / calcMatNorm(t);
+            scale = basics::calcMatNorm(truth_t) / basics::calcMatNorm(t);
             is_made_the_same_scale = true;
         }
         if (vo->isInitialized())
@@ -245,7 +242,7 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
     }
     // ------------------------------- Update points ----------------------------------------
 
-    vector<Point3f> vec_pos;
+    vector<cv::Point3f> vec_pos;
     vector<vector<unsigned char>> vec_color;
     unsigned char r, g, b;
     vector<unsigned char> color(3, 0);
@@ -257,7 +254,7 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
         vec_color.clear();
         for (auto &iter_map_point : vo->map_->map_points_)
         {
-            const MapPoint::Ptr &p = iter_map_point.second;
+            const vo::MapPoint::Ptr &p = iter_map_point.second;
             vec_pos.push_back(p->pos_);
             vec_color.push_back(p->color_);
         }
@@ -273,9 +270,9 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
         color[0] = 255;
         color[1] = 0;
         color[2] = 0;
-        for (const Point3f &pt3d : frame->inliers_pts3d_)
+        for (const cv::Point3f &pt3d : frame->inliers_pts3d_)
         {
-            vec_pos.push_back(transCoord(pt3d, R, t));
+            vec_pos.push_back(basics::transCoord(pt3d, R, t));
             vec_color.push_back(color);
         }
         pcl_displayer->updateCurrPoints(vec_pos, vec_color);
@@ -291,7 +288,7 @@ bool drawResultByPcl(const vo::VisualOdometry::Ptr vo, vo::Frame::Ptr frame,
         return true;
 }
 
-void waitPclKeyPress(PclViewer::Ptr pcl_displayer)
+void waitPclKeyPress(display::PclViewer::Ptr pcl_displayer)
 {
     while (!pcl_displayer->checkKeyPressed())
     {

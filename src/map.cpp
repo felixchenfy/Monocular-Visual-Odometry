@@ -1,6 +1,7 @@
 
 #include "my_slam/vo/map.h"
 
+namespace my_slam{
 namespace vo
 {
 
@@ -46,3 +47,4 @@ bool Map::checkKeyFrame(int frame_id)
 }
 
 } // namespace vo
+} // namespace my_slam

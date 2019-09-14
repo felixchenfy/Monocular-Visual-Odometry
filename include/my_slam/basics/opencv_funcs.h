@@ -5,50 +5,47 @@
 #ifndef OPENCV_FUNCS_H
 #define OPENCV_FUNCS_H
 
-#include <stdio.h>
-#include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
+#include "my_slam/common_include.h"
 
+namespace my_slam
+{
 namespace basics
 {
-using namespace std;
-using namespace cv;
 
 // ---------------- image operation ----------------
-vector<unsigned char> getPixelAt(const Mat &image, int x, int y);
-unsigned char getPixelAt(const Mat &image, int row, int col, int idx_rgb);
+vector<unsigned char> getPixelAt(const cv::Mat &image, int x, int y);
+unsigned char getPixelAt(const cv::Mat &image, int row, int col, int idx_rgb);
 
 // ---------------- datatype conversion ----------------
-Mat point3f_to_mat(const Point3f &p);
-Mat point3f_to_mat4x1(const Point3f &p);
-Point3f Mat_to_Point3f(const Mat &p);
-Mat point2f_to_mat(const Point2f &p);
+cv::Mat point3f_to_mat(const cv::Point3f &p);
+cv::Mat point3f_to_mat4x1(const cv::Point3f &p);
+cv::Point3f Mat_to_Point3f(const cv::Mat &p);
+cv::Mat point2f_to_mat(const cv::Point2f &p);
 
 // ---------------- Transformations ----------------
-Point3f transCoord(const Point3f &p, const Mat &R, const Mat &t);
-void invRt(Mat &R, Mat &t);
-Mat convertRt2T(const Mat &R, const Mat &t);
-Mat convertRt2T_3x4(const Mat &R, const Mat &t);
-void getRtFromT(const Mat &T, Mat &R, Mat &t);
-Mat getPosFromT(const Mat &T);
-Point3f preTranslatePoint3f(const Point3f &p3x1, const Mat &T4x4);
+cv::Point3f transCoord(const cv::Point3f &p, const cv::Mat &R, const cv::Mat &t);
+void invRt(cv::Mat &R, cv::Mat &t);
+cv::Mat convertRt2T(const cv::Mat &R, const cv::Mat &t);
+cv::Mat convertRt2T_3x4(const cv::Mat &R, const cv::Mat &t);
+void getRtFromT(const cv::Mat &T, cv::Mat &R, cv::Mat &t);
+cv::Mat getPosFromT(const cv::Mat &T);
+cv::Point3f preTranslatePoint3f(const cv::Point3f &p3x1, const cv::Mat &T4x4);
 
 // ---------------- Math ----------------
-Mat skew(const Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
-double calcDist(const Point2f &p1, const Point2f &p2);
-double calcMeanDepth(const vector<Point3f> &pts_3d);
-double scalePointPos(Point3f &p, double scale);
-double calcMatNorm(const Mat &mat);
-Mat getNormalizedMat(const Mat mat);
-double calcAngleBetweenTwoVectors(const Mat& vec1, const Mat& vec2);
+cv::Mat skew(const cv::Mat &t); // 3x1 vec to 3x3 skew symmetric matrix
+double calcDist(const cv::Point2f &p1, const cv::Point2f &p2);
+double calcMeanDepth(const vector<cv::Point3f> &pts_3d);
+double scalePointPos(cv::Point3f &p, double scale);
+double calcMatNorm(const cv::Mat &mat);
+cv::Mat getNormalizedMat(const cv::Mat mat);
+double calcAngleBetweenTwoVectors(const cv::Mat &vec1, const cv::Mat &vec2);
 
 // ---------------- Print ----------------
 void print_MatProperty(const cv::Mat &M); // print data type and size
-void print_R_t(const Mat &R, const Mat &t);
+void print_R_t(const cv::Mat &R, const cv::Mat &t);
 string cvMatType2str(int cvMatType);
 
 } // namespace basics
+} // namespace my_slam
+
 #endif

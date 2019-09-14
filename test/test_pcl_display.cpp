@@ -61,8 +61,8 @@ int main()
         //      Return: kpt_3d_pos_in_world, r, g, b
         double x = 0, y = 0, z = 2;
         unsigned char r = 255, g = 0, b = 0;
-        cv::Mat kpt_3d_pos_in_cam = (Mat_<double>(3, 1) << x, y, z);
-        Mat R;
+        cv::Mat kpt_3d_pos_in_cam = (cv::Mat_<double>(3, 1) << x, y, z);
+        cv::Mat R;
         cv::Rodrigues(R_vec, R);
         cv::Mat kpt_3d_pos_in_world = R * kpt_3d_pos_in_cam + t;
 

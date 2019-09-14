@@ -3,6 +3,8 @@
 #include "my_slam/optimization/g2o_ba.h"
 #include <numeric>
 
+namespace my_slam
+{
 namespace vo
 {
 
@@ -13,10 +15,10 @@ VisualOdometry::VisualOdometry() : map_(new (Map))
 
 void VisualOdometry::getMappointsInCurrentView(
     vector<MapPoint::Ptr> &candidate_mappoints_in_map,
-    Mat &corresponding_mappoints_descriptors)
+    cv::Mat &corresponding_mappoints_descriptors)
 {
     // vector<MapPoint::Ptr> candidate_mappoints_in_map;
-    // Mat corresponding_mappoints_descriptors;
+    // cv::Mat corresponding_mappoints_descriptors;
     candidate_mappoints_in_map.clear();
     corresponding_mappoints_descriptors.release();
     for (auto &iter_map_point : map_->map_points_)
@@ -38,18 +40,18 @@ void VisualOdometry::estimateMotionAnd3DPoints()
 {
     // -- Rename output
     vector<DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
-    vector<Point3f> &pts3d_in_curr = curr_->inliers_pts3d_;
+    vector<cv::Point3f> &pts3d_in_curr = curr_->inliers_pts3d_;
     vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
-    Mat &T = curr_->T_w_c_;
+    cv::Mat &T = curr_->T_w_c_;
 
     // -- Start: call this big function to compute everything
     // (1) motion from Essential && Homography, (2) inliers indices, (3) triangulated points
-    vector<Mat> list_R, list_t, list_normal;
+    vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<DMatch>> list_matches; // these are the inliers matches
-    vector<vector<Point3f>> sols_pts3d_in_cam1_by_triang;
+    vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
     const bool print_res = false, is_frame_cam2_to_cam1 = true;
     const bool compute_homography = true;
-    Mat &K = curr_->camera_->K_;
+    cv::Mat &K = curr_->camera_->K_;
     int best_sol = helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         ref_->keypoints_, curr_->keypoints_, curr_->matches_with_ref_, K,
@@ -59,12 +61,12 @@ void VisualOdometry::estimateMotionAnd3DPoints()
         print_res, compute_homography, is_frame_cam2_to_cam1);
 
     // -- Only retain the data of the best solution
-    const Mat &R_curr_to_prev = list_R[best_sol];
-    const Mat &t_curr_to_prev = list_t[best_sol];
+    const cv::Mat &R_curr_to_prev = list_R[best_sol];
+    const cv::Mat &t_curr_to_prev = list_t[best_sol];
     inlier_matches = list_matches[best_sol];
-    const vector<Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[best_sol];
+    const vector<cv::Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[best_sol];
     pts3d_in_curr.clear();
-    for (const Point3f &p1 : pts3d_in_cam1)
+    for (const cv::Point3f &p1 : pts3d_in_cam1)
         pts3d_in_curr.push_back(transCoord(p1, R_curr_to_prev, t_curr_to_prev));
 
     // -- Output
@@ -85,7 +87,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     //Normalize Points Depth to 1, and
     double mean_depth = calcMeanDepth(curr_->inliers_pts3d_);
     t_curr_to_prev /= mean_depth;
-    for (Point3f &p : curr_->inliers_pts3d_)
+    for (cv::Point3f &p : curr_->inliers_pts3d_)
         scalePointPos(p, 1 / mean_depth);
     T = ref_->T_w_c_ * convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
@@ -161,13 +163,13 @@ void VisualOdometry::retainGoodTriangulationResult()
 
     // -- Input
     // 1. vector<DMatch>  curr_ -> inliers_matches_with_ref_; // input
-    // 2. vector<Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_; // update this
+    // 2. vector<cv::Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_; // update this
 
     // -- Output
     // 1. generate this:
     vector<double> &angles = curr_->triangulation_angles_of_inliers_;
     // 2. update this:
-    //vector<Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_;
+    //vector<cv::Point3f> pts3d_in_curr:  curr_ -> inliers_pts3d_;
     // 3. generate this:
     //vector<DMatch> inliers_matches: curr_ -> inliers_matches_for_3d_;
 
@@ -177,10 +179,10 @@ void VisualOdometry::retainGoodTriangulationResult()
         return;
     for (int i = 0; i < N; i++)
     {
-        Point3f &p_in_curr = curr_->inliers_pts3d_[i];
-        Mat p_in_world = point3f_to_mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
-        Mat vec_p_to_cam_curr = getPosFromT(curr_->T_w_c_) - p_in_world;
-        Mat vec_p_to_cam_prev = getPosFromT(ref_->T_w_c_) - p_in_world;
+        cv::Point3f &p_in_curr = curr_->inliers_pts3d_[i];
+        cv::Mat p_in_world = point3f_to_mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
+        cv::Mat vec_p_to_cam_curr = getPosFromT(curr_->T_w_c_) - p_in_world;
+        cv::Mat vec_p_to_cam_prev = getPosFromT(ref_->T_w_c_) - p_in_world;
         double angle = calcAngleBetweenTwoVectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
         angles.push_back(angle / 3.1415926 * 180.0);
     }
@@ -199,7 +201,7 @@ void VisualOdometry::retainGoodTriangulationResult()
 
     // Get good triangulation points
 
-    vector<Point3f> old_inlier_points = curr_->inliers_pts3d_;
+    vector<cv::Point3f> old_inlier_points = curr_->inliers_pts3d_;
     curr_->inliers_pts3d_.clear();
 
     vector<double> old_angles = angles;
@@ -221,8 +223,8 @@ void VisualOdometry::retainGoodTriangulationResult()
 // ------------------- Tracking -------------------
 bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref)
 {
-    Mat T_key_to_curr = ref->T_w_c_.inv() * curr->T_w_c_;
-    Mat R, t, R_vec;
+    cv::Mat T_key_to_curr = ref->T_w_c_.inv() * curr->T_w_c_;
+    cv::Mat R, t, R_vec;
     getRtFromT(T_key_to_curr, R, t);
     cv::Rodrigues(R, R_vec);
 
@@ -243,14 +245,14 @@ void VisualOdometry::poseEstimationPnP()
 {
     // -- From the local map, find the keypoints that fall into the current view
     vector<MapPoint::Ptr> candidate_mappoints_in_map;
-    Mat corresponding_mappoints_descriptors;
+    cv::Mat corresponding_mappoints_descriptors;
     getMappointsInCurrentView(candidate_mappoints_in_map, corresponding_mappoints_descriptors);
 
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
     geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
     cout << "Number of 3d-2d pairs: " << curr_->matches_with_map_.size() << endl;
-    vector<Point3f> pts_3d;
-    vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
+    vector<cv::Point3f> pts_3d;
+    vector<cv::Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
     for (int i = 0; i < curr_->matches_with_map_.size(); i++)
     {
         DMatch &match = curr_->matches_with_map_[i];
@@ -260,19 +262,19 @@ void VisualOdometry::poseEstimationPnP()
     }
 
     // -- Solve PnP, get T_world_to_camera
-    Mat R_vec, R, t;
+    cv::Mat R_vec, R, t;
     bool useExtrinsicGuess = false;
     int iterationsCount = 100;
     float reprojectionError = 5.0;
     double confidence = 0.999;
-    Mat pnp_inliers_mask; // type = 32SC1, size = 999x1
-    solvePnPRansac(pts_3d, pts_2d, curr_->camera_->K_, Mat(), R_vec, t,
+    cv::Mat pnp_inliers_mask; // type = 32SC1, size = 999x1
+    solvePnPRansac(pts_3d, pts_2d, curr_->camera_->K_, cv::Mat(), R_vec, t,
                    useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
     Rodrigues(R_vec, R);
 
     // -- Get inlier matches used in PnP
-    vector<Point2f> tmp_pts_2d;
-    vector<Point3f *> inlier_candidates_pos;
+    vector<cv::Point2f> tmp_pts_2d;
+    vector<cv::Point3f *> inlier_candidates_pos;
     vector<MapPoint::Ptr> inlier_candidates;
     vector<DMatch> tmp_matches_with_map_;
     int num_inliers = pnp_inliers_mask.rows;
@@ -328,13 +330,13 @@ void VisualOdometry::callBundleAdjustment()
     printf("\nCalling bundle adjustment on %d frames ... \n", NUM_FRAMES_FOR_BA);
 
     // Measurement (which is fixed; truth)
-    vector<vector<Point2f *>> v_pts_2d;
+    vector<vector<cv::Point2f *>> v_pts_2d;
     vector<vector<int>> v_pts_2d_to_3d_idx;
 
     // Things to to optimize
-    unordered_map<int, Point3f *> um_pts_3d;
-    vector<Point3f *> v_pts_3d_only_in_curr; // This is an alternative of the above
-    vector<Mat *> v_camera_poses;
+    unordered_map<int, cv::Point3f *> um_pts_3d;
+    vector<cv::Point3f *> v_pts_3d_only_in_curr; // This is an alternative of the above
+    vector<cv::Mat *> v_camera_poses;
 
     // Set up input vars
     int ith_frame = 0;
@@ -348,7 +350,7 @@ void VisualOdometry::callBundleAdjustment()
             continue; // Too few mappoints. Not optimizing this frame
         }
         printf("Frame id: %d, num map points = %d\n", frame->id_, num_mappt_in_frame);
-        v_pts_2d.push_back(vector<Point2f *>());
+        v_pts_2d.push_back(vector<cv::Point2f *>());
         v_pts_2d_to_3d_idx.push_back(vector<int>());
 
         // Get camera poses
@@ -368,14 +370,14 @@ void VisualOdometry::callBundleAdjustment()
             v_pts_2d_to_3d_idx[ith_frame].push_back(mappt_idx);
 
             // Get 3d pos
-            Point3f *p = &(map_->map_points_[mappt_idx]->pos_);
+            cv::Point3f *p = &(map_->map_points_[mappt_idx]->pos_);
             um_pts_3d[mappt_idx] = p;
             if (ith_frame == 0)
                 v_pts_3d_only_in_curr.push_back(p);
         }
     }
     // Bundle Adjustment
-    Mat pose_src = getPosFromT(curr_->T_w_c_);
+    cv::Mat pose_src = getPosFromT(curr_->T_w_c_);
     if (1)
     {
         optimization::bundleAdjustment(
@@ -393,7 +395,7 @@ void VisualOdometry::callBundleAdjustment()
     }
 
     // Print result
-    Mat pose_new = getPosFromT(curr_->T_w_c_);
+    cv::Mat pose_new = getPosFromT(curr_->T_w_c_);
     printf("Cam pos: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
            pose_src.at<double>(0, 0), pose_src.at<double>(1, 0), pose_src.at<double>(2, 0),
            pose_new.at<double>(0, 0), pose_new.at<double>(1, 0), pose_new.at<double>(2, 0));
@@ -449,9 +451,9 @@ void VisualOdometry::optimizeMap()
 void VisualOdometry::pushCurrPointsToMap()
 {
     // -- Input
-    const vector<Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
-    const Mat &T_w_curr = curr_->T_w_c_;
-    const Mat &descriptors = curr_->descriptors_;
+    const vector<cv::Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
+    const cv::Mat &T_w_curr = curr_->T_w_c_;
+    const cv::Mat &descriptors = curr_->descriptors_;
     const vector<vector<unsigned char>> &kpts_colors = curr_->kpts_colors_;
     const vector<DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
 
@@ -475,7 +477,7 @@ void VisualOdometry::pushCurrPointsToMap()
         {
 
             // Change coordinate of 3d points to world frame
-            Point3f world_pos = preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr);
+            cv::Point3f world_pos = preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr);
 
             // Create map point
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
@@ -498,10 +500,11 @@ void VisualOdometry::pushCurrPointsToMap()
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
-    Mat n = point3f_to_mat(point->pos_) - frame->getCamCenter();
+    cv::Mat n = point3f_to_mat(point->pos_) - frame->getCamCenter();
     n = getNormalizedMat(n);
-    Mat vector_dot_product = n.t() * point->norm_;
+    cv::Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));
 }
 
 } // namespace vo
+} // namespace my_slam

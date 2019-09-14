@@ -3,7 +3,8 @@
 
 #ifndef EIGEN_TRANS_H
 #define EIGEN_TRANS_H
-#include <iostream>
+
+#include "my_slam/common_include.h"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -16,7 +17,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp> // for cv::Rodrigues
 
-
+namespace my_slam
+{
 namespace basics
 {
 
@@ -35,5 +37,6 @@ Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv);
 cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus);
 
 } // namespace basics
+} // namespace my_slam
 
 #endif

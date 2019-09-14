@@ -26,15 +26,15 @@ int main ( int argc, char** argv )
     string img_file2="fr1_1_2.png";
     string img_file3="fr1_1_1_depth.png";
     string img_file4="fr1_1_2_depth.png";  
-    Mat K = (Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
-    Mat img_1 = imread (folder+ img_file1,  IMREAD_COLOR );
-    Mat img_2 = imread (folder+ img_file2, IMREAD_COLOR );
-    Mat d1 = imread ( folder+img_file3, IMREAD_UNCHANGED ); // 16 bit unsigned char, single channel
+    cv::Mat K = (cv::Mat_<double>(3, 3) << 517.3, 0, 325.1, 0, 516.5, 249.7, 0, 0, 1); // fr1 dataset
+    cv::Mat img_1 = imread (folder+ img_file1,  IMREAD_COLOR );
+    cv::Mat img_2 = imread (folder+ img_file2, IMREAD_COLOR );
+    cv::Mat d1 = imread ( folder+img_file3, IMREAD_UNCHANGED ); // 16 bit unsigned char, single channel
 
     // Extract keypoints and features. Match keypoints.
     vector<KeyPoint> keypoints_1, keypoints_2;
     vector<DMatch> matches;
-    Mat descriptors_1, descriptors_2;
+    cv::Mat descriptors_1, descriptors_2;
     string filename = "config/config.yaml";
     basics::Config::setParameterFile(filename);
     extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
@@ -47,8 +47,8 @@ int main ( int argc, char** argv )
 
 
     // Get points 3d and 2d correspondance
-    vector<Point3f> pts_3d; // a point's 3d pos in cam1 frame
-    vector<Point2f> pts_2d; // a point's 2d pos in image2 pixel frame
+    vector<cv::Point3f> pts_3d; // a point's 3d pos in cam1 frame
+    vector<cv::Point2f> pts_2d; // a point's 2d pos in image2 pixel frame
     for ( DMatch m:matches )
     {
         ushort d = d1.ptr<unsigned short> (int ( keypoints_1[m.queryIdx].pt.y )) [ int ( keypoints_1[m.queryIdx].pt.x ) ];
@@ -56,19 +56,19 @@ int main ( int argc, char** argv )
             continue;
         float dd = d/1000.0; // mm -> m
         Point2d p1_norm = pixel2camNormPlane ( keypoints_1[m.queryIdx].pt, K );// point's pos on cam1's normalized plane
-        pts_3d.push_back ( Point3f ( p1_norm.x*dd, p1_norm.y*dd, dd ) );
+        pts_3d.push_back ( cv::Point3f ( p1_norm.x*dd, p1_norm.y*dd, dd ) );
         pts_2d.push_back ( keypoints_2[m.trainIdx].pt );
     }
     cout<<"Number of 3d-2d pairs: "<<pts_3d.size() <<endl;
 
     // Solve PnP
-    Mat R_vec, t, R;
-    // solvePnP( pts_3d, pts_2d, K, Mat(), R_vec, t, false );
-    solvePnPRansac ( pts_3d, pts_2d, K, Mat(), R_vec, t, false );
+    cv::Mat R_vec, t, R;
+    // solvePnP( pts_3d, pts_2d, K, cv::Mat(), R_vec, t, false );
+    solvePnPRansac ( pts_3d, pts_2d, K, cv::Mat(), R_vec, t, false );
     Rodrigues ( R_vec, R );
 
     // Get cam1 to cam2
-    Mat T_cam1_to_cam2 = convertRt2T(R,t).inv();
+    cv::Mat T_cam1_to_cam2 = convertRt2T(R,t).inv();
 
     // Print result
     printf("Print result of PnP:\n");

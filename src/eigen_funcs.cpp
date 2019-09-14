@@ -6,22 +6,24 @@ using namespace std;
 using namespace cv;
 using namespace Eigen;
 
+namespace my_slam
+{
 namespace basics
 {
-    
+
 // --------------  Eigen --------------
-Eigen::Affine3d getAffine3d(double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z){
-    cv::Mat t=(cv::Mat_<double>(3,1)<<x,y,z);
-    cv::Mat R_vec=(cv::Mat_<double>(3,1)<<rot_axis_x,rot_axis_y,rot_axis_z);
+Eigen::Affine3d getAffine3d(double x, double y, double z, double rot_axis_x, double rot_axis_y, double rot_axis_z)
+{
+    cv::Mat t = (cv::Mat_<double>(3, 1) << x, y, z);
+    cv::Mat R_vec = (cv::Mat_<double>(3, 1) << rot_axis_x, rot_axis_y, rot_axis_z);
     return transT_CVRt_to_EigenAffine3d(R_vec, t);
 }
 
-
 // -------------- CV <--> Eigen --------------
-Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const Mat &R0, const Mat &t)
+Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const cv::Mat &R0, const cv::Mat &t)
 {
     // check input: whether R0 is a SO3 or xyz-Euler-Angles
-    Mat R = R0.clone();
+    cv::Mat R = R0.clone();
     if (R.rows == 3 && R.cols == 1)
         cv::Rodrigues(R, R);
     assert(R.rows == 3 && R.cols == 3);
@@ -32,7 +34,6 @@ Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const Mat &R0, const Mat &t)
     T.translation() = Eigen::Vector3d::Map(reinterpret_cast<const double *>(t.data));
     return T;
 }
-
 
 // -------------- CV <--> Sophus --------------
 
@@ -57,4 +58,5 @@ cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
     return convertRt2T(cv_R, cv_t);
 }
 
-}
+} // namespace basics
+} // namespace my_slam

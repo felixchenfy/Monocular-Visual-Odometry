@@ -31,7 +31,7 @@ add_library( vo SHARED
     vo_addFrame.cpp
     map.cpp
     mappoint.cpp
-    commons.cpp
+    vo_commons.cpp
 )
 
 
