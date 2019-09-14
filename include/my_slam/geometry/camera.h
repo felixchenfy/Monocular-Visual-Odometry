@@ -8,6 +8,7 @@ namespace my_slam
 {
 namespace geometry
 {
+
 // ---------------- transformations (by OpenCV) ----------------
 cv::Point2f pixel2camNormPlane(const cv::Point2f &p, const cv::Mat &K);
 cv::Point3f pixel2cam(const cv::Point2f &p, const cv::Mat &K, double depth = 1);
@@ -15,13 +16,8 @@ cv::Point2f cam2pixel(const cv::Point3f &p, const cv::Mat &K);
 cv::Point2f cam2pixel(const cv::Mat &p, const cv::Mat &K);
 cv::Mat world2camera(const cv::Point3f &p, const cv::Mat &T_world_to_cam);
 
-
-// ---------------- transformations (by Eigen && Sophus; For g2o optimization) ----------------
-// ------------ !!! Copy from Dr. Xiang Gao's book !!! --------------
-// TO DO
-
 // ---------------- Class ----------------
-class Camera /*This is defined but not acctually used*/
+class Camera /*This is defined but not used*/
 {
 public:
   typedef std::shared_ptr<Camera> Ptr;

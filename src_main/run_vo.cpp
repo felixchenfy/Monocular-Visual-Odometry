@@ -16,6 +16,8 @@
 #include <opencv2/features2d/features2d.hpp>
 
 // my
+#include "my_slam/common_include.h"
+
 #include "my_slam/basics/io.h"
 #include "my_slam/basics/config.h"
 #include "my_slam/basics/basics.h"
@@ -26,8 +28,7 @@
 
 // display
 #include "my_slam/display/pcl_display.h"
-using namespace std;
-using namespace cv;
+
 using namespace my_slam;
 
 // functions for this script
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
     // -- Iterate through images
     int MAX_NUM_IMAGES = basics::Config::get<int>("MAX_NUM_IMAGES");
     vector<cv::Mat> cam_pose_history;
-    for (int img_id = 0; img_id < min(MAX_NUM_IMAGES, (int)image_paths.size()); img_id++)
+    for (int img_id = 0; img_id < std::min(MAX_NUM_IMAGES, (int)image_paths.size()); img_id++)
     {
 
         // Read image.
@@ -189,7 +190,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     }
     is_vo_initialized_in_prev_frame = vo->isInitialized();
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    waitKey(1);
+    cv::waitKey(1);
 
     // save to file
     if (0)

@@ -11,15 +11,12 @@ namespace my_slam
 namespace vo
 {
 
-using namespace std;
-using namespace cv;
-
 class Map
 {
 public:
     typedef std::shared_ptr<Map> Ptr;
-    unordered_map<int, Frame::Ptr> keyframes_;
-    unordered_map<int, MapPoint::Ptr> map_points_;
+    std::unordered_map<int, Frame::Ptr> keyframes_;
+    std::unordered_map<int, MapPoint::Ptr> map_points_;
 
     Map() {}
 

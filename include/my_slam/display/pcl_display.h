@@ -18,13 +18,12 @@ namespace my_slam
 {
 namespace display
 {
-using namespace std;
 
 class PclViewer
 {
 
 public:
-  typedef shared_ptr<PclViewer> Ptr;
+  typedef std::shared_ptr<PclViewer> Ptr;
 
   string viewer_name_;
 

@@ -13,9 +13,6 @@ namespace my_slam
 namespace vo
 {
 
-using namespace std;
-using namespace cv;
-
 typedef struct PtConn_
 {
   int pt_ref_idx;
@@ -47,7 +44,7 @@ public:
   vector<double> triangulation_angles_of_inliers_;
   vector<cv::DMatch> inliers_matches_for_3d_;                   // matches whose triangulation result is good.
   vector<cv::Point3f> inliers_pts3d_;                           // 3d points triangulated from inliers_matches_for_3d_
-  unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
+  std::unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
 
   // -- Matches with map points (for PnP)
   vector<cv::DMatch> matches_with_map_; // inliers matches index with respect to all the points

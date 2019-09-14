@@ -52,7 +52,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     const bool print_res = false, is_frame_cam2_to_cam1 = true;
     const bool compute_homography = true;
     cv::Mat &K = curr_->camera_->K_;
-    int best_sol = helperEstimatePossibleRelativePosesByEpipolarGeometry(
+    int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         ref_->keypoints_, curr_->keypoints_, curr_->matches_with_ref_, K,
         /*Output*/
@@ -67,12 +67,12 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     const vector<cv::Point3f> &pts3d_in_cam1 = sols_pts3d_in_cam1_by_triang[best_sol];
     pts3d_in_curr.clear();
     for (const cv::Point3f &p1 : pts3d_in_cam1)
-        pts3d_in_curr.push_back(transCoord(p1, R_curr_to_prev, t_curr_to_prev));
+        pts3d_in_curr.push_back(basics::transCoord(p1, R_curr_to_prev, t_curr_to_prev));
 
     // -- Output
 
     // compute camera pose
-    T = ref_->T_w_c_ * convertRt2T(R_curr_to_prev, t_curr_to_prev).inv();
+    T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv();
 
     // Get points that are used for triangulating new map points
     retainGoodTriangulationResult();
@@ -85,11 +85,11 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     }
 
     //Normalize Points Depth to 1, and
-    double mean_depth = calcMeanDepth(curr_->inliers_pts3d_);
+    double mean_depth = basics::calcMeanDepth(curr_->inliers_pts3d_);
     t_curr_to_prev /= mean_depth;
     for (cv::Point3f &p : curr_->inliers_pts3d_)
-        scalePointPos(p, 1 / mean_depth);
-    T = ref_->T_w_c_ * convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
+        basics::scalePointPos(p, 1 / mean_depth);
+    T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
 
 bool VisualOdometry::checkIfVoGoodToInit()
@@ -116,7 +116,7 @@ bool VisualOdometry::checkIfVoGoodToInit()
     bool CRITERIA_1 = false; // init vo only when distance between matched keypoints are large
     {
         vector<double> dists_between_kpts;
-        double mean_dist = computeMeanDistBetweenkeypoints(init_kpts, curr_kpts, matches);
+        double mean_dist = geometry::computeMeanDistBetweenkeypoints(init_kpts, curr_kpts, matches);
         printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
 
         CRITERIA_1 = mean_dist > min_pixel_dist;
@@ -180,10 +180,10 @@ void VisualOdometry::retainGoodTriangulationResult()
     for (int i = 0; i < N; i++)
     {
         cv::Point3f &p_in_curr = curr_->inliers_pts3d_[i];
-        cv::Mat p_in_world = point3f_to_mat(preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
-        cv::Mat vec_p_to_cam_curr = getPosFromT(curr_->T_w_c_) - p_in_world;
-        cv::Mat vec_p_to_cam_prev = getPosFromT(ref_->T_w_c_) - p_in_world;
-        double angle = calcAngleBetweenTwoVectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
+        cv::Mat p_in_world = basics::point3f_to_mat(basics::preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
+        cv::Mat vec_p_to_cam_curr = basics::getPosFromT(curr_->T_w_c_) - p_in_world;
+        cv::Mat vec_p_to_cam_prev = basics::getPosFromT(ref_->T_w_c_) - p_in_world;
+        double angle = basics::calcAngleBetweenTwoVectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
         angles.push_back(angle / 3.1415926 * 180.0);
     }
 
@@ -225,14 +225,14 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
 {
     cv::Mat T_key_to_curr = ref->T_w_c_.inv() * curr->T_w_c_;
     cv::Mat R, t, R_vec;
-    getRtFromT(T_key_to_curr, R, t);
+    basics::getRtFromT(T_key_to_curr, R, t);
     cv::Rodrigues(R, R_vec);
 
     static const double MIN_DIST_BETWEEN_KEYFRAME = basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
     static const double MIN_ROTATED_ANGLE = basics::Config::get<double>("MIN_ROTATED_ANGLE");
 
-    double moved_dist = calcMatNorm(t);
-    double rotated_angle = calcMatNorm(R_vec);
+    double moved_dist = basics::calcMatNorm(t);
+    double rotated_angle = basics::calcMatNorm(R_vec);
 
     printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
@@ -301,7 +301,7 @@ void VisualOdometry::poseEstimationPnP()
     curr_->matches_with_map_.swap(tmp_matches_with_map_);
 
     // -- Update current camera pos
-    curr_->T_w_c_ = convertRt2T(R, t).inv();
+    curr_->T_w_c_ = basics::convertRt2T(R, t).inv();
 }
 
 // bundle adjustment
@@ -319,7 +319,7 @@ void VisualOdometry::callBundleAdjustment()
 
     // Set params
     const int TOTAL_FRAMES = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = min(MAX_NUM_FRAMES_FOR_BA, TOTAL_FRAMES - 1);
+    const int NUM_FRAMES_FOR_BA = std::min(MAX_NUM_FRAMES_FOR_BA, TOTAL_FRAMES - 1);
     const static cv::Mat information_matrix = (cv::Mat_<double>(2, 2) << im[0], im[1], im[2], im[3]);
 
     if (USE_BA != true)
@@ -334,7 +334,7 @@ void VisualOdometry::callBundleAdjustment()
     vector<vector<int>> v_pts_2d_to_3d_idx;
 
     // Things to to optimize
-    unordered_map<int, cv::Point3f *> um_pts_3d;
+    std::unordered_map<int, cv::Point3f *> um_pts_3d;
     vector<cv::Point3f *> v_pts_3d_only_in_curr; // This is an alternative of the above
     vector<cv::Mat *> v_camera_poses;
 
@@ -357,7 +357,7 @@ void VisualOdometry::callBundleAdjustment()
         v_camera_poses.push_back(&frame->T_w_c_);
 
         // Iterate through this camera's mappoints
-        for (unordered_map<int, PtConn>::iterator ite = frame->inliers_to_mappt_connections_.begin();
+        for (std::unordered_map<int, PtConn>::iterator ite = frame->inliers_to_mappt_connections_.begin();
              ite != frame->inliers_to_mappt_connections_.end(); ite++)
         {
             int kpt_idx = ite->first;
@@ -377,7 +377,7 @@ void VisualOdometry::callBundleAdjustment()
         }
     }
     // Bundle Adjustment
-    cv::Mat pose_src = getPosFromT(curr_->T_w_c_);
+    cv::Mat pose_src = basics::getPosFromT(curr_->T_w_c_);
     if (1)
     {
         optimization::bundleAdjustment(
@@ -395,7 +395,7 @@ void VisualOdometry::callBundleAdjustment()
     }
 
     // Print result
-    cv::Mat pose_new = getPosFromT(curr_->T_w_c_);
+    cv::Mat pose_new = basics::getPosFromT(curr_->T_w_c_);
     printf("Cam pos: Before:{%.5f,%.5f,%.5f}, After:{%.5f,%.5f,%.5f}\n",
            pose_src.at<double>(0, 0), pose_src.at<double>(1, 0), pose_src.at<double>(2, 0),
            pose_new.at<double>(0, 0), pose_new.at<double>(1, 0), pose_new.at<double>(2, 0));
@@ -458,7 +458,7 @@ void VisualOdometry::pushCurrPointsToMap()
     const vector<cv::DMatch> &inliers_matches_for_3d = curr_->inliers_matches_for_3d_;
 
     // -- Output
-    unordered_map<int, PtConn> &inliers_to_mappt_connections = curr_->inliers_to_mappt_connections_;
+    std::unordered_map<int, PtConn> &inliers_to_mappt_connections = curr_->inliers_to_mappt_connections_;
 
     // -- Start
     for (int i = 0; i < inliers_matches_for_3d.size(); i++)
@@ -477,13 +477,13 @@ void VisualOdometry::pushCurrPointsToMap()
         {
 
             // Change coordinate of 3d points to world frame
-            cv::Point3f world_pos = preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr);
+            cv::Point3f world_pos = basics::preTranslatePoint3f(inliers_pts3d_in_curr[i], T_w_curr);
 
             // Create map point
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
                 descriptors.row(pt_idx).clone(),                                       // descriptor
-                getNormalizedMat(point3f_to_mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
+                basics::getNormalizedMat(basics::point3f_to_mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
             map_point_id = map_point->id_;
@@ -500,8 +500,8 @@ void VisualOdometry::pushCurrPointsToMap()
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
-    cv::Mat n = point3f_to_mat(point->pos_) - frame->getCamCenter();
-    n = getNormalizedMat(n);
+    cv::Mat n = basics::point3f_to_mat(point->pos_) - frame->getCamCenter();
+    n = basics::getNormalizedMat(n);
     cv::Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));
 }

@@ -14,7 +14,6 @@ namespace my_slam
 {
 namespace geometry
 {
-using namespace basics;
 
 // This is a giant function, which computes: E21/H21, all their decompositions, all corresponding triangulation results,
 //      Then, choose between E/H based on ORB-SLAM2 paper. 

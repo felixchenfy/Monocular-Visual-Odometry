@@ -123,7 +123,7 @@ void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
         pcl::PointXYZ cam_pos_old, cam_pos_new;
         setPointPos(cam_pos_old, t_curr);
         setPointPos(cam_pos_new, t_new);
-        string line_name = cam_traj_name + "-line" + to_string(cnt_cam);
+        string line_name = cam_traj_name + "-line" + std::to_string(cnt_cam);
         viewer_->addLine<pcl::PointXYZ>(
             cam_pos_old, cam_pos_new, line_color[0], line_color[1], line_color[2], line_name);
         viewer_->setShapeRenderingProperties(

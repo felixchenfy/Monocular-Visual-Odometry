@@ -1,7 +1,8 @@
 
 #include "my_slam/vo/map.h"
 
-namespace my_slam{
+namespace my_slam
+{
 namespace vo
 {
 

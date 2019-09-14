@@ -8,7 +8,6 @@ namespace my_slam
 {
 namespace geometry
 {
-using namespace std;
 
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
                       bool SET_PARAM_BY_YAML = true);

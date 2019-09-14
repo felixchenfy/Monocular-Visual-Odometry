@@ -70,7 +70,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
 
             // Find inliers by epipolar constraint
-            curr_->inliers_matches_with_ref_ = helperFindInlierMatchesByEpipolarCons(
+            curr_->inliers_matches_with_ref_ = geometry::helperFindInlierMatchesByEpipolarCons(
                 ref_->keypoints_, curr_->keypoints_,curr_->matches_with_ref_, K);
             
             // Print
@@ -78,7 +78,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 (int) curr_->matches_with_ref_.size(),(int) curr_->inliers_matches_with_ref_.size());
 
             // Triangulate points
-            curr_->inliers_pts3d_ = helperTriangulatePoints(
+            curr_->inliers_pts3d_ = geometry::helperTriangulatePoints(
                 ref_->keypoints_, curr_->keypoints_,
                 curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
     
@@ -98,7 +98,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         const cv::Mat &T_w_to_curr = curr_->T_w_c_;
         cv::Mat T_prev_to_curr = T_w_to_prev.inv() * T_w_to_curr;
         cv::Mat R, t;
-        getRtFromT(T_prev_to_curr, R, t);
+        basics::getRtFromT(T_prev_to_curr, R, t);
         cout << "\nCamera motion:" << endl;
         cout << "R_prev_to_curr: " << R << endl;
         cout << "t_prev_to_curr: " << t.t() << endl;

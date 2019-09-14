@@ -3,7 +3,8 @@
 #include "my_slam/common_include.h"
 #include "my_slam/vo/mappoint.h"
 
-namespace my_slam{
+namespace my_slam
+{
 namespace vo
 {
 
@@ -17,10 +18,10 @@ MapPoint::MapPoint(
     id_ = factory_id_++;
 }
 
-// void MapPoint::resetPos(cv::Point3f pos)
-// {
-//     pos_ = (cv::Mat_<double>(3,1) << pos.x, pos.y, pos.z);
-// }
+void MapPoint::setPos(const cv::Point3f &pos)
+{
+    pos_ = pos;
+}
 
 } // namespace vo
 } // namespace my_slam

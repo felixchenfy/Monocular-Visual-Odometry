@@ -9,8 +9,6 @@ namespace my_slam
 {
 namespace vo
 {
-using namespace std;
-using namespace cv;
 
 // class Frame;
 class MapPoint
@@ -33,7 +31,7 @@ public:                 // Properties for constructing local mapping
 public: // Functions
     MapPoint(const cv::Point3f &pos, const cv::Mat &descriptor, const cv::Mat &norm,
              unsigned char r = 0, unsigned char g = 0, unsigned char b = 0);
-    // void resetPos(cv::Point3f pos);
+    void setPos(const cv::Point3f &pos);
 };
 
 } // namespace vo

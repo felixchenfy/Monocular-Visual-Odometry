@@ -1,7 +1,8 @@
 
 #include "my_slam/geometry/camera.h"
 
-namespace my_slam{
+namespace my_slam
+{
 namespace geometry
 {
 // ---------------- transformation ----------------
@@ -33,9 +34,5 @@ cv::Point2f cam2pixel(const cv::Mat &p, const cv::Mat &K)
     return cv::Point2f(pp.at<double>(0, 0), pp.at<double>(1, 0));
 }
 
-
-// ---------------- Class ----------------
-// Not used
-
-} // namespace vo
+} // namespace geometry
 } // namespace my_slam

@@ -23,8 +23,6 @@ namespace geometry
 #define _match_ratio 2.0
 #define _lowe_dist_ratio 0.6 /*for method 2*/
 
-using namespace cv;
-
 void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
                       const bool SET_PARAM_BY_YAML)
 {
@@ -46,7 +44,7 @@ void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
     // int 	patchSize = 31,
     // int 	fastThreshold = 20
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid,
-                                                  31, 0, 2, ORB::HARRIS_SCORE, 31, score_threshold);
+                                                  31, 0, 2, cv::ORB::HARRIS_SCORE, 31, score_threshold);
 
     // compute
     orb->detect(image, keypoints);
@@ -144,7 +142,7 @@ void matchFeatures(
             if (dist > max_dis)
                 max_dis = dist;
         }
-        distance_threshold = max<float>(min_dis * MATCH_RATIO, 30.0);
+        distance_threshold = std::max<float>(min_dis * MATCH_RATIO, 30.0);
         // Another way of getting the minimum:
         // min_dis = std::min_element(all_matches.begin(), all_matches.end(),
         //     [](const cv::DMatch &m1, const cv::DMatch &m2) {return m1.distance < m2.distance;})->distance;
@@ -156,7 +154,7 @@ void matchFeatures(
     }
     else if (METHOD_INDEX == 2)
     { // method in Lowe's 2004 paper
-        static Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
+        static cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
         // Calculate the features's distance of the two images.
         vector<vector<cv::DMatch>> knn_matches;
         vector<cv::Mat> train_desc(1, descriptors_2);

@@ -115,7 +115,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     // Caution: This should be done after all other algorithms
     if (is_motion_cam2_to_cam1 == false)
         for (int i = 0; i < num_solutions; i++)
-            invRt(list_R[i], list_t[i]);
+            basics::invRt(list_R[i], list_t[i]);
 
     // Debug EpipolarError and TriangulationResult
     if (print_res && !compute_homography)
@@ -210,7 +210,7 @@ void helperFind3Dto2DCorrespondences(
     pts_2d.clear();
 
     // Set up a table to store the index of pts_3d in prev_frame
-    map<int, int> table;
+    std::map<int, int> table;
     int cnt_inliers = 0;
     for (int i = 0; i < prev_inlier_matches.size(); i++)
     {
@@ -239,7 +239,7 @@ vector<cv::Point3f> helperTriangulatePoints(
     const cv::Mat &K)
 {
     cv::Mat R_curr_to_prev, t_curr_to_prev;
-    getRtFromT(T_curr_to_prev, R_curr_to_prev, t_curr_to_prev);
+    basics::getRtFromT(T_curr_to_prev, R_curr_to_prev, t_curr_to_prev);
     // call this func again
     return helperTriangulatePoints(prev_kpts, curr_kpts, curr_inlier_matches,
                                    R_curr_to_prev, t_curr_to_prev, K);
@@ -274,7 +274,7 @@ vector<cv::Point3f> helperTriangulatePoints(
     // Change pos to current frame
     vector<cv::Point3f> pts_3d_in_curr;
     for (const cv::Point3f &pt3d : pts_3d_in_prev)
-        pts_3d_in_curr.push_back(transCoord(pt3d, R, t));
+        pts_3d_in_curr.push_back(basics::transCoord(pt3d, R, t));
 
     // Return
     return pts_3d_in_curr;
@@ -324,7 +324,7 @@ void helperEvalEppiAndTriangErrors(
         {
             const cv::Point2f &p1 = inlpts1[idx_inlier], &p2 = inlpts2[idx_inlier];
             // print triangulation result
-            cv::Mat pts3dc1 = point3f_to_mat(pts3d[idx_inlier]); // 3d pos in camera 1
+            cv::Mat pts3dc1 = basics::point3f_to_mat(pts3d[idx_inlier]); // 3d pos in camera 1
             cv::Mat pts3dc2 = R * pts3dc1 + t;
             cv::Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             cv::Point2f pts2dc2 = cam2pixel(pts3dc2, K);
@@ -357,7 +357,7 @@ void helperEvalEppiAndTriangErrors(
 
             printf("\n---------------\n");
             printf("Solution %d, num inliers = %d \n", i, (int)list_matches[i].size());
-            print_R_t(list_R[i], list_t[i]);
+            basics::print_R_t(list_R[i], list_t[i]);
             if (!list_normal[i].empty())
                 cout << "norm is:" << (list_normal[i]).t() << endl;
             printf("-- Epipolar cons error = %f \n", list_error_epipolar[i]);
@@ -384,7 +384,7 @@ void printResult_estiMotionByEssential(
          << essential_matrix << endl;
     cout << "* Number of inliers (after triangulation): " << inliers_index.size() << endl;
     cout << "* Recovering R and t from essential matrix:" << endl;
-    print_R_t(R, t);
+    basics::print_R_t(R, t);
     cout << endl;
 }
 
@@ -408,7 +408,7 @@ void printResult_estiMotionByHomography(
     {
         cout << endl;
         cout << "* Solution " << i + 1 << ":" << endl; // Start index from 1. The index 0 is for essential matrix.
-        print_R_t(Rs[i], ts[i]);
+        basics::print_R_t(Rs[i], ts[i]);
         cout << "plane normal: " << normals[i].t() << endl;
     }
 }
@@ -467,7 +467,7 @@ void print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
             else
                 ith_in_curr_sol = ith_in_h_inliers;
 
-            cv::Mat pts3dc1 = point3f_to_mat(sols_pts3d_in_cam1[j][ith_in_curr_sol]); // 3d pos in camera 1
+            cv::Mat pts3dc1 = basics::point3f_to_mat(sols_pts3d_in_cam1[j][ith_in_curr_sol]); // 3d pos in camera 1
             cv::Mat pts3dc2 = R * pts3dc1 + t;
             cv::Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             cv::Point2f pts2dc2 = cam2pixel(pts3dc2, K);
@@ -500,7 +500,7 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
         const vector<int> &inliers = list_inliers[j];
         int num_inliers = inliers.size();
         const int MAX_TO_PRINT = 5;
-        for (int _idx_inlier = 0; _idx_inlier < min(MAX_TO_PRINT, num_inliers); _idx_inlier++)
+        for (int _idx_inlier = 0; _idx_inlier < std::min(MAX_TO_PRINT, num_inliers); _idx_inlier++)
         {
             int idx_inlier = num_inliers - 1 - _idx_inlier;
             int idx_pts = inliers[idx_inlier];
@@ -518,7 +518,7 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
             cout << "===solu " << j << ": epipolar_error*1e6 is " << err_epipolar * 1e6 << endl;
 
             // print triangulation result
-            cv::Mat pts3dc1 = point3f_to_mat(sols_pts3d_in_cam1[j][idx_inlier]); // 3d pos in camera 1
+            cv::Mat pts3dc1 = basics::point3f_to_mat(sols_pts3d_in_cam1[j][idx_inlier]); // 3d pos in camera 1
             cv::Mat pts3dc2 = R * pts3dc1 + t;
             cv::Point2f pts2dc1 = cam2pixel(pts3dc1, K);
             // cv::Point2f pts2dc1 = cam2pixel(sols_pts3d_in_cam1[j][idx_inlier], K);

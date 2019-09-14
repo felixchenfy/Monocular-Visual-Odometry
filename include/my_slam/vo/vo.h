@@ -29,9 +29,6 @@ namespace my_slam
 {
 namespace vo
 {
-using namespace std;
-using namespace cv;
-using namespace geometry;
 
 class VisualOdometry
 {
@@ -53,7 +50,7 @@ public: // ------------------------------- Member variables --------------------
   Frame::Ptr ref_;
   Frame::Ptr newest_frame_; // temporarily store the newest frame
   cv::Mat prev_T_w_c_;          // pos of previous frame
-  deque<Frame::Ptr> frames_buff_;
+  std::deque<Frame::Ptr> frames_buff_;
 
   // Map
   Map::Ptr map_;

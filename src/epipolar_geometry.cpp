@@ -1,10 +1,9 @@
 
 #include "my_slam/geometry/epipolar_geometry.h"
 
-using namespace std;
-using namespace cv;
 
 #define PRINT_DEBUG_RESULT true
+
 namespace my_slam
 {
 namespace geometry
@@ -18,12 +17,12 @@ void estiMotionByEssential(
     cv::Mat &R, cv::Mat &t, vector<int> &inliers_index)
 {
     inliers_index.clear();
-    cv::Mat K = camera_intrinsics;                                           // rename
-    cv::Point2f principal_point(K.at<double>(0, 2), K.at<double>(1, 2));     // optical center
+    cv::Mat K = camera_intrinsics;                                       // rename
+    cv::Point2f principal_point(K.at<double>(0, 2), K.at<double>(1, 2)); // optical center
     double focal_length = (K.at<double>(0, 0) + K.at<double>(1, 1)) / 2; // focal length
 
     // -- Essential matrix
-    int method = RANSAC;
+    int method = cv::RANSAC;
     double prob = 0.999;
     double threshold = 0.8;
     // double prob = 0.99; //This param settings give big error. Tested by image0001 and image0015.
@@ -96,7 +95,7 @@ void estiMotionByHomography(const vector<cv::Point2f> &pts_in_img1,
     normals.clear();
     inliers_index.clear();
     // -- Homography matrix
-    int method = RANSAC;
+    int method = cv::RANSAC;
     double ransacReprojThreshold = 3;
     cv::Mat inliers_mask; //Use print_MatProperty to know its type: 8UC1
     homography_matrix = findHomography(pts_in_img1, pts_in_img2, method, ransacReprojThreshold, inliers_mask);
@@ -130,7 +129,7 @@ double computeEpipolarConsError(
     cv::Mat y1 = (cv::Mat_<double>(3, 1) << p_cam1.x, p_cam1.y, 1);
     cv::Point2f p_cam2 = pixel2camNormPlane(p2, K);
     cv::Mat y2 = (cv::Mat_<double>(3, 1) << p_cam2.x, p_cam2.y, 1);
-    cv::Mat d = y2.t() * skew(t) * R * y1;
+    cv::Mat d = y2.t() * basics::skew(t) * R * y1;
     return d.at<double>(0, 0);
 }
 
@@ -162,7 +161,7 @@ double ptPosInNormPlane(const cv::Point3f &pt_3d_pos_in_cam1,
 
     // cam2
     cv::Mat tmp = t_cam2_to_cam1 +
-              R_cam2_to_cam1 * (cv::Mat_<double>(3, 1) << pts3dc1.x, pts3dc1.y, pts3dc1.z);
+                  R_cam2_to_cam1 * (cv::Mat_<double>(3, 1) << pts3dc1.x, pts3dc1.y, pts3dc1.z);
     cv::Point3f pts3dc2(tmp.at<double>(0, 0), tmp.at<double>(1, 0), tmp.at<double>(2, 0));
     depth2 = pts3dc2.z;
     cv::Point2f pts3dc2_norm(pts3dc2.x / depth2, pts3dc2.y / depth2);
@@ -192,7 +191,7 @@ void doTriangulation(
         (cv::Mat_<float>(3, 4) << 1, 0, 0, 0,
          0, 1, 0, 0,
          0, 0, 1, 0);
-    cv::Mat T_cam2_to_world = convertRt2T_3x4(R_cam2_to_cam1, t_cam2_to_cam1);
+    cv::Mat T_cam2_to_world = basics::convertRt2T_3x4(R_cam2_to_cam1, t_cam2_to_cam1);
 
     // triangulartion
     cv::Mat pts4d_in_world;

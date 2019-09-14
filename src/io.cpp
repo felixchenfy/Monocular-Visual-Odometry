@@ -7,8 +7,6 @@
 #include "my_slam/basics/io.h"
 #include "my_slam/basics/config.h"
 
-using namespace std;
-
 namespace my_slam
 {
 namespace basics
@@ -60,7 +58,7 @@ cv::Mat readCameraIntrinsics(const string &config_file, bool print_res)
 
 void writePoseToFile(const string filename, vector<cv::Mat> list_T)
 {
-    ofstream fout;
+    std::ofstream fout;
     fout.open(filename);
     if (!fout.is_open())
     {
@@ -93,7 +91,7 @@ vector<cv::Mat> readPoseFromFile(const string filename)
     vector<vector<double>> list_pose; // store, but not output
 
     // Open file
-    ifstream fin;
+    std::ifstream fin;
     fin.open(filename);
     assert(fin.is_open()); // Fail to find the config file
 
