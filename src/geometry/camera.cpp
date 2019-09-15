@@ -7,7 +7,7 @@ namespace geometry
 {
 // ---------------- transformation ----------------
 
-cv::Point2f pixel2camNormPlane(const cv::Point2f &p, const cv::Mat &K)
+cv::Point2f pixel2CamNormPlane(const cv::Point2f &p, const cv::Mat &K)
 {
     return cv::Point2f(
         (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),

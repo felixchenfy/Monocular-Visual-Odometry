@@ -9,6 +9,10 @@ namespace my_slam
 namespace geometry
 {
 
+// -------------------------------------------------------------------------------------------
+// ---------------- Main: Motion from Essential and Homography; Triangulation ----------------
+// -------------------------------------------------------------------------------------------
+
 void estiMotionByEssential(
     const vector<cv::Point2f> &pts_in_img1,
     const vector<cv::Point2f> &pts_in_img2,
@@ -122,55 +126,6 @@ void estiMotionByHomography(const vector<cv::Point2f> &pts_in_img1,
     }
 }
 
-double computeEpipolarConsError(
-    const cv::Point2f &p1, const cv::Point2f &p2, const cv::Mat &R, const cv::Mat &t, const cv::Mat &K)
-{
-    cv::Point2f p_cam1 = pixel2camNormPlane(p1, K); // point's pos in the camera frame
-    cv::Mat y1 = (cv::Mat_<double>(3, 1) << p_cam1.x, p_cam1.y, 1);
-    cv::Point2f p_cam2 = pixel2camNormPlane(p2, K);
-    cv::Mat y2 = (cv::Mat_<double>(3, 1) << p_cam2.x, p_cam2.y, 1);
-    cv::Mat d = y2.t() * basics::skew(t) * R * y1;
-    return d.at<double>(0, 0);
-}
-
-double computeEpipolarConsError(
-    const vector<cv::Point2f> &pts1, const vector<cv::Point2f> &pts2,
-    const cv::Mat &R, const cv::Mat &t, const cv::Mat &K)
-{
-    double err = 0;
-    int N = pts1.size();
-    if (N == 0)
-        return 99999999999999;
-    for (int i = 0; i < N; i++)
-    {
-        double e = computeEpipolarConsError(pts1[i], pts2[i], R, t, K);
-        err += e * e;
-    }
-    return sqrt(err / N);
-}
-double ptPosInNormPlane(const cv::Point3f &pt_3d_pos_in_cam1,
-                        const cv::Mat &R_cam2_to_cam1, const cv::Mat &t_cam2_to_cam1,
-                        cv::Point2f &pt_pos_on_cam1_nplane, double &depth1,
-                        cv::Point2f &pt_pos_on_cam2_nplane, double &depth2)
-{
-    cv::Point3f pts3dc1 = pt_3d_pos_in_cam1;
-
-    // cam1
-    depth1 = pts3dc1.z;
-    cv::Point2f pts3dc1_norm(pts3dc1.x / depth1, pts3dc1.y / depth1);
-
-    // cam2
-    cv::Mat tmp = t_cam2_to_cam1 +
-                  R_cam2_to_cam1 * (cv::Mat_<double>(3, 1) << pts3dc1.x, pts3dc1.y, pts3dc1.z);
-    cv::Point3f pts3dc2(tmp.at<double>(0, 0), tmp.at<double>(1, 0), tmp.at<double>(2, 0));
-    depth2 = pts3dc2.z;
-    cv::Point2f pts3dc2_norm(pts3dc2.x / depth2, pts3dc2.y / depth2);
-
-    // return
-    pt_pos_on_cam1_nplane = pts3dc1_norm;
-    pt_pos_on_cam2_nplane = pts3dc2_norm;
-}
-
 void doTriangulation(
     const vector<cv::Point2f> &pts_on_np1,
     const vector<cv::Point2f> &pts_on_np2,
@@ -218,13 +173,44 @@ void doTriangulation(
     pts3d_in_cam1 = pts3d_in_world;
 }
 
-double calcErrorSquare(const cv::Point2f &p1, const cv::Point2f &p2)
+
+
+// ----------------------------------------------------------
+// ---------------- Validation (Print error) ----------------
+// ----------------------------------------------------------
+
+
+double computeEpipolarConsError(
+    const cv::Point2f &p1, const cv::Point2f &p2, const cv::Mat &R, const cv::Mat &t, const cv::Mat &K)
 {
-    double dx = p1.x - p2.x, dy = p1.y - p2.y;
-    return dx * dx + dy * dy;
+    cv::Point2f p_cam1 = pixel2CamNormPlane(p1, K); // point's pos in the camera frame
+    cv::Mat y1 = (cv::Mat_<double>(3, 1) << p_cam1.x, p_cam1.y, 1);
+    cv::Point2f p_cam2 = pixel2CamNormPlane(p2, K);
+    cv::Mat y2 = (cv::Mat_<double>(3, 1) << p_cam2.x, p_cam2.y, 1);
+    cv::Mat d = y2.t() * basics::skew(t) * R * y1;
+    return d.at<double>(0, 0);
 }
 
-// ---------------- datatype conversion ----------------
+double computeEpipolarConsError(
+    const vector<cv::Point2f> &pts1, const vector<cv::Point2f> &pts2,
+    const cv::Mat &R, const cv::Mat &t, const cv::Mat &K)
+{
+    double err = 0;
+    int N = pts1.size();
+    if (N == 0)
+        return 99999999999999;
+    for (int i = 0; i < N; i++)
+    {
+        double e = computeEpipolarConsError(pts1[i], pts2[i], R, t, K);
+        err += e * e;
+    }
+    return sqrt(err / N);
+}
+
+
+// -----------------------------------------------------
+// ---------------- Datatype conversion ----------------
+// -----------------------------------------------------
 
 vector<cv::Point2f> convertkeypointsToPoint2f(const vector<cv::KeyPoint> kpts)
 {
@@ -282,6 +268,35 @@ void extractPtsFromMatches(
         pts2.push_back(keypoints_2[m.trainIdx].pt);
     }
 }
+
+
+// ----------------------------------------------------------------------------
+// ---------------- Other assistant functions ----------------
+// ----------------------------------------------------------------------------
+
+double ptPosInNormPlane(const cv::Point3f &pt_3d_pos_in_cam1,
+                        const cv::Mat &R_cam2_to_cam1, const cv::Mat &t_cam2_to_cam1,
+                        cv::Point2f &pt_pos_on_cam1_nplane, double &depth1,
+                        cv::Point2f &pt_pos_on_cam2_nplane, double &depth2)
+{
+    cv::Point3f pts3dc1 = pt_3d_pos_in_cam1;
+
+    // cam1
+    depth1 = pts3dc1.z;
+    cv::Point2f pts3dc1_norm(pts3dc1.x / depth1, pts3dc1.y / depth1);
+
+    // cam2
+    cv::Mat tmp = t_cam2_to_cam1 +
+                  R_cam2_to_cam1 * (cv::Mat_<double>(3, 1) << pts3dc1.x, pts3dc1.y, pts3dc1.z);
+    cv::Point3f pts3dc2(tmp.at<double>(0, 0), tmp.at<double>(1, 0), tmp.at<double>(2, 0));
+    depth2 = pts3dc2.z;
+    cv::Point2f pts3dc2_norm(pts3dc2.x / depth2, pts3dc2.y / depth2);
+
+    // return
+    pt_pos_on_cam1_nplane = pts3dc1_norm;
+    pt_pos_on_cam2_nplane = pts3dc2_norm;
+}
+
 
 } // namespace geometry
 } // namespace my_slam

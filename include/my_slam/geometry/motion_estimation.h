@@ -1,3 +1,5 @@
+/* @brief Functions for estimating camera motion between two frames.
+ */
 
 #ifndef MY_SLAM_MOTION_ESTIMATION_H
 #define MY_SLAM_MOTION_ESTIMATION_H
@@ -9,15 +11,23 @@
 #include "my_slam/geometry/epipolar_geometry.h"
 #include "my_slam/basics/opencv_funcs.h"
 
-
 namespace my_slam
 {
 namespace geometry
 {
 
-// This is a giant function, which computes: E21/H21, all their decompositions, all corresponding triangulation results,
-//      Then, choose between E/H based on ORB-SLAM2 paper. 
-//      If choose H, then choose the one with largest norm z in camera direction.
+/* @brief This is a giant function, which:
+ *      - Computes: E21/H21
+ *      - Decompose E and H into R and t.
+ *      - Do triangulation based on R and t.
+ * @return list_R, list_t
+ * @return list_matches
+ * @return list_normal
+ * @return sols_pts3d_in_cam1
+ * @return int: the index of the best R and t in list_R and list_t.
+ *      Whether choose E or H is based on the score defined in ORB-SLAM2 paper.
+ *      If choose H, hen choose the pose which has largest norm z in camera direction. 
+ */
 int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
@@ -29,9 +39,12 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
     const bool print_res = false,
     const bool compute_homography = true,
-    const bool is_frame_cam2_to_cam1=true);
+    const bool is_frame_cam2_to_cam1 = true);
 
-// Compute Eppipolar_Constraint and Triangulation error
+/* @brief Compute:
+ *      - The error of eppipolar onstraint
+ *      - The error of triangulation
+ */
 void helperEvalEppiAndTriangErrors(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
@@ -41,54 +54,66 @@ void helperEvalEppiAndTriangErrors(
     const cv::Mat &K, // camera intrinsics
     bool print_res);
 
-// Estimate camera motion by Essential matrix.
-void helperEstiMotionByEssential( 
+/* @brief Estimate camera motion by Essential matrix.
+ * @return R: R_cam2_to_cam1
+ * @return t: t_cam2_to_cam1
+ * @return inlier_matches: list of indices of keypoints
+ */
+void helperEstiMotionByEssential(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
     const vector<cv::DMatch> &matches,
     const cv::Mat &K, // camera intrinsics
     cv::Mat &R, cv::Mat &t,
     vector<cv::DMatch> &inlier_matches,
-    const bool print_res=false);
+    const bool print_res = false);
 
-// After feature matching, find inlier matches by using epipolar constraint to exclude wrong matches
+/* @brief After feature matching, find inlier matches 
+ *      by using epipolar constraint to exclude wrong matches.
+ * @param: keypoints_1, keypoints_2, matches, K
+ * @return vector<cv::DMatch>: the inlier matches
+ */
 vector<cv::DMatch> helperFindInlierMatchesByEpipolarCons(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
     const vector<cv::DMatch> &matches,
-    const cv::Mat &K);
+    const cv::Mat &K // camera intrinsics
+);
 
-// Get the 3d-2d corrsponding points
-void helperFind3Dto2DCorrespondences( 
-    const vector<cv::DMatch> &curr_inlier_matches, const vector<cv::KeyPoint> &curr_kpts, 
-    const vector<cv::DMatch> &prev_inlier_matches, const vector<cv::Point3f> &prev_inliers_pts3d,
-    vector<cv::Point3f> &pts_3d, vector<cv::Point2f> &pts_2d);
-
-// Triangulate points
+/* @brief Triangulate points.
+ * @param: prev_kpts
+ * @param: curr_kpts
+ * @param: curr_inlier_matches (prev is queryIdx, curr is trainIdx)
+ * @return vector<cv::Point3f>: triangulated points in current frame.
+ */
 vector<cv::Point3f> helperTriangulatePoints(
     const vector<cv::KeyPoint> &prev_kpts, const vector<cv::KeyPoint> &curr_kpts,
     const vector<cv::DMatch> &curr_inlier_matches,
     const cv::Mat &T_curr_to_prev,
-    const cv::Mat &K
-);
+    const cv::Mat &K);
 vector<cv::Point3f> helperTriangulatePoints(
     const vector<cv::KeyPoint> &prev_kpts, const vector<cv::KeyPoint> &curr_kpts,
     const vector<cv::DMatch> &curr_inlier_matches,
     const cv::Mat &R_curr_to_prev, const cv::Mat &t_curr_to_prev,
-    const cv::Mat &K
-);
+    const cv::Mat &K);
 
-// Compute the score of estiamted E/H matrix by the method in ORB-SLAM
-double checkEssentialScore(const cv::Mat &E21, const cv::Mat &K, const vector<cv::Point2f> &pts_img1, const vector<cv::Point2f> &pts_img2, 
-    vector<int> &inliers_index, double sigma=1.0);
-double checkHomographyScore(const cv::Mat &H21,const vector<cv::Point2f> &pts_img1, const vector<cv::Point2f> &pts_img2, 
-    vector<int> &inliers_index, double sigma=1.0);
+/* @brief Compute the score of estiamted Essential matrix by the method in ORB-SLAM
+ */
+double checkEssentialScore(const cv::Mat &E21, const cv::Mat &K,
+                           const vector<cv::Point2f> &pts_img1, const vector<cv::Point2f> &pts_img2,
+                           vector<int> &inliers_index, double sigma = 1.0);
 
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
-// ----------- debug functions --------------------------------------------------
-// ------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------
+/* @brief Compute the score of estiamted Homography matrix by the method in ORB-SLAM
+ */
+double checkHomographyScore(const cv::Mat &H21,
+                            const vector<cv::Point2f> &pts_img1, const vector<cv::Point2f> &pts_img2,
+                            vector<int> &inliers_index, double sigma = 1.0);
+
+// ---------------------------------------------
+// ---------------------------------------------
+// ----------- debug functions -----------------
+// ---------------------------------------------
+// ---------------------------------------------
 
 void printResult_estiMotionByEssential(
     const cv::Mat &essential_matrix,

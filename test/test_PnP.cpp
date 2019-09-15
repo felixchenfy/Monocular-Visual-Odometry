@@ -55,7 +55,7 @@ int main ( int argc, char** argv )
         if ( d == 0 )   // bad depth
             continue;
         float dd = d/1000.0; // mm -> m
-        Point2d p1_norm = pixel2camNormPlane ( keypoints_1[m.queryIdx].pt, K );// point's pos on cam1's normalized plane
+        Point2d p1_norm = pixel2CamNormPlane ( keypoints_1[m.queryIdx].pt, K );// point's pos on cam1's normalized plane
         pts_3d.push_back ( cv::Point3f ( p1_norm.x*dd, p1_norm.y*dd, dd ) );
         pts_2d.push_back ( keypoints_2[m.trainIdx].pt );
     }

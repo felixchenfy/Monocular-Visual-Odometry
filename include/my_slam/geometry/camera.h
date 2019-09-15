@@ -1,4 +1,5 @@
-
+/* @brief Transformation matrices related to camera.
+ */
 #ifndef MY_SLAM_CAMERA_H
 #define MY_SLAM_CAMERA_H
 
@@ -10,7 +11,7 @@ namespace geometry
 {
 
 // ---------------- transformations (by OpenCV) ----------------
-cv::Point2f pixel2camNormPlane(const cv::Point2f &p, const cv::Mat &K);
+cv::Point2f pixel2CamNormPlane(const cv::Point2f &p, const cv::Mat &K);
 cv::Point3f pixel2cam(const cv::Point2f &p, const cv::Mat &K, double depth = 1);
 cv::Point2f cam2pixel(const cv::Point3f &p, const cv::Mat &K);
 cv::Point2f cam2pixel(const cv::Mat &p, const cv::Mat &K);
@@ -35,11 +36,10 @@ public:
     fy_ = K.at<double>(1, 1);
     cx_ = K.at<double>(0, 2);
     cy_ = K.at<double>(1, 2);
-    K_=K;
+    K_ = K;
   }
-
 };
-} // namespace vo
+} // namespace geometry
 } // namespace my_slam
 
 #endif

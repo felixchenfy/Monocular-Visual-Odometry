@@ -37,8 +37,8 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     int num_matched = (int)matches.size();
     for (int i = 0; i < num_matched; i++)
     {
-        pts_on_np1.push_back(pixel2camNormPlane(pts_img1[i], K));
-        pts_on_np2.push_back(pixel2camNormPlane(pts_img2[i], K));
+        pts_on_np1.push_back(pixel2CamNormPlane(pts_img1[i], K));
+        pts_on_np2.push_back(pixel2CamNormPlane(pts_img2[i], K));
     }
 
     // Estiamte motion by Essential Matrix
@@ -156,7 +156,6 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     return best_sol;
 }
 
-// Estimate camera motion by Essential matrix.
 void helperEstiMotionByEssential(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
@@ -180,7 +179,6 @@ void helperEstiMotionByEssential(
     }
 }
 
-// After feature matching, find inlier matches by using epipolar constraint to exclude wrong matches
 vector<cv::DMatch> helperFindInlierMatchesByEpipolarCons(
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
@@ -199,37 +197,6 @@ vector<cv::DMatch> helperFindInlierMatchesByEpipolarCons(
     return inlier_matches;
 }
 
-// Get the 3d-2d corrsponding points
-// First find curr_inlier_matches.train that appears also in prev_dmatch.query,
-void helperFind3Dto2DCorrespondences(
-    const vector<cv::DMatch> &curr_inlier_matches, const vector<cv::KeyPoint> &curr_kpts,
-    const vector<cv::DMatch> &prev_inlier_matches, const vector<cv::Point3f> &prev_inliers_pts3d,
-    vector<cv::Point3f> &pts_3d, vector<cv::Point2f> &pts_2d)
-{
-    pts_3d.clear();
-    pts_2d.clear();
-
-    // Set up a table to store the index of pts_3d in prev_frame
-    std::map<int, int> table;
-    int cnt_inliers = 0;
-    for (int i = 0; i < prev_inlier_matches.size(); i++)
-    {
-        const cv::DMatch &m = prev_inlier_matches[i];
-        table[m.trainIdx] = i;
-    }
-
-    // search curr_inlier_matches.query in table
-    const int curr_dmatch_size = curr_inlier_matches.size();
-    for (int i = 0; i < curr_dmatch_size; i++)
-    {
-        int prev_pt_idx = curr_inlier_matches[i].queryIdx;
-        if (table.find(prev_pt_idx) != table.end())
-        { // if find a correspondance
-            pts_3d.push_back(prev_inliers_pts3d[table[prev_pt_idx]]);
-            pts_2d.push_back(curr_kpts[curr_inlier_matches[i].trainIdx].pt);
-        }
-    }
-}
 
 // Triangulate points
 vector<cv::Point3f> helperTriangulatePoints(
@@ -240,7 +207,6 @@ vector<cv::Point3f> helperTriangulatePoints(
 {
     cv::Mat R_curr_to_prev, t_curr_to_prev;
     basics::getRtFromT(T_curr_to_prev, R_curr_to_prev, t_curr_to_prev);
-    // call this func again
     return helperTriangulatePoints(prev_kpts, curr_kpts, curr_inlier_matches,
                                    R_curr_to_prev, t_curr_to_prev, K);
 }
@@ -257,9 +223,9 @@ vector<cv::Point3f> helperTriangulatePoints(
 
     vector<cv::Point2f> pts_on_np1, pts_on_np2; // matched points on camera normalized plane
     for (const cv::Point2f &pt : pts_img1)
-        pts_on_np1.push_back(pixel2camNormPlane(pt, K));
+        pts_on_np1.push_back(pixel2CamNormPlane(pt, K));
     for (const cv::Point2f &pt : pts_img2)
-        pts_on_np2.push_back(pixel2camNormPlane(pt, K));
+        pts_on_np2.push_back(pixel2CamNormPlane(pt, K));
 
     // Set inliers indices
     const cv::Mat &R = R_curr_to_prev, &t = t_curr_to_prev; //rename
