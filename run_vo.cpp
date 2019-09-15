@@ -67,7 +67,8 @@ int main(int argc, char **argv)
     basics::Config::setParameterFile(kConfigFile); // Use Config to read .yaml
     const string dataset_name = config.get<string>("dataset_name");
     basics::Yaml config_dataset = config.get(dataset_name);
-    basics::makedirs("output/");
+    static const string output_folder = basics::Config::get<string>("output_folder");
+    basics::makedirs(output_folder + "/");
 
     // -- Read image filenames
     vector<string>
@@ -185,6 +186,8 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     cv::Mat img_show = rgb_img.clone();
     const int img_id = frame->id_;
     static bool is_vo_initialized_in_prev_frame = false;
+    static const int cv_waitkey_time = basics::Config::get<int>("cv_waitkey_time");
+    static const string output_folder = basics::Config::get<string>("output_folder");
     bool first_time_vo_init = vo->isInitialized() && !is_vo_initialized_in_prev_frame;
 
     if (img_id != 0 && // draw matches during initialization stage
@@ -214,14 +217,14 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     }
     is_vo_initialized_in_prev_frame = vo->isInitialized();
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    cv::waitKey(10);
+    cv::waitKey(cv_waitkey_time);
 
     // Save to file
     constexpr bool kIsSaveImageToDisk = true;
     if (kIsSaveImageToDisk)
     {
         const string str_img_id = basics::int2str(img_id, 4);
-        imwrite("output/" + str_img_id + ".png", img_show);
+        imwrite(output_folder + "/" + str_img_id + ".png", img_show);
     }
 
     return true;

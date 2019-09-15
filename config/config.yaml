@@ -52,8 +52,9 @@ fr1_desk: # fr1_desk dataset
 max_num_imgs_to_proc: 300
 # is_pcl_wait_for_keypress: "true" # If true, PCL Viewer will stop after each update, and wait for your keypress.
 is_pcl_wait_for_keypress: "false" 
+cv_waitkey_time: 10
 save_predicted_traj_to: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/test_data/cam_traj.txt
-
+output_folder: "output"
 
 # ==============================================================
 # =============== Parameters of Visual Odometry  =============== 
