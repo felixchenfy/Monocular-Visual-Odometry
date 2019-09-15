@@ -1,29 +1,23 @@
-
+#include "my_slam/vo/vo_io.h"
+#include "my_slam/basics/yaml.h"
 
 #include <iostream>
 #include <boost/format.hpp> // for setting image filename
 #include <fstream>
 
-#include "my_slam/basics/io.h"
-#include "my_slam/basics/config.h"
-
 namespace my_slam
 {
-namespace basics
+namespace vo
 {
 
 vector<string> readImagePaths(
-    const string &config_file, bool print_res, 
-    const string &key_dataset_dir, 
-    const string &key_num_images,
-    const string &image_formatting)
+    const string &dataset_dir,
+    int num_images,
+    const string &image_formatting,
+    bool is_print_res)
 {
-    basics::Config::setParameterFile(config_file);
-
     // Set up image_paths
     vector<string> image_paths;
-    string dataset_dir = basics::Config::get<string>(key_dataset_dir);
-    int num_images = basics::Config::get<int>(key_num_images);
     boost::format filename_fmt(dataset_dir + image_formatting);
     for (int i = 0; i < num_images; i++)
     {
@@ -31,7 +25,7 @@ vector<string> readImagePaths(
     }
 
     // Print result
-    if (print_res)
+    if (is_print_res)
     {
         cout << endl;
         cout << "Reading from dataset_dir: " << dataset_dir << endl;
@@ -44,17 +38,15 @@ vector<string> readImagePaths(
     return image_paths;
 }
 
-cv::Mat readCameraIntrinsics(const string &config_file, bool print_res)
+cv::Mat readCameraIntrinsics(const basics::Yaml &config, bool is_print_res)
 {
-    basics::Config::setParameterFile(config_file);
-    double fx = basics::Config::get<double>("camera_info.fx");
-    double fy = basics::Config::get<double>("camera_info.fy");
-    double cx = basics::Config::get<double>("camera_info.cx");
-    double cy = basics::Config::get<double>("camera_info.cy");
+    double fx = config.get<double>("camera_info.fx");
+    double fy = config.get<double>("camera_info.fy");
+    double cx = config.get<double>("camera_info.cx");
+    double cy = config.get<double>("camera_info.cy");
     cv::Mat K = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
     return K;
 }
-
 
 void writePoseToFile(const string filename, vector<cv::Mat> list_T)
 {
@@ -124,5 +116,5 @@ vector<cv::Mat> readPoseFromFile(const string filename)
     return list_T;
 }
 
-} // namespace basics
+} // namespace vo
 } // namespace my_slam

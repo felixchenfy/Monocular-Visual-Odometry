@@ -37,7 +37,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<cv::DMatch>> &list_matches,
     vector<cv::Mat> &list_normal,
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
-    const bool print_res = false,
+    const bool is_print_res = false,
     const bool compute_homography = true,
     const bool is_frame_cam2_to_cam1 = true);
 
@@ -52,7 +52,7 @@ void helperEvalEppiAndTriangErrors(
     const vector<vector<cv::Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<cv::Mat> &list_R, const vector<cv::Mat> &list_t, const vector<cv::Mat> &list_normal,
     const cv::Mat &K, // camera intrinsics
-    bool print_res);
+    bool is_print_res);
 
 /* @brief Estimate camera motion by Essential matrix.
  * @return R: R_cam2_to_cam1
@@ -66,7 +66,7 @@ void helperEstiMotionByEssential(
     const cv::Mat &K, // camera intrinsics
     cv::Mat &R, cv::Mat &t,
     vector<cv::DMatch> &inlier_matches,
-    const bool print_res = false);
+    const bool is_print_res = false);
 
 /* @brief After feature matching, find inlier matches 
  *      by using epipolar constraint to exclude wrong matches.

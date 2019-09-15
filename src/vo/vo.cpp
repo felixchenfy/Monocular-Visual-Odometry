@@ -49,7 +49,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<cv::DMatch>> list_matches; // these are the inliers matches
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool print_res = false, is_frame_cam2_to_cam1 = true;
+    const bool is_print_res = false, is_frame_cam2_to_cam1 = true;
     const bool compute_homography = true;
     cv::Mat &K = curr_->camera_->K_;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
@@ -58,7 +58,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
-        print_res, compute_homography, is_frame_cam2_to_cam1);
+        is_print_res, compute_homography, is_frame_cam2_to_cam1);
 
     // -- Only retain the data of the best solution
     const cv::Mat &R_curr_to_prev = list_R[best_sol];
@@ -228,8 +228,8 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     basics::getRtFromT(T_key_to_curr, R, t);
     cv::Rodrigues(R, R_vec);
 
-    static const double MIN_DIST_BETWEEN_KEYFRAME = basics::Config::get<double>("MIN_DIST_BETWEEN_KEYFRAME");
-    static const double MIN_ROTATED_ANGLE = basics::Config::get<double>("MIN_ROTATED_ANGLE");
+    static const double min_dist_between_two_keyframes = basics::Config::get<double>("min_dist_between_two_keyframes");
+    static const double min_rotation_angle_betwen_two_keyframes = basics::Config::get<double>("min_rotation_angle_betwen_two_keyframes");
 
     double moved_dist = basics::calcMatNorm(t);
     double rotated_angle = basics::calcMatNorm(R_vec);
@@ -237,7 +237,7 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
     // Satisfy each one will be a good keyframe
-    bool res = moved_dist > MIN_DIST_BETWEEN_KEYFRAME || rotated_angle > MIN_ROTATED_ANGLE;
+    bool res = moved_dist > min_dist_between_two_keyframes || rotated_angle > min_rotation_angle_betwen_two_keyframes;
     return res;
 }
 
@@ -308,21 +308,21 @@ void VisualOdometry::poseEstimationPnP()
 void VisualOdometry::callBundleAdjustment()
 {
     // Read settings from config.yaml
-    static const bool USE_BA = basics::Config::getBool("USE_BA");
-    static const int MAX_NUM_FRAMES_FOR_BA = basics::Config::get<int>("MAX_NUM_FRAMES_FOR_BA");
+    static const bool is_enable_ba = basics::Config::getBool("is_enable_ba");
+    static const int num_prev_frames_to_opti_by_ba = basics::Config::get<int>("num_prev_frames_to_opti_by_ba");
     static const vector<double> im = basics::str2vecdouble(
         basics::Config::get<string>("information_matrix"));
-    static const bool FIX_MAP_PTS = basics::Config::getBool("FIX_MAP_PTS");
+    static const bool is_ba_fix_map_points = basics::Config::getBool("is_ba_fix_map_points");
     // static const bool UPDATE_MAP_PTS = basics::Config::getBool("UPDATE_MAP_PTS");
-    static const bool UPDATE_MAP_PTS = !FIX_MAP_PTS;
-    // cout << FIX_MAP_PTS << UPDATE_MAP_PTS << endl;
+    static const bool UPDATE_MAP_PTS = !is_ba_fix_map_points;
+    // cout << is_ba_fix_map_points << UPDATE_MAP_PTS << endl;
 
     // Set params
     const int TOTAL_FRAMES = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = std::min(MAX_NUM_FRAMES_FOR_BA, TOTAL_FRAMES - 1);
+    const int NUM_FRAMES_FOR_BA = std::min(num_prev_frames_to_opti_by_ba, TOTAL_FRAMES - 1);
     const static cv::Mat information_matrix = (cv::Mat_<double>(2, 2) << im[0], im[1], im[2], im[3]);
 
-    if (USE_BA != true)
+    if (is_enable_ba != true)
     {
         printf("\nNot using bundle adjustment ... \n");
         return;
@@ -384,14 +384,14 @@ void VisualOdometry::callBundleAdjustment()
             v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
             um_pts_3d, v_camera_poses,
             information_matrix,
-            FIX_MAP_PTS, UPDATE_MAP_PTS);
+            is_ba_fix_map_points, UPDATE_MAP_PTS);
     }
     else
     {
         optimization::optimizeSingleFrame(
             v_pts_2d[0], curr_->camera_->K_,
             v_pts_3d_only_in_curr, curr_->T_w_c_,
-            FIX_MAP_PTS, UPDATE_MAP_PTS); // Update pts_3d and curr_->T_w_c_
+            is_ba_fix_map_points, UPDATE_MAP_PTS); // Update pts_3d and curr_->T_w_c_
     }
 
     // Print result

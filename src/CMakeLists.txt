@@ -3,9 +3,9 @@
 add_library(basics SHARED
     basics/basics.cpp
     basics/config.cpp
+    basics/yaml.cpp
     basics/eigen_funcs.cpp
     basics/opencv_funcs.cpp
-    basics/io.cpp
 )
 
 add_library(display SHARED
@@ -28,6 +28,7 @@ add_library( vo SHARED
     vo/frame.cpp
     vo/vo.cpp
     vo/vo_addFrame.cpp
+    vo/vo_io.cpp
     vo/map.cpp
     vo/mappoint.cpp
     vo/vo_commons.cpp

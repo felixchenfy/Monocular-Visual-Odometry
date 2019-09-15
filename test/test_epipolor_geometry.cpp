@@ -111,14 +111,14 @@ int main(int argc, char **argv)
     vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<cv::DMatch>> list_matches;
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
+    const bool is_print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
-        print_res, compute_homography, is_frame_cam2_to_cam1);
+        is_print_res, compute_homography, is_frame_cam2_to_cam1);
     cout << "Best solution is: " << best_sol << endl;
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)

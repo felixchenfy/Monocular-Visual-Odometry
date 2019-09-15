@@ -17,7 +17,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<cv::DMatch>> &list_matches,
     vector<cv::Mat> &list_normal,
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
-    const bool print_res,
+    const bool is_print_res,
     const bool compute_homography,
     const bool is_motion_cam2_to_cam1)
 {
@@ -48,7 +48,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
                           essential_matrix,
                           R_e, t_e, inliers_index_e);
 
-    if (print_res && DEBUG_PRINT_RESULT)
+    if (is_print_res && DEBUG_PRINT_RESULT)
     {
         printResult_estiMotionByEssential(essential_matrix, // debug
                                           inliers_index_e, R_e, t_e);
@@ -68,7 +68,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
         removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
     }
     int num_h_solutions = R_h_list.size();
-    if (print_res && DEBUG_PRINT_RESULT && compute_homography)
+    if (is_print_res && DEBUG_PRINT_RESULT && compute_homography)
     {
         printResult_estiMotionByHomography(homography_matrix, // debug
                                            inliers_index_h, R_h_list, t_h_list, normal_list);
@@ -118,13 +118,13 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
             basics::invRt(list_R[i], list_t[i]);
 
     // Debug EpipolarError and TriangulationResult
-    if (print_res && !compute_homography)
+    if (is_print_res && !compute_homography)
     {
         print_EpipolarError_and_TriangulationResult_By_Solution(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
             sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
-    else if (print_res && compute_homography)
+    else if (is_print_res && compute_homography)
     {
         print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
@@ -163,7 +163,7 @@ void helperEstiMotionByEssential(
     const cv::Mat &K,
     cv::Mat &R, cv::Mat &t,
     vector<cv::DMatch> &inlier_matches,
-    const bool print_res)
+    const bool is_print_res)
 {
     vector<cv::Point2f> pts_in_img1, pts_in_img2;
     extractPtsFromMatches(keypoints_1, keypoints_2, matches, pts_in_img1, pts_in_img2);
@@ -263,7 +263,7 @@ void helperEvalEppiAndTriangErrors(
     const vector<vector<cv::Point3f>> &sols_pts3d_in_cam1_by_triang,
     const vector<cv::Mat> &list_R, const vector<cv::Mat> &list_t, const vector<cv::Mat> &list_normal,
     const cv::Mat &K,
-    bool print_res)
+    bool is_print_res)
 {
     vector<double> list_error_epipolar;
     vector<double> list_error_triangulation;
@@ -314,7 +314,7 @@ void helperEvalEppiAndTriangErrors(
     }
 
     // -- Print out result
-    if (print_res)
+    if (is_print_res)
     {
         printf("\n------------------------------------\n");
         printf("Print the mean error of each E/H method by using the inlier points.\n");

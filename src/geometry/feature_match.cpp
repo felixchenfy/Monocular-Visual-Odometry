@@ -73,16 +73,16 @@ void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
                          const int image_rows, const int image_cols,
                          const bool SET_PARAM_BY_YAML)
 {
-    static int GRID_SIZE = _grid_size, MAX_PTS_IN_GRID = _max_pts_in_grid;
+    static int kpts_uniform_selection_grid_size = _grid_size, kpts_uniform_selection_max_pts_per_grid = _max_pts_in_grid;
     static int max_num_keypoints = _max_num_keypoints;
     static int cnt_call_times_ = 0;
     if (cnt_call_times_++ == 0 && SET_PARAM_BY_YAML)
     {
         max_num_keypoints = basics::Config::get<int>("max_number_of_keypoints");
-        GRID_SIZE = basics::Config::get<int>("GRID_SIZE");
-        MAX_PTS_IN_GRID = basics::Config::get<int>("MAX_PTS_IN_GRID");
+        kpts_uniform_selection_grid_size = basics::Config::get<int>("kpts_uniform_selection_grid_size");
+        kpts_uniform_selection_max_pts_per_grid = basics::Config::get<int>("kpts_uniform_selection_max_pts_per_grid");
     }
-    static int rows = image_rows / GRID_SIZE, cols = image_cols / GRID_SIZE;
+    static int rows = image_rows / kpts_uniform_selection_grid_size, cols = image_cols / kpts_uniform_selection_grid_size;
     static vector<vector<int>> grid(rows, vector<int>(cols, 0));
     // clear grid
     // for (int i=0;i<rows;i++)for(int j=0;j<cols;j++)grid[i][j]=0;
@@ -94,8 +94,8 @@ void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
     int cnt = 0;
     for (auto &kpt : keypoints)
     {
-        int row = ((int)kpt.pt.y) / GRID_SIZE, col = ((int)kpt.pt.x) / GRID_SIZE;
-        if (grid[row][col] < MAX_PTS_IN_GRID)
+        int row = ((int)kpt.pt.y) / kpts_uniform_selection_grid_size, col = ((int)kpt.pt.x) / kpts_uniform_selection_grid_size;
+        if (grid[row][col] < kpts_uniform_selection_max_pts_per_grid)
         {
             tmp_keypoints.push_back(kpt);
             grid[row][col]++;

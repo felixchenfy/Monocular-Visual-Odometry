@@ -11,7 +11,7 @@
 // my
 
 #include "my_slam/basics/basics.h"
-#include "my_slam/basics/io.h"
+#include "my_slam/vo/vo_io.h"
 #include "my_slam/basics/config.h"
 #include "my_slam/basics/opencv_funcs.h"
 
@@ -49,7 +49,7 @@ public: // ------------------------------- Member variables --------------------
   Frame::Ptr curr_;
   Frame::Ptr ref_;
   Frame::Ptr newest_frame_; // temporarily store the newest frame
-  cv::Mat prev_T_w_c_;          // pos of previous frame
+  cv::Mat prev_T_w_c_;      // pos of previous frame
   std::deque<Frame::Ptr> frames_buff_;
 
   // Map
@@ -62,15 +62,17 @@ public: // ------------------------------- Member variables --------------------
   vector<cv::Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
+private:
+  const int kBuffSize_ = 20; // How much prev frames to store.
+
   // ================================ Functions ================================
 public: // basics
   VisualOdometry();
   void addFrame(vo::Frame::Ptr frame);
   void pushFrameToBuff(Frame::Ptr frame)
   {
-    const int BUFF_SIZE = 20;
     frames_buff_.push_back(frame);
-    if (frames_buff_.size() > BUFF_SIZE)
+    if (frames_buff_.size() > kBuffSize_)
       frames_buff_.pop_front();
   }
 

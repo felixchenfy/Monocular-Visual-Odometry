@@ -4,7 +4,7 @@ Monocular Visual Odometry
 
 A monocular visual odometry (VO) with 4 components: initialization, tracking, local map, and bundle adjustment.
 
-This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). Its also my final project for the course EESC-432 Advanced Computer Vision.
+This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). Its also my final project for the course EESC-432 Advanced Computer Vision in 2019-03.
 
 A demo:  
 <p align = "center">
@@ -106,11 +106,10 @@ The first one is adopted, which is easier to tune the parameters to generate few
 ## 2.1. Folders
 * [include/](include/): c++ header files.
 * [src/](src/): c++ definitions.
-* [src_main/](src_main/): Main script to run VO.
 * [test/](test/): Testing scripts for c++ functions.
 * [data/](data/): Store images.
 
-Main scripts and classes for VO are in [include/vo/](include/vo/). I referenced this structure from the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4).
+Main scripts and classes for VO are in [include/my_slam/vo/](include/my_slam/vo/). I referenced this structure from the [Slambook Chapter 9](https://github.com/gaoxiang12/slambook/tree/master/project/0.4).
 
 ## 2.2. Functions
 Functions are declared in [include/](include/). Some of its folders contain a README. See the tree structure for overview:
@@ -121,8 +120,8 @@ include/
     ├── basics
     │   ├── basics.h
     │   ├── config.h
+    │   ├── yaml.h
     │   ├── eigen_funcs.h
-    │   ├── io.h
     │   ├── opencv_funcs.h
     │   └── README.md
     ├── common_include.h
@@ -142,8 +141,10 @@ include/
         ├── mappoint.h
         ├── README.md
         ├── vo_commons.h
+        ├── vo_io.h
         └── vo.h
 ```
+
 # 3. Dependencies
 Require: OpenCV, Eigen, Sophus, g2o.  
 See details below:
@@ -243,11 +244,11 @@ I borrowed its code of the criteria for choosing Essential or Homography (for de
 
 # 7. To Do
 
-**Bugs**    
-* In release mode, the program throws an error:
-  > *** stack smashing detected ***: <unknown> terminated  
-  Please run in debug mode.
-
 **Improvements**  
+
 * In bundle adjustment, I cannot optimize  (1) multiple frames and (b) map points **at the same time**. It returns huge error. I haven't figure out why.
+
+* If certain region of the image has only few keypoints, then extract more.
+
+* Utilize epipolar constraint to do feature matching.
 
