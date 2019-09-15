@@ -28,7 +28,7 @@ bool Frame::isInFrame(const cv::Point3f &p_world)
 }
 bool Frame::isInFrame(const cv::Mat &p_world)
 {
-    return isInFrame(basics::Mat_to_Point3f(p_world));
+    return isInFrame(basics::Mat3x1_to_Point3f(p_world));
 }
 cv::Mat Frame::getCamCenter()
 {

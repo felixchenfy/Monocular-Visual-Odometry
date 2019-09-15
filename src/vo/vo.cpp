@@ -180,7 +180,7 @@ void VisualOdometry::retainGoodTriangulationResult()
     for (int i = 0; i < N; i++)
     {
         cv::Point3f &p_in_curr = curr_->inliers_pts3d_[i];
-        cv::Mat p_in_world = basics::point3f_to_mat(basics::preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
+        cv::Mat p_in_world = basics::point3f_to_mat3x1(basics::preTranslatePoint3f(p_in_curr, curr_->T_w_c_));
         cv::Mat vec_p_to_cam_curr = basics::getPosFromT(curr_->T_w_c_) - p_in_world;
         cv::Mat vec_p_to_cam_prev = basics::getPosFromT(ref_->T_w_c_) - p_in_world;
         double angle = basics::calcAngleBetweenTwoVectors(vec_p_to_cam_curr, vec_p_to_cam_prev);
@@ -483,7 +483,7 @@ void VisualOdometry::pushCurrPointsToMap()
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
                 descriptors.row(pt_idx).clone(),                                       // descriptor
-                basics::getNormalizedMat(basics::point3f_to_mat(world_pos) - curr_->getCamCenter()),   // view direction of the point
+                basics::getNormalizedMat(basics::point3f_to_mat3x1(world_pos) - curr_->getCamCenter()),   // view direction of the point
                 kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
                 ));
             map_point_id = map_point->id_;
@@ -500,7 +500,7 @@ void VisualOdometry::pushCurrPointsToMap()
 
 double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
 {
-    cv::Mat n = basics::point3f_to_mat(point->pos_) - frame->getCamCenter();
+    cv::Mat n = basics::point3f_to_mat3x1(point->pos_) - frame->getCamCenter();
     n = basics::getNormalizedMat(n);
     cv::Mat vector_dot_product = n.t() * point->norm_;
     return acos(vector_dot_product.at<double>(0, 0));

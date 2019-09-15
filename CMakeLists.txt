@@ -53,7 +53,12 @@ set( THIRD_PARTY_LIBS
 ############### My Files ###############
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 add_subdirectory( src )
-add_subdirectory( src_main )
 add_subdirectory( test )
-# add_subdirectory( test_tmp )
 
+add_executable(run_vo run_vo.cpp)
+target_link_libraries( run_vo
+    basics
+    geometry
+    display
+    vo
+)

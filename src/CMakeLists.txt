@@ -1,37 +1,36 @@
 
 
 add_library(basics SHARED
-    basics.cpp
-    config.cpp
-    eigen_funcs.cpp
-    opencv_funcs.cpp
-    io.cpp
+    basics/basics.cpp
+    basics/config.cpp
+    basics/eigen_funcs.cpp
+    basics/opencv_funcs.cpp
+    basics/io.cpp
 )
 
 add_library(display SHARED
-    pcl_display.cpp
-    pcl_display_lib.cpp
+    display/pcl_display.cpp
+    display/pcl_display_lib.cpp
 )
 
 add_library(geometry SHARED
-    camera.cpp
-    feature_match.cpp
-    epipolar_geometry.cpp
-    motion_estimation.cpp
+    geometry/camera.cpp
+    geometry/feature_match.cpp
+    geometry/epipolar_geometry.cpp
+    geometry/motion_estimation.cpp
 )
 
 add_library( optimization SHARED
-    g2o_ba.cpp
+    optimization/g2o_ba.cpp
 )
 
-
 add_library( vo SHARED
-    frame.cpp
-    vo.cpp
-    vo_addFrame.cpp
-    map.cpp
-    mappoint.cpp
-    vo_commons.cpp
+    vo/frame.cpp
+    vo/vo.cpp
+    vo/vo_addFrame.cpp
+    vo/map.cpp
+    vo/mappoint.cpp
+    vo/vo_commons.cpp
 )
 
 

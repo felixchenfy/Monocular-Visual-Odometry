@@ -38,7 +38,7 @@ unsigned char getPixelAt(const cv::Mat &image, int row, int col, int idx_rgb)
 
 // ---------------- datatype conversion ----------------
 
-cv::Mat point3f_to_mat(const cv::Point3f &p)
+cv::Mat point3f_to_mat3x1(const cv::Point3f &p)
 {
     return (cv::Mat_<double>(3, 1) << p.x, p.y, p.z);
 }
@@ -47,12 +47,12 @@ cv::Mat point3f_to_mat4x1(const cv::Point3f &p)
     return (cv::Mat_<double>(4, 1) << p.x, p.y, p.z, 1);
 }
 
-cv::Point3f Mat_to_Point3f(const cv::Mat &p)
+cv::Point3f Mat3x1_to_Point3f(const cv::Mat &p)
 {
     return cv::Point3f(p.at<double>(0, 0), p.at<double>(1, 0), p.at<double>(2, 0));
 }
 
-cv::Mat point2f_to_mat(const cv::Point2f &p)
+cv::Mat point2f_to_mat2x1(const cv::Point2f &p)
 {
     return (cv::Mat_<double>(2, 1) << p.x, p.y);
 }
@@ -115,7 +115,7 @@ cv::Mat getPosFromT(const cv::Mat &T)
 }
 cv::Point3f transCoord(const cv::Point3f &p, const cv::Mat &R, const cv::Mat &t)
 {
-    cv::Mat p2 = R * point3f_to_mat(p) + t; // 3d pos in camera 2
+    cv::Mat p2 = R * point3f_to_mat3x1(p) + t; // 3d pos in camera 2
     return cv::Point3f(p2.at<double>(0, 0), p2.at<double>(1, 0), p2.at<double>(2, 0));
 }
 void invRt(cv::Mat &R, cv::Mat &t)
