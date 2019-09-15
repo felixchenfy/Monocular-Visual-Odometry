@@ -75,7 +75,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv();
 
     // Get points that are used for triangulating new map points
-    retainGoodTriangulationResult();
+    retainGoodTriangulationResult_();
 
     int N = curr_->inliers_pts3d_.size();
     if (N < 20)
@@ -92,7 +92,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
 
-bool VisualOdometry::checkIfVoGoodToInit()
+bool VisualOdometry::isVoGoodToInit()
 {
 
     // -- Rename input
@@ -148,14 +148,14 @@ bool VisualOdometry::checkIfVoGoodToInit()
 
 bool VisualOdometry::isInitialized()
 {
-    return vo_state_ == OK;
+    return vo_state_ == DOING_TRACKING;
 }
 
 // ------------------------------- Triangulation -------------------------------
 
 // Compute the triangulation angle of each point, and get the statistics.
 // Remove those with a too large or too small angle.
-void VisualOdometry::retainGoodTriangulationResult()
+void VisualOdometry::retainGoodTriangulationResult_()
 {
     static const double min_triang_angle = basics::Config::get<double>("min_triang_angle");
     static const double max_ratio_between_max_angle_and_median_angle =
@@ -400,7 +400,9 @@ void VisualOdometry::callBundleAdjustment()
            pose_new.at<double>(0, 0), pose_new.at<double>(1, 0), pose_new.at<double>(2, 0));
     printf("Bundle adjustment finishes... \n\n");
 }
+
 // ------------------- Mapping -------------------
+
 void VisualOdometry::addKeyFrame(Frame::Ptr frame)
 {
     map_->insertKeyFrame(frame);

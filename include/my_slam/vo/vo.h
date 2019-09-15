@@ -39,17 +39,18 @@ public: // ------------------------------- Member variables --------------------
   enum VOState
   {
     BLANK,
-    INITIALIZATION,
-    OK,
+    DOING_INITIALIZATION,
+    DOING_TRACKING,
     LOST
   };
   VOState vo_state_;
 
   // Frame
-  Frame::Ptr curr_;
-  Frame::Ptr ref_;
-  Frame::Ptr newest_frame_; // temporarily store the newest frame
-  cv::Mat prev_T_w_c_;      // pos of previous frame
+  Frame::Ptr curr_ = nullptr;         // current frame
+  Frame::Ptr ref_ = nullptr;          // reference keyframe
+  Frame::Ptr prev_ref_ = nullptr;     // set prev_ref_ as ref_ at the beginning of addFrame (only for displaying purpose)
+  Frame::Ptr newest_frame_ = nullptr; // temporarily store the newest frame
+  cv::Mat prev_T_w_c_;                // pos of previous frame
   std::deque<Frame::Ptr> frames_buff_;
 
   // Map
@@ -78,14 +79,14 @@ public: // basics
 
 public: // ------------------------------- Initialization -------------------------------
   void estimateMotionAnd3DPoints();
-  bool checkIfVoGoodToInit();
+  bool isVoGoodToInit();
   bool isInitialized();
 
 public: // ------------------------------- Triangulation -------------------------------
   // 1. motion_estimation.h: helperTriangulatePoints
   // 2. Some triangulated points have a small viewing angle between two frames.
   //    Remove these points: change "pts3d_in_curr", return a new "inlier_matches"
-  void retainGoodTriangulationResult();
+  void retainGoodTriangulationResult_();
 
 public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()

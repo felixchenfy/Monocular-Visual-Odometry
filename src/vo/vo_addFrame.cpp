@@ -1,7 +1,8 @@
 
 #include "my_slam/vo/vo.h"
 
-namespace my_slam{
+namespace my_slam
+{
 namespace vo
 {
 
@@ -22,15 +23,16 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     curr_->calcKeyPoints();
     curr_->calcDescriptors();
     cout << "Number of keypoints: " << curr_->keypoints_.size() << endl;
+    prev_ref_ = ref_;
 
-    // vo_state_: BLANK -> INITIALIZATION
+    // vo_state_: BLANK -> DOING_INITIALIZATION
     if (vo_state_ == BLANK)
     {
         curr_->T_w_c_ = cv::Mat::eye(4, 4, CV_64F);
-        vo_state_ = INITIALIZATION;
-        addKeyFrame(curr_);
+        vo_state_ = DOING_INITIALIZATION;
+        addKeyFrame(curr_); // curr_ becomes the ref_
     }
-    else if (vo_state_ == INITIALIZATION)
+    else if (vo_state_ == DOING_INITIALIZATION)
     {
         // Match features
         geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
@@ -39,14 +41,15 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         // Estimae motion and triangulate points
         estimateMotionAnd3DPoints();
         printf("Number of inlier matches: %d\n", (int)curr_->inliers_matches_for_3d_.size());
+        printf("\n");
 
         // Check initialization condition:
-        if (checkIfVoGoodToInit())
+        if (isVoGoodToInit())
         {
             cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             pushCurrPointsToMap();
             addKeyFrame(curr_);
-            vo_state_ = OK;
+            vo_state_ = DOING_TRACKING;
             cout << "Inilialiation success !!!" << endl;
             cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
         }
@@ -56,7 +59,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             cout << "Not initialize VO ..." << endl;
         }
     }
-    else if (vo_state_ == OK)
+    else if (vo_state_ == DOING_TRACKING)
     {
         curr_->T_w_c_ = ref_->T_w_c_.clone(); // Initial estimation of the current pose
         poseEstimationPnP();
@@ -70,18 +73,18 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
 
             // Find inliers by epipolar constraint
             curr_->inliers_matches_with_ref_ = geometry::helperFindInlierMatchesByEpipolarCons(
-                ref_->keypoints_, curr_->keypoints_,curr_->matches_with_ref_, K);
-            
+                ref_->keypoints_, curr_->keypoints_, curr_->matches_with_ref_, K);
+
             // Print
-            printf("For triangulation: Matches with prev keyframe: %d; Num inliers: %d \n", 
-                (int) curr_->matches_with_ref_.size(),(int) curr_->inliers_matches_with_ref_.size());
+            printf("For triangulation: Matches with prev keyframe: %d; Num inliers: %d \n",
+                   (int)curr_->matches_with_ref_.size(), (int)curr_->inliers_matches_with_ref_.size());
 
             // Triangulate points
             curr_->inliers_pts3d_ = geometry::helperTriangulatePoints(
                 ref_->keypoints_, curr_->keypoints_,
                 curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
-    
-            retainGoodTriangulationResult();
+
+            retainGoodTriangulationResult_();
 
             // -- Update state
             pushCurrPointsToMap();
@@ -91,7 +94,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     }
 
     // Print relative motion
-    if (vo_state_ == OK)
+    if (vo_state_ == DOING_TRACKING)
     {
         static cv::Mat T_w_to_prev = cv::Mat::eye(4, 4, CV_64F);
         const cv::Mat &T_w_to_curr = curr_->T_w_c_;

@@ -33,7 +33,7 @@ fr1_desk: # fr1_desk dataset
   # https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
   
   # -- Data dir
-  dataset_dir: /home/feiyu/Documents/Projects/EECS432_CV_VO/data/dataset_images_fr1_desk
+  dataset_dir: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/dataset_images_fr1_desk
   num_images: 100
 
   # -- Camera intrinsics (The images should all be undistorted)
@@ -50,7 +50,8 @@ fr1_desk: # fr1_desk dataset
 # ================================================
 
 max_num_imgs_to_proc: 300
-is_pcl_wait_for_keypress: "false" # If true, PCL Viewer will stop after each update, and wait for your keypress.
+# is_pcl_wait_for_keypress: "true" # If true, PCL Viewer will stop after each update, and wait for your keypress.
+is_pcl_wait_for_keypress: "false" 
 save_predicted_traj_to: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/test_data/cam_traj.txt
 
 

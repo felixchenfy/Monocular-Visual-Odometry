@@ -1,12 +1,14 @@
 
 
 #include "my_slam/basics/basics.h"
-#include <string>
-#include <vector>
 #include <iterator>
-#include <sstream>
 #include <assert.h>
-#include <algorithm>    // std::set_intersection, std::sort
+#include <chrono>
+#include <ctime>
+#include <sys/types.h> //mkdir
+#include <sys/stat.h>  //mkdir
+#include <unistd.h> // access
+#include <stdlib.h> // access
 
 namespace my_slam
 {
@@ -57,6 +59,37 @@ vector<int> getIntersection(vector<int> v1, vector<int> v2)
     v.resize(it - v.begin());
     return v;
 }
+
+bool makedirs(const string &dir)
+{
+    const char *sPathName = dir.c_str();
+    char DirName[256];
+    strcpy(DirName, sPathName);
+    int i, len = strlen(DirName);
+    if (DirName[len - 1] != '/')
+        strcat(DirName, "/");
+
+    len = strlen(DirName);
+
+    for (i = 1; i < len; i++)
+    {
+        if (DirName[i] == '/')
+        {
+            DirName[i] = 0;
+            if (access(DirName, F_OK) != 0)
+            {
+                if (mkdir(DirName, 0755) == -1)
+                {
+                    perror("Error makedirs.");
+                    return false;
+                }
+            }
+            DirName[i] = '/';
+        }
+    }
+    return true;
+}
+
 
 } // namespace basics
 } // namespace my_slam

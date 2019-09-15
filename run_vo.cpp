@@ -67,9 +67,11 @@ int main(int argc, char **argv)
     basics::Config::setParameterFile(kConfigFile); // Use Config to read .yaml
     const string dataset_name = config.get<string>("dataset_name");
     basics::Yaml config_dataset = config.get(dataset_name);
+    basics::makedirs("output/");
 
     // -- Read image filenames
-    vector<string> image_paths;
+    vector<string>
+        image_paths;
     if (IS_DEBUGGING) // Read certain images specified below.
     {
         string folder = "/home/feiyu/Documents/Projects/EECS432_CV_VO/data/test_data/";
@@ -185,8 +187,16 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     static bool is_vo_initialized_in_prev_frame = false;
     bool first_time_vo_init = vo->isInitialized() && !is_vo_initialized_in_prev_frame;
 
-    if (1) // draw all & inlier keypoints in the current frame
+    if (img_id != 0 && // draw matches during initialization stage
+        (!vo->isInitialized() || first_time_vo_init))
     {
+        drawMatches(vo->prev_ref_->rgb_img_, vo->prev_ref_->keypoints_, // keywords: feature matching / matched features
+                    frame->rgb_img_, frame->keypoints_,
+                    frame->matches_with_ref_,
+                    img_show);
+    }
+    else
+    { // draw all & inlier keypoints in the current frame
         cv::Scalar color_g(0, 255, 0), color_b(255, 0, 0), color_r(0, 0, 255);
         vector<cv::KeyPoint> inliers_kpt;
         if (!vo->isInitialized() || first_time_vo_init)
@@ -202,23 +212,16 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
         cv::drawKeypoints(img_show, frame->keypoints_, img_show, color_g);
         cv::drawKeypoints(img_show, inliers_kpt, img_show, color_r);
     }
-    else if (img_id != 0 && // draw matches during initialization stage
-             (!vo->isInitialized() || first_time_vo_init))
-    {
-        drawMatches(vo->ref_->rgb_img_, vo->ref_->keypoints_, // keywords: feature matching / matched features
-                    frame->rgb_img_, frame->keypoints_,
-                    frame->inliers_matches_for_3d_,
-                    img_show);
-    }
     is_vo_initialized_in_prev_frame = vo->isInitialized();
     cv::imshow(IMAGE_WINDOW_NAME, img_show);
-    cv::waitKey(1);
+    cv::waitKey(10);
 
-    // save to file
-    if (0)
+    // Save to file
+    constexpr bool kIsSaveImageToDisk = true;
+    if (kIsSaveImageToDisk)
     {
-        string str_img_id = basics::int2str(img_id, 4);
-        imwrite("result/" + str_img_id + ".png", img_show);
+        const string str_img_id = basics::int2str(img_id, 4);
+        imwrite("output/" + str_img_id + ".png", img_show);
     }
 
     return true;

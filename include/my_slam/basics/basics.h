@@ -23,6 +23,9 @@ vector<double> str2vecdouble(const string &pointLine);
 // Please sort v1 and v2 first, then this functions returns the intersection of two vector.
 vector<int> getIntersection(vector<int> v1, vector<int> v2);
 
+// Create directories. Same as python `os.makedirs()`
+bool makedirs(const string &dir);
+
 } // namespace basics
 } // namespace my_slam
 
