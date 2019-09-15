@@ -116,34 +116,33 @@ Main scripts and classes for VO are in [include/vo/](include/vo/). I referenced 
 Functions are declared in [include/](include/). Some of its folders contain a README. See the tree structure for overview:
 
 ```
-include
-├── basics
-│   ├── basics.h
-│   ├── config.h
-│   ├── eigen_funcs.h
-│   ├── io.h
-│   ├── opencv_funcs.h
-│   └── README.md
-├── display
-│   ├── pcl_display.h
-│   └── pcl_display_lib.h
-├── geometry
-│   ├── camera.h
-│   ├── common_include.h
-│   ├── epipolar_geometry.h
-│   ├── feature_match.h
-│   └── motion_estimation.h
-├── optimization
-│   └── g2o_ba.h
-└── vo
+include/
+└── my_slam
+    ├── basics
+    │   ├── basics.h
+    │   ├── config.h
+    │   ├── eigen_funcs.h
+    │   ├── io.h
+    │   ├── opencv_funcs.h
+    │   └── README.md
     ├── common_include.h
-    ├── commons.h
-    ├── frame.h
-    ├── map.h
-    ├── mappoint.h
-    ├── README.md
-    └── vo.h
-
+    ├── display
+    │   ├── pcl_display.h
+    │   └── pcl_display_lib.h
+    ├── geometry
+    │   ├── camera.h
+    │   ├── epipolar_geometry.h
+    │   ├── feature_match.h
+    │   └── motion_estimation.h
+    ├── optimization
+    │   └── g2o_ba.h
+    └── vo
+        ├── frame.h
+        ├── map.h
+        ├── mappoint.h
+        ├── README.md
+        ├── vo_commons.h
+        └── vo.h
 ```
 # 3. Dependencies
 Require: OpenCV, Eigen, Sophus, g2o.  
