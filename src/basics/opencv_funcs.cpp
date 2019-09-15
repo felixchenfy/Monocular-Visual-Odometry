@@ -22,7 +22,7 @@ vector<unsigned char> getPixelAt(const cv::Mat &image, int x, int y)
     }
     else
     {
-        for (int c = 0; c <= 3; c++)
+        for (int c = 0; c < 3; c++)
         {
             bgr[c] = image.at<cv::Vec3b>(y, x)[c];
         }

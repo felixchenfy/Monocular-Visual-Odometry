@@ -313,13 +313,13 @@ void VisualOdometry::callBundleAdjustment()
     static const vector<double> im = basics::str2vecdouble(
         basics::Config::get<string>("information_matrix"));
     static const bool is_ba_fix_map_points = basics::Config::getBool("is_ba_fix_map_points");
-    // static const bool UPDATE_MAP_PTS = basics::Config::getBool("UPDATE_MAP_PTS");
-    static const bool UPDATE_MAP_PTS = !is_ba_fix_map_points;
-    // cout << is_ba_fix_map_points << UPDATE_MAP_PTS << endl;
+    // static const bool is_ba_update_map_points = basics::Config::getBool("is_ba_update_map_points");
+    static const bool is_ba_update_map_points = !is_ba_fix_map_points;
+    // cout << is_ba_fix_map_points << is_ba_update_map_points << endl;
 
     // Set params
-    const int TOTAL_FRAMES = frames_buff_.size();
-    const int NUM_FRAMES_FOR_BA = std::min(num_prev_frames_to_opti_by_ba, TOTAL_FRAMES - 1);
+    const int kTotalFrames = frames_buff_.size();
+    const int kNumFramesForBA = std::min(num_prev_frames_to_opti_by_ba, kTotalFrames - 1);
     const static cv::Mat information_matrix = (cv::Mat_<double>(2, 2) << im[0], im[1], im[2], im[3]);
 
     if (is_enable_ba != true)
@@ -327,20 +327,21 @@ void VisualOdometry::callBundleAdjustment()
         printf("\nNot using bundle adjustment ... \n");
         return;
     }
-    printf("\nCalling bundle adjustment on %d frames ... \n", NUM_FRAMES_FOR_BA);
+    printf("\nCalling bundle adjustment on %d frames ... \n", kNumFramesForBA);
 
     // Measurement (which is fixed; truth)
     vector<vector<cv::Point2f *>> v_pts_2d;
     vector<vector<int>> v_pts_2d_to_3d_idx;
 
     // Things to to optimize
-    std::unordered_map<int, cv::Point3f *> um_pts_3d;
-    vector<cv::Point3f *> v_pts_3d_only_in_curr; // This is an alternative of the above
+    std::unordered_map<int, cv::Point3f *> um_pts_3d_in_prev_frames;
+    vector<cv::Point3f *> v_pts_3d_only_in_curr;
     vector<cv::Mat *> v_camera_poses;
 
     // Set up input vars
     int ith_frame = 0;
-    for (int ith_frame_in_buff = TOTAL_FRAMES - 1; ith_frame_in_buff >= TOTAL_FRAMES - NUM_FRAMES_FOR_BA;
+    for (int ith_frame_in_buff = kTotalFrames - 1;
+         ith_frame_in_buff >= kTotalFrames - kNumFramesForBA;
          ith_frame_in_buff--, ith_frame++)
     {
         Frame::Ptr frame = frames_buff_[ith_frame_in_buff];
@@ -366,12 +367,12 @@ void VisualOdometry::callBundleAdjustment()
                 continue; // point has been deleted
 
             // Get 2d pos
-            v_pts_2d[ith_frame].push_back(&(frame->keypoints_[kpt_idx].pt));
-            v_pts_2d_to_3d_idx[ith_frame].push_back(mappt_idx);
+            v_pts_2d.back().push_back(&(frame->keypoints_[kpt_idx].pt));
+            v_pts_2d_to_3d_idx.back().push_back(mappt_idx);
 
             // Get 3d pos
             cv::Point3f *p = &(map_->map_points_[mappt_idx]->pos_);
-            um_pts_3d[mappt_idx] = p;
+            um_pts_3d_in_prev_frames[mappt_idx] = p;
             if (ith_frame == 0)
                 v_pts_3d_only_in_curr.push_back(p);
         }
@@ -382,16 +383,16 @@ void VisualOdometry::callBundleAdjustment()
     {
         optimization::bundleAdjustment(
             v_pts_2d, v_pts_2d_to_3d_idx, curr_->camera_->K_,
-            um_pts_3d, v_camera_poses,
+            um_pts_3d_in_prev_frames, v_camera_poses,
             information_matrix,
-            is_ba_fix_map_points, UPDATE_MAP_PTS);
+            is_ba_fix_map_points, is_ba_update_map_points);
     }
-    else
+    else // This is a deprecated function. I will remove it later.
     {
         optimization::optimizeSingleFrame(
             v_pts_2d[0], curr_->camera_->K_,
             v_pts_3d_only_in_curr, curr_->T_w_c_,
-            is_ba_fix_map_points, UPDATE_MAP_PTS); // Update pts_3d and curr_->T_w_c_
+            is_ba_fix_map_points, is_ba_update_map_points); // Update pts_3d and curr_->T_w_c_
     }
 
     // Print result
@@ -482,9 +483,9 @@ void VisualOdometry::pushCurrPointsToMap()
             // Create map point
             MapPoint::Ptr map_point(new MapPoint( // createMapPoint
                 world_pos,
-                descriptors.row(pt_idx).clone(),                                       // descriptor
-                basics::getNormalizedMat(basics::point3f_to_mat3x1(world_pos) - curr_->getCamCenter()),   // view direction of the point
-                kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2] // rgb color
+                descriptors.row(pt_idx).clone(),                                                        // descriptor
+                basics::getNormalizedMat(basics::point3f_to_mat3x1(world_pos) - curr_->getCamCenter()), // view direction of the point
+                kpts_colors[pt_idx][0], kpts_colors[pt_idx][1], kpts_colors[pt_idx][2]                  // rgb color
                 ));
             map_point_id = map_point->id_;
             // cout<<map_point->id_ <<", "<< map_point->factory_id_<<endl;
