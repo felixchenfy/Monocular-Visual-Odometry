@@ -255,15 +255,10 @@ bool drawResultByPcl(basics::Yaml config_dataset,
         // Start drawing only when visual odometry has been initialized. (i.e. The first few frames are not drawn.)
         // The reason is: we need scale the truth pose to be same as estiamted pose, so we can make comparison between them.
         // (And the underlying reason is that Mono SLAM cannot estiamte depth of point.)
-        static bool is_made_the_same_scale = false;
         static double scale;
-        if (is_made_the_same_scale == false && vo->isInitialized())
-        {
-            scale = basics::calcMatNorm(truth_t) / basics::calcMatNorm(t);
-            is_made_the_same_scale = true;
-        }
         if (vo->isInitialized())
         {
+            scale = basics::calcMatNorm(truth_t) / basics::calcMatNorm(t);
             truth_t /= scale;
             pcl_displayer->updateCameraTruthPose(truth_R_vec, truth_t);
         }

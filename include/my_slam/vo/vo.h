@@ -47,6 +47,7 @@ public: // ------------------------------- Member variables --------------------
 
   // Frame
   Frame::Ptr curr_ = nullptr;         // current frame
+  Frame::Ptr prev_ = nullptr;         // previous frame
   Frame::Ptr ref_ = nullptr;          // reference keyframe
   Frame::Ptr prev_ref_ = nullptr;     // set prev_ref_ as ref_ at the beginning of addFrame (only for displaying purpose)
   Frame::Ptr newest_frame_ = nullptr; // temporarily store the newest frame
@@ -78,8 +79,8 @@ public: // basics
   }
 
 public: // ------------------------------- Initialization -------------------------------
-  void estimateMotionAnd3DPoints();
-  bool isVoGoodToInit();
+  void estimateMotionAnd3DPoints_();
+  bool isVoGoodToInit_();
   bool isInitialized();
 
 public: // ------------------------------- Triangulation -------------------------------
@@ -90,9 +91,9 @@ public: // ------------------------------- Triangulation -----------------------
 
 public: // ------------------------------- Tracking -------------------------------
   // void find3Dto2DCorrespondences()
-  bool checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref);
+  bool checkLargeMoveForAddKeyFrame_(Frame::Ptr curr, Frame::Ptr ref);
   void optimizeMap();
-  void poseEstimationPnP();
+  bool poseEstimationPnP_();
 
 public: // ------------------------------- Mapping -------------------------------
   void addKeyFrame(Frame::Ptr frame);
@@ -103,7 +104,7 @@ public: // ------------------------------- Mapping -----------------------------
   double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
 
 public: // ------------------------------- BundleAdjustment -------------------------------
-  void callBundleAdjustment();
+  void callBundleAdjustment_();
 };
 
 } // namespace vo

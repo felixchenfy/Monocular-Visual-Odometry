@@ -34,7 +34,7 @@ fr1_desk: # fr1_desk dataset
   
   # -- Data dir
   dataset_dir: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/dataset_images_fr1_desk
-  num_images: 100
+  num_images: 150
 
   # -- Camera intrinsics (The images should all be undistorted)
   camera_info.fx: 517.3
@@ -52,7 +52,7 @@ fr1_desk: # fr1_desk dataset
 max_num_imgs_to_proc: 300
 # is_pcl_wait_for_keypress: "true" # If true, PCL Viewer will stop after each update, and wait for your keypress.
 is_pcl_wait_for_keypress: "false" 
-cv_waitkey_time: 10
+cv_waitkey_time: 30
 save_predicted_traj_to: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/test_data/cam_traj.txt
 output_folder: "output"
 
@@ -76,25 +76,31 @@ kpts_uniform_selection_grid_size: 16
 kpts_uniform_selection_max_pts_per_grid: 8
 
 # ORB settings 
-number_of_keypoints_to_extract: 10000
+number_of_keypoints_to_extract: 8000
 max_number_of_keypoints: 1500
 scale_factor: 1.2
-level_pyramid: 4
-score_threshold: 20
+level_pyramid: 3
+score_threshold: 15
+
+# ------------------- RANSAC Essential matrix -------------------
+
+findEssentialMat_prob: 0.999
+findEssentialMat_threshold: 1.0
 
 # ------------------- Triangulation -------------------
-min_triang_angle: 0.8
+min_triang_angle: 1.0
 max_ratio_between_max_angle_and_median_angle: 20
 
 # ------------------- Initialization -------------------
 
-# 2 criterias for initializing VO
+min_inlier_matches: 15
 min_pixel_dist: 50
 min_median_triangulation_angle: 2.0
+assumed_mean_pts_depth_during_vo_init: 0.8
 
 # ------------------- Tracking -------------------
-min_dist_between_two_keyframes: 0.08
-min_rotation_angle_betwen_two_keyframes: 0.08
+min_dist_between_two_keyframes: 0.03
+max_possible_dist_to_prev_keyframe: 0.3
 
 # ------------------- Optimization -------------------
 is_enable_ba: "true"                 # Use bundle adjustment for camera and points in single frame. 1 for true, 0 for false

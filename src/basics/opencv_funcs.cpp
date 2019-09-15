@@ -57,6 +57,11 @@ cv::Mat point2f_to_mat2x1(const cv::Point2f &p)
     return (cv::Mat_<double>(2, 1) << p.x, p.y);
 }
 
+cv::Mat getZerosMat(int rows, int cols, int type)
+{
+    return cv::Mat::zeros(cv::Size(rows, cols), type);
+}
+
 // ---------------- Transformations ----------------
 
 cv::Point3f preTranslatePoint3f(const cv::Point3f &p3x1, const cv::Mat &T4x4)

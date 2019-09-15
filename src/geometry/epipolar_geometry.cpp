@@ -1,5 +1,6 @@
 
 #include "my_slam/geometry/epipolar_geometry.h"
+#include "my_slam/basics/config.h"
 
 
 #define PRINT_DEBUG_RESULT true
@@ -27,14 +28,14 @@ void estiMotionByEssential(
 
     // -- Essential matrix
     int method = cv::RANSAC;
-    double prob = 0.999;
-    double threshold = 0.8;
+    static double findEssentialMat_prob = basics::Config::get<double>("findEssentialMat_prob");
+    static double findEssentialMat_threshold = basics::Config::get<double>("findEssentialMat_threshold");
     // double prob = 0.99; //This param settings give big error. Tested by image0001 and image0015.
     // double threshold = 3.0;
     cv::Mat inliers_mask; //Use print_MatProperty to know its type: 8UC1
     essential_matrix = findEssentialMat(
         pts_in_img1, pts_in_img2, focal_length, principal_point,
-        method, prob, threshold,
+        method, findEssentialMat_prob, findEssentialMat_threshold,
         inliers_mask);
     essential_matrix /= essential_matrix.at<double>(2, 2);
     // print_MatProperty(inliers_mask);

@@ -36,7 +36,7 @@ void VisualOdometry::getMappointsInCurrentView(
 
 // --------------------------------- Initialization ---------------------------------
 
-void VisualOdometry::estimateMotionAnd3DPoints()
+void VisualOdometry::estimateMotionAnd3DPoints_()
 {
     // -- Rename output
     vector<cv::DMatch> &inlier_matches = curr_->inliers_matches_with_ref_;
@@ -85,14 +85,17 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     }
 
     //Normalize Points Depth to 1, and
-    double mean_depth = basics::calcMeanDepth(curr_->inliers_pts3d_);
-    t_curr_to_prev /= mean_depth;
+    double mean_depth_without_scale = basics::calcMeanDepth(curr_->inliers_pts3d_);
+    static const double assumed_mean_pts_depth_during_vo_init =
+        basics::Config::get<double>("assumed_mean_pts_depth_during_vo_init");
+    double scale = assumed_mean_pts_depth_during_vo_init / mean_depth_without_scale;
+    t_curr_to_prev *= scale;
     for (cv::Point3f &p : curr_->inliers_pts3d_)
-        basics::scalePointPos(p, 1 / mean_depth);
+        basics::scalePointPos(p, scale);
     T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv(); // update pose
 }
 
-bool VisualOdometry::isVoGoodToInit()
+bool VisualOdometry::isVoGoodToInit_()
 {
 
     // -- Rename input
@@ -102,14 +105,17 @@ bool VisualOdometry::isVoGoodToInit()
     const vector<cv::DMatch> &matches = curr_->inliers_matches_for_3d_;
 
     // Params
+    static const int min_inlier_matches = basics::Config::get<int>("min_inlier_matches");
     static const double min_pixel_dist = basics::Config::get<double>("min_pixel_dist");
     static const double min_median_triangulation_angle = basics::Config::get<double>("min_median_triangulation_angle");
 
     // -- Check CRITERIA_0: num inliers should be large
-    if (matches.size() < 20)
+    bool criteria_0 = true;
+    if (matches.size() < min_inlier_matches)
     {
-        printf("Check VO init: Too few inlier points ...\n");
-        return false;
+        printf("%d inlier points are too few... threshold is %d.\n",
+               int(matches.size()), min_inlier_matches);
+        criteria_0 = false;
     }
 
     // -- Check criteria_1
@@ -117,20 +123,21 @@ bool VisualOdometry::isVoGoodToInit()
     {
         vector<double> dists_between_kpts;
         double mean_dist = geometry::computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
-        printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
+        printf("Pixel movement of matched keypoints: %.1f. Threshold is %.1f\n", mean_dist, min_pixel_dist);
 
         criteria_1 = mean_dist > min_pixel_dist;
     }
 
     // -- Check criteria_2
     bool criteria_2 = false; // Triangulation angle of each point should be larger than threshold.
+    if (curr_->triangulation_angles_of_inliers_.size() > 0)
     {
         vector<double> sort_a = curr_->triangulation_angles_of_inliers_; // a copy of angles
         int N = sort_a.size();                                           // num of 3d points triangulated from inlier points
         sort(sort_a.begin(), sort_a.end());
         double mean_angle = accumulate(sort_a.begin(), sort_a.end(), 0.0) / N;
         double median_angle = sort_a[N / 2];
-        printf("Triangulation angle: mean=%f, median=%f, min=%f, max=%f\n",
+        printf("Triangulation angle: mean=%f, median=%f, min=%f, max=%f.\n",
                mean_angle,   // mean
                median_angle, // median
                sort_a[0],    // min
@@ -138,12 +145,14 @@ bool VisualOdometry::isVoGoodToInit()
         );
 
         // Thresholding
+        printf("    median_angle is %.2f, threshold is %.2f.\n",
+               median_angle, min_median_triangulation_angle);
         if (median_angle > min_median_triangulation_angle)
             criteria_2 = true;
     }
 
     // -- Return
-    return criteria_1 && criteria_2;
+    return criteria_0 && criteria_1 && criteria_2;
 }
 
 bool VisualOdometry::isInitialized()
@@ -221,7 +230,7 @@ void VisualOdometry::retainGoodTriangulationResult_()
 }
 
 // ------------------- Tracking -------------------
-bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr ref)
+bool VisualOdometry::checkLargeMoveForAddKeyFrame_(Frame::Ptr curr, Frame::Ptr ref)
 {
     cv::Mat T_key_to_curr = ref->T_w_c_.inv() * curr->T_w_c_;
     cv::Mat R, t, R_vec;
@@ -229,7 +238,7 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     cv::Rodrigues(R, R_vec);
 
     static const double min_dist_between_two_keyframes = basics::Config::get<double>("min_dist_between_two_keyframes");
-    static const double min_rotation_angle_betwen_two_keyframes = basics::Config::get<double>("min_rotation_angle_betwen_two_keyframes");
+    // static const double min_rotation_angle_betwen_two_keyframes = basics::Config::get<double>("min_rotation_angle_betwen_two_keyframes");
 
     double moved_dist = basics::calcMatNorm(t);
     double rotated_angle = basics::calcMatNorm(R_vec);
@@ -237,11 +246,11 @@ bool VisualOdometry::checkLargeMoveForAddKeyFrame(Frame::Ptr curr, Frame::Ptr re
     printf("Wrt prev keyframe, relative dist = %.5f, angle = %.5f\n", moved_dist, rotated_angle);
 
     // Satisfy each one will be a good keyframe
-    bool res = moved_dist > min_dist_between_two_keyframes || rotated_angle > min_rotation_angle_betwen_two_keyframes;
+    bool res = moved_dist > min_dist_between_two_keyframes;
     return res;
 }
 
-void VisualOdometry::poseEstimationPnP()
+bool VisualOdometry::poseEstimationPnP_()
 {
     // -- From the local map, find the keypoints that fall into the current view
     vector<MapPoint::Ptr> candidate_mappoints_in_map;
@@ -250,10 +259,11 @@ void VisualOdometry::poseEstimationPnP()
 
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
     geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
-    cout << "Number of 3d-2d pairs: " << curr_->matches_with_map_.size() << endl;
+    const int num_matches = curr_->matches_with_map_.size();
+    cout << "Number of 3d-2d pairs: " << num_matches << endl;
     vector<cv::Point3f> pts_3d;
     vector<cv::Point2f> pts_2d; // a point's 2d pos in image2 pixel curr_
-    for (int i = 0; i < curr_->matches_with_map_.size(); i++)
+    for (int i = 0; i < num_matches; i++)
     {
         cv::DMatch &match = curr_->matches_with_map_[i];
         MapPoint::Ptr mappoint = candidate_mappoints_in_map[match.queryIdx];
@@ -262,50 +272,85 @@ void VisualOdometry::poseEstimationPnP()
     }
 
     // -- Solve PnP, get T_world_to_camera
-    cv::Mat R_vec, R, t;
-    bool useExtrinsicGuess = false;
-    int iterationsCount = 100;
-    float reprojectionError = 5.0;
-    double confidence = 0.999;
+    constexpr int kMinPtsForPnP = 5;
+    static const double max_possible_dist_to_prev_keyframe =
+        basics::Config::get<double>("max_possible_dist_to_prev_keyframe");
+
     cv::Mat pnp_inliers_mask; // type = 32SC1, size = 999x1
-    solvePnPRansac(pts_3d, pts_2d, curr_->camera_->K_, cv::Mat(), R_vec, t,
-                   useExtrinsicGuess, iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
-    Rodrigues(R_vec, R);
+    cv::Mat R_vec, t;
 
-    // -- Get inlier matches used in PnP
-    vector<cv::Point2f> tmp_pts_2d;
-    vector<cv::Point3f *> inlier_candidates_pos;
-    vector<MapPoint::Ptr> inlier_candidates;
-    vector<cv::DMatch> tmp_matches_with_map_;
-    int num_inliers = pnp_inliers_mask.rows;
-    for (int i = 0; i < num_inliers; i++)
+    bool is_pnp_good = num_matches >= kMinPtsForPnP;
+    if (is_pnp_good)
     {
-        int good_idx = pnp_inliers_mask.at<int>(i, 0);
+        bool useExtrinsicGuess = false;
+        int iterationsCount = 100;
+        float reprojectionError = 2.0;
+        double confidence = 0.999;
+        cv::solvePnPRansac(pts_3d, pts_2d, curr_->camera_->K_, cv::Mat(), R_vec, t,
+                           useExtrinsicGuess,
+                           iterationsCount, reprojectionError, confidence, pnp_inliers_mask);
+        // Output two variables:
+        //      1. curr_->matches_with_map_
+        //      2. curr_->T_w_c_
 
-        // good match
-        cv::DMatch &match = curr_->matches_with_map_[good_idx];
-        tmp_matches_with_map_.push_back(match);
+        cv::Mat R;
+        cv::Rodrigues(R_vec, R); // angle-axis rotation to 3x3 rotation matrix
 
-        // good pts 2d
-        tmp_pts_2d.push_back(pts_2d[good_idx]);
+        // -- Get inlier matches used in PnP
+        vector<cv::Point2f> tmp_pts_2d;
+        vector<cv::Point3f *> inlier_candidates_pos;
+        vector<MapPoint::Ptr> inlier_candidates;
+        vector<cv::DMatch> tmp_matches_with_map_;
+        int num_inliers = pnp_inliers_mask.rows;
+        for (int i = 0; i < num_inliers; i++)
+        {
+            int good_idx = pnp_inliers_mask.at<int>(i, 0);
 
-        // good pts 3d
-        MapPoint::Ptr inlier_mappoint = candidate_mappoints_in_map[match.queryIdx];
-        inlier_candidates_pos.push_back(&(inlier_mappoint->pos_));
-        inlier_mappoint->matched_times_++;
+            // good match
+            cv::DMatch &match = curr_->matches_with_map_[good_idx];
+            tmp_matches_with_map_.push_back(match);
 
-        // Update graph info
-        curr_->inliers_to_mappt_connections_[match.trainIdx] = PtConn{-1, inlier_mappoint->id_};
+            // good pts 2d
+            tmp_pts_2d.push_back(pts_2d[good_idx]);
+
+            // good pts 3d
+            MapPoint::Ptr inlier_mappoint = candidate_mappoints_in_map[match.queryIdx];
+            inlier_candidates_pos.push_back(&(inlier_mappoint->pos_));
+            inlier_mappoint->matched_times_++;
+
+            // Update graph info
+            curr_->inliers_to_mappt_connections_[match.trainIdx] = PtConn{-1, inlier_mappoint->id_};
+        }
+        pts_2d.swap(tmp_pts_2d);
+        curr_->matches_with_map_.swap(tmp_matches_with_map_);
+
+        // -- Update current camera pos
+        curr_->T_w_c_ = basics::convertRt2T(R, t).inv();
+
+        // -- Check relative motion with previous frame
+        cv::Mat R_prev, t_prev, R_curr, t_curr;
+        basics::getRtFromT(curr_->T_w_c_, R_prev, t_prev);
+        basics::getRtFromT(prev_->T_w_c_, R_curr, t_curr);
+        double dist_to_prev_keyframe = basics::calcMatNorm(t_prev - t_curr);
+        if (dist_to_prev_keyframe >= max_possible_dist_to_prev_keyframe)
+        {
+            printf("PnP: distance with prev keyframe is %.3f. Threshold is %.3f.\n",
+                   dist_to_prev_keyframe, max_possible_dist_to_prev_keyframe);
+            is_pnp_good = false;
+        }
+    }else{
+        printf("PnP num inlier matches: %d.\n", num_matches);
     }
-    pts_2d.swap(tmp_pts_2d);
-    curr_->matches_with_map_.swap(tmp_matches_with_map_);
 
-    // -- Update current camera pos
-    curr_->T_w_c_ = basics::convertRt2T(R, t).inv();
+    if (!is_pnp_good) // Set this frame's pose the same as previous frame
+    {
+        curr_->T_w_c_ = prev_->T_w_c_.clone();
+    }
+    return is_pnp_good;
 }
 
 // bundle adjustment
-void VisualOdometry::callBundleAdjustment()
+void VisualOdometry::callBundleAdjustment_()
 {
     // Read settings from config.yaml
     static const bool is_enable_ba = basics::Config::getBool("is_enable_ba");
@@ -431,7 +476,7 @@ void VisualOdometry::optimizeMap()
         }
 
         double angle = getViewAngle(curr_, iter->second);
-        if (angle > M_PI / 6.)
+        if (angle > M_PI / 4.)
         {
             iter = map_->map_points_.erase(iter);
             continue;

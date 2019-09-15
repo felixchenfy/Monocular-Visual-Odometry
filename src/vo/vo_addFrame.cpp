@@ -39,12 +39,12 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_with_ref_.size());
 
         // Estimae motion and triangulate points
-        estimateMotionAnd3DPoints();
+        estimateMotionAnd3DPoints_();
         printf("Number of inlier matches: %d\n", (int)curr_->inliers_matches_for_3d_.size());
-        printf("\n");
 
         // Check initialization condition:
-        if (isVoGoodToInit())
+        printf("\nCheck VO init conditions: \n");
+        if (isVoGoodToInit_())
         {
             cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
             pushCurrPointsToMap();
@@ -61,35 +61,51 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     }
     else if (vo_state_ == DOING_TRACKING)
     {
+        printf("\nDoing tracking\n");
         curr_->T_w_c_ = ref_->T_w_c_.clone(); // Initial estimation of the current pose
-        poseEstimationPnP();
-        callBundleAdjustment();
-
-        // -- Insert a keyframe is motion is large. Then, triangulate more points
-        if (checkLargeMoveForAddKeyFrame(curr_, ref_))
+        bool is_pnp_good = poseEstimationPnP_();
+        if (!is_pnp_good) // pnp failed. Print log.
         {
-            // Feature matching
-            geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+            int num_matches = curr_->matches_with_map_.size();
+            constexpr int kMinPtsForPnP = 5;
+            printf("PnP failed.\n");
+            printf("    Num inlier matches: %d.\n", num_matches);
+            if (num_matches >= kMinPtsForPnP)
+            {
+                printf("    Computed world to camera transformation:\n");
+                std::cout << curr_->T_w_c_ << std::endl;
+            }
+            printf("PnP result has been reset as R=identity, t=zero.\n");
+        }
+        else // pnp good
+        {
+            callBundleAdjustment_();
+            // -- Insert a keyframe is motion is large. Then, triangulate more points
+            if (checkLargeMoveForAddKeyFrame_(curr_, ref_))
+            {
+                // Feature matching
+                geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
 
-            // Find inliers by epipolar constraint
-            curr_->inliers_matches_with_ref_ = geometry::helperFindInlierMatchesByEpipolarCons(
-                ref_->keypoints_, curr_->keypoints_, curr_->matches_with_ref_, K);
+                // Find inliers by epipolar constraint
+                curr_->inliers_matches_with_ref_ = geometry::helperFindInlierMatchesByEpipolarCons(
+                    ref_->keypoints_, curr_->keypoints_, curr_->matches_with_ref_, K);
 
-            // Print
-            printf("For triangulation: Matches with prev keyframe: %d; Num inliers: %d \n",
-                   (int)curr_->matches_with_ref_.size(), (int)curr_->inliers_matches_with_ref_.size());
+                // Print
+                printf("For triangulation: Matches with prev keyframe: %d; Num inliers: %d \n",
+                       (int)curr_->matches_with_ref_.size(), (int)curr_->inliers_matches_with_ref_.size());
 
-            // Triangulate points
-            curr_->inliers_pts3d_ = geometry::helperTriangulatePoints(
-                ref_->keypoints_, curr_->keypoints_,
-                curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
+                // Triangulate points
+                curr_->inliers_pts3d_ = geometry::helperTriangulatePoints(
+                    ref_->keypoints_, curr_->keypoints_,
+                    curr_->inliers_matches_with_ref_, getMotionFromFrame1to2(curr_, ref_), K);
 
-            retainGoodTriangulationResult_();
+                retainGoodTriangulationResult_();
 
-            // -- Update state
-            pushCurrPointsToMap();
-            optimizeMap();
-            addKeyFrame(curr_);
+                // -- Update state
+                pushCurrPointsToMap();
+                optimizeMap();
+                addKeyFrame(curr_);
+            }
         }
     }
 
@@ -105,6 +121,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         cout << "R_prev_to_curr: " << R << endl;
         cout << "t_prev_to_curr: " << t.t() << endl;
     }
+    prev_ = curr_;
     cout << "\nEnd of a frame" << endl;
 }
 
