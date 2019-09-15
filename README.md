@@ -4,7 +4,9 @@ Monocular Visual Odometry
 
 A monocular visual odometry (VO) with 4 components: initialization, tracking, local map, and bundle adjustment.
 
-This is a practice after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook). Its also my final project for the course EESC-432 Advanced Computer Vision in 2019-03.
+I did this project after I read the [Slambook](htcdtps://github.com/gaoxiang12/slambook).   
+It's also my final project for the course `EESC-432 Advanced Computer Vision` in NWU in 2019 March.   
+
 
 A demo:  
 <p align = "center">

@@ -51,7 +51,7 @@ public:
   void update();
   void spinOnce(unsigned int millisecond);
   bool isStopped();
-  bool checkKeyPressed();
+  bool isKeyPressed();
 };
 
 } // namespace display

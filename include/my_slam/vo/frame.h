@@ -70,13 +70,13 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
     inliers_matches_for_3d_.clear();
     matches_with_map_.clear();
   }
-  void extractKeyPoints()
+  void calcKeyPoints()
   {
-    geometry::extractKeyPoints(rgb_img_, keypoints_);
+    geometry::calcKeyPoints(rgb_img_, keypoints_);
   }
-  void computeDescriptors()
+  void calcDescriptors()
   {
-    geometry::computeDescriptors(rgb_img_, keypoints_, descriptors_);
+    geometry::calcDescriptors(rgb_img_, keypoints_, descriptors_);
     kpts_colors_.clear();
     for (cv::KeyPoint kpt : keypoints_)
     {

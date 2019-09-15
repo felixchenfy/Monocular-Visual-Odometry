@@ -8,7 +8,6 @@ namespace vo
 void VisualOdometry::addFrame(Frame::Ptr frame)
 {
     // Settings
-    const int FRAME_FOR_FIRST_ESSENTIAL = 14;
     pushFrameToBuff(frame);
 
     // Renamed vars
@@ -20,8 +19,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     printf("\n\n=============================================\n");
     printf("Start processing the %dth image.\n", img_id);
 
-    curr_->extractKeyPoints();
-    curr_->computeDescriptors();
+    curr_->calcKeyPoints();
+    curr_->calcDescriptors();
     cout << "Number of keypoints: " << curr_->keypoints_.size() << endl;
 
     // vo_state_: BLANK -> INITIALIZATION

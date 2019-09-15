@@ -17,8 +17,8 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<cv::DMatch>> &list_matches,
     vector<cv::Mat> &list_normal,
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
-    const bool is_print_res,
-    const bool compute_homography,
+    bool is_print_res,
+    bool is_calc_homo,
     const bool is_motion_cam2_to_cam1)
 {
     list_R.clear();
@@ -58,7 +58,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<cv::Mat> R_h_list, t_h_list, normal_list;
     vector<int> inliers_index_h; // index of the inliers
     cv::Mat homography_matrix;
-    if (compute_homography)
+    if (is_calc_homo)
     {
         estiMotionByHomography(pts_img1, pts_img2, K,
                                /*output*/
@@ -68,7 +68,7 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
         removeWrongRtOfHomography(pts_on_np1, pts_on_np2, inliers_index_h, R_h_list, t_h_list, normal_list);
     }
     int num_h_solutions = R_h_list.size();
-    if (is_print_res && DEBUG_PRINT_RESULT && compute_homography)
+    if (is_print_res && DEBUG_PRINT_RESULT && is_calc_homo)
     {
         printResult_estiMotionByHomography(homography_matrix, // debug
                                            inliers_index_h, R_h_list, t_h_list, normal_list);
@@ -118,13 +118,13 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
             basics::invRt(list_R[i], list_t[i]);
 
     // Debug EpipolarError and TriangulationResult
-    if (is_print_res && !compute_homography)
+    if (is_print_res && !is_calc_homo)
     {
         print_EpipolarError_and_TriangulationResult_By_Solution(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
             sols_pts3d_in_cam1, list_inliers, list_R, list_t, K);
     }
-    else if (is_print_res && compute_homography)
+    else if (is_print_res && is_calc_homo)
     {
         print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
             pts_img1, pts_img2, pts_on_np1, pts_on_np2,
@@ -163,7 +163,7 @@ void helperEstiMotionByEssential(
     const cv::Mat &K,
     cv::Mat &R, cv::Mat &t,
     vector<cv::DMatch> &inlier_matches,
-    const bool is_print_res)
+    bool is_print_res)
 {
     vector<cv::Point2f> pts_in_img1, pts_in_img2;
     extractPtsFromMatches(keypoints_1, keypoints_2, matches, pts_in_img1, pts_in_img2);
@@ -387,19 +387,19 @@ void print_EpipolarError_and_TriangulationResult_By_Common_Inlier(
     const vector<vector<int>> &list_inliers,
     const vector<cv::Mat> &list_R, const vector<cv::Mat> &list_t, const cv::Mat &K)
 {
-    const int MAX_TO_CHECK_AND_PRINT = 1000;
+    constexpr int kMaxNumPtsToCheckAndPrint = 1000;
     int num_solutions = list_R.size();
     const vector<int> &inliers_index_e = list_inliers[0];
     const vector<int> &inliers_index_h = list_inliers[1];
 
     cout << "\n---------------------------------------" << endl;
     cout << "Check [Epipoloar error] and [Triangulation result]" << endl;
-    cout << "for the first " << MAX_TO_CHECK_AND_PRINT << " points:";
+    cout << "for the first " << kMaxNumPtsToCheckAndPrint << " points:";
 
     // Iterate through points.
     int cnt = 0;
     int num_points = pts_img1.size();
-    for (int i = 0; i < num_points && cnt < MAX_TO_CHECK_AND_PRINT; i++)
+    for (int i = 0; i < num_points && cnt < kMaxNumPtsToCheckAndPrint; i++)
     {
         auto pe = find(inliers_index_e.begin(), inliers_index_e.end(), i);
         auto ph = find(inliers_index_h.begin(), inliers_index_h.end(), i);
@@ -465,8 +465,8 @@ void print_EpipolarError_and_TriangulationResult_By_Solution(
         const cv::Mat &R = list_R[j], &t = list_t[j];
         const vector<int> &inliers = list_inliers[j];
         int num_inliers = inliers.size();
-        const int MAX_TO_PRINT = 5;
-        for (int _idx_inlier = 0; _idx_inlier < std::min(MAX_TO_PRINT, num_inliers); _idx_inlier++)
+        constexpr int kMaxNumInliersToPrint = 5;
+        for (int _idx_inlier = 0; _idx_inlier < std::min(kMaxNumInliersToPrint, num_inliers); _idx_inlier++)
         {
             int idx_inlier = num_inliers - 1 - _idx_inlier;
             int idx_pts = inliers[idx_inlier];

@@ -23,7 +23,7 @@ public:
     void insertKeyFrame(Frame::Ptr frame);
     void insertMapPoint(MapPoint::Ptr map_point);
     Frame::Ptr findKeyFrame(int frame_id);
-    bool checkKeyFrame(int frame_id);
+    bool hasKeyFrame(int frame_id);
 };
 
 } // namespace vo

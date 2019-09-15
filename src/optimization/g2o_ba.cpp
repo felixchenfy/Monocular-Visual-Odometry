@@ -36,7 +36,7 @@ void optimizeSingleFrame(
     const cv::Mat &K,
     vector<cv::Point3f *> &points_3d,
     cv::Mat &pose_src,
-    bool fix_map_pts, bool update_map_pts)
+    bool is_fix_map_pts, bool is_update_map_pts)
 {
     const cv::Mat pose_src0 = pose_src.clone();
 
@@ -69,7 +69,7 @@ void optimizeSingleFrame(
     for (const cv::Point3f *p : points_3d) // landmarks
     {
         g2o::VertexSBAPointXYZ *point = new g2o::VertexSBAPointXYZ();
-        if (fix_map_pts)
+        if (is_fix_map_pts)
             point->setFixed(true);
         point->setId(index++);
         point->setEstimate(Eigen::Vector3d(p->x, p->y, p->z));
@@ -100,9 +100,9 @@ void optimizeSingleFrame(
     }
 
     // -- Optimize
-    bool IF_PRINT_TIME = false;
+    const bool is_print_time = false;
     int optimize_iters = 50;
-    if (IF_PRINT_TIME)
+    if (is_print_time)
     {
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         optimizer.setVerbose(true);
@@ -131,7 +131,7 @@ void optimizeSingleFrame(
     int N = points_3d.size();
     cv::Point3f point_src0(*points_3d[0]);
     Eigen::Vector3d point_dst0 = g2o_points_3d[0]->estimate();
-    for (int i = 0; update_map_pts && i < N; i++)
+    for (int i = 0; is_update_map_pts && i < N; i++)
     {
         Eigen::Vector3d p = g2o_points_3d[i]->estimate();
         points_3d[i]->x = p(0, 0);
@@ -176,7 +176,7 @@ void bundleAdjustment(
     std::unordered_map<int, cv::Point3f *> &pts_3d,
     vector<cv::Mat *> &v_camera_g2o_poses,
     const cv::Mat &information_matrix,
-    bool fix_map_pts, bool update_map_pts)
+    bool is_fix_map_pts, bool is_update_map_pts)
 {
 
     // Change pose format from OpenCV to Sophus::SE3
@@ -231,7 +231,7 @@ void bundleAdjustment(
 
         g2o::VertexSBAPointXYZ *point = new g2o::VertexSBAPointXYZ();
         point->setId(vertex_id);
-        if (fix_map_pts)
+        if (is_fix_map_pts)
             point->setFixed(true);
 
         pts3dID_to_vertexID[pt3d_id] = vertex_id;
@@ -271,9 +271,9 @@ void bundleAdjustment(
     }
 
     // -- Optimize
-    bool IF_PRINT_TIME_AND_RES = false;
+    constexpr bool is_print_time_and_res = false;
     int optimize_iters = 50;
-    if (IF_PRINT_TIME_AND_RES)
+    if (is_print_time_and_res)
     {
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         optimizer.setVerbose(true);
@@ -305,7 +305,7 @@ void bundleAdjustment(
     }
 
     // 2. Points 3d world pos // This makes the performance bad
-    for (auto it = pts_3d.begin(); update_map_pts && it != pts_3d.end(); it++)
+    for (auto it = pts_3d.begin(); is_update_map_pts && it != pts_3d.end(); it++)
     {
         int pt3d_id = it->first;
         cv::Point3f *p = it->second;

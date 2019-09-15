@@ -9,17 +9,20 @@ namespace my_slam
 namespace geometry
 {
 
-void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
-                      bool SET_PARAM_BY_YAML = true);
+void calcKeyPoints(const cv::Mat &image,
+                      vector<cv::KeyPoint> &keypoints);
 
-void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat &descriptors,
-                        bool SET_PARAM_BY_YAML = true);
+/* @brief Compute the descriptors of keypoints.
+ *      Meanwhile, keypoints might be changed.
+ */
+void calcDescriptors(const cv::Mat &image,
+                        vector<cv::KeyPoint> &keypoints,
+                        cv::Mat &descriptors);
 
 void matchFeatures(
     const cv::Mat &descriptors_1, const cv::Mat &descriptors_2,
     vector<cv::DMatch> &matches,
-    const bool PRINT_RES = false,
-    const bool SET_PARAM_BY_YAML = true);
+    bool is_print_res = false);
 
 // Remove duplicate matches.
 // After cv's match func, many kpts in I1 might matched to a same kpt in I2.
@@ -27,17 +30,16 @@ void matchFeatures(
 void removeDuplicatedMatches(vector<cv::DMatch> &matches);
 
 // Use a grid to remove the keypoints that are too close to each other.
-void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
-                         const int image_rows, const int image_cols,
-                         const bool SET_PARAM_BY_YAML = true);
+void selectUniformKptsByGrid(vector<cv::KeyPoint> &keypoints,
+                         int image_rows, int image_cols);
 
 // --------------------- Other assistant functions ---------------------
-double computeMeanDistBetweenkeypoints(
+double computeMeanDistBetweenKeypoints(
     const vector<cv::KeyPoint> &kpts1, const vector<cv::KeyPoint> &kpts2, const vector<cv::DMatch> &matches);
 
-// --------------------- datatype transform ---------------------
+// --------------------- Datatype conversion ---------------------
 vector<cv::DMatch> inliers2DMatches(const vector<int> inliers);
-vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts);
+vector<cv::KeyPoint> pts2Keypts(const vector<cv::Point2f> pts);
 
 } // namespace geometry
 } // namespace my_slam

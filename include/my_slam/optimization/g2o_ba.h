@@ -18,7 +18,7 @@ void optimizeSingleFrame(
     const cv::Mat &K,
     vector<cv::Point3f *> &points_3d,
     cv::Mat &cam_pose_in_world,
-    bool fix_map_pts, bool update_map_pts);
+    bool is_fix_map_pts, bool is_update_map_pts);
 
 void bundleAdjustment(
     const vector<vector<cv::Point2f *>> &v_pts_2d,
@@ -27,7 +27,7 @@ void bundleAdjustment(
     std::unordered_map<int, cv::Point3f *> &pts_3d,
     vector<cv::Mat *> &v_camera_g2o_poses,
     const cv::Mat &information_matrix,
-    bool fix_map_pts = false, bool update_map_pts = true);
+    bool is_fix_map_pts = false, bool is_update_map_pts = true);
 
 } // namespace optimization
 } // namespace my_slam

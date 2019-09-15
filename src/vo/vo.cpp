@@ -49,8 +49,8 @@ void VisualOdometry::estimateMotionAnd3DPoints()
     vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<cv::DMatch>> list_matches; // these are the inliers matches
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool is_print_res = false, is_frame_cam2_to_cam1 = true;
-    const bool compute_homography = true;
+    bool is_print_res = false, is_frame_cam2_to_cam1 = true;
+    bool is_calc_homo = true;
     cv::Mat &K = curr_->camera_->K_;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
@@ -58,7 +58,7 @@ void VisualOdometry::estimateMotionAnd3DPoints()
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
-        is_print_res, compute_homography, is_frame_cam2_to_cam1);
+        is_print_res, is_calc_homo, is_frame_cam2_to_cam1);
 
     // -- Only retain the data of the best solution
     const cv::Mat &R_curr_to_prev = list_R[best_sol];
@@ -112,18 +112,18 @@ bool VisualOdometry::checkIfVoGoodToInit()
         return false;
     }
 
-    // -- Check CRITERIA_1
-    bool CRITERIA_1 = false; // init vo only when distance between matched keypoints are large
+    // -- Check criteria_1
+    bool criteria_1 = false; // init vo only when distance between matched keypoints are large
     {
         vector<double> dists_between_kpts;
-        double mean_dist = geometry::computeMeanDistBetweenkeypoints(init_kpts, curr_kpts, matches);
+        double mean_dist = geometry::computeMeanDistBetweenKeypoints(init_kpts, curr_kpts, matches);
         printf("\nPixel movement of matched keypoints: %.1f \n", mean_dist);
 
-        CRITERIA_1 = mean_dist > min_pixel_dist;
+        criteria_1 = mean_dist > min_pixel_dist;
     }
 
-    // -- Check CRITERIA_2
-    bool CRITERIA_2 = false; // Triangulation angle of each point should be larger than threshold.
+    // -- Check criteria_2
+    bool criteria_2 = false; // Triangulation angle of each point should be larger than threshold.
     {
         vector<double> sort_a = curr_->triangulation_angles_of_inliers_; // a copy of angles
         int N = sort_a.size();                                           // num of 3d points triangulated from inlier points
@@ -139,11 +139,11 @@ bool VisualOdometry::checkIfVoGoodToInit()
 
         // Thresholding
         if (median_angle > min_median_triangulation_angle)
-            CRITERIA_2 = true;
+            criteria_2 = true;
     }
 
     // -- Return
-    return CRITERIA_1 && CRITERIA_2;
+    return criteria_1 && criteria_2;
 }
 
 bool VisualOdometry::isInitialized()
@@ -313,9 +313,7 @@ void VisualOdometry::callBundleAdjustment()
     static const vector<double> im = basics::str2vecdouble(
         basics::Config::get<string>("information_matrix"));
     static const bool is_ba_fix_map_points = basics::Config::getBool("is_ba_fix_map_points");
-    // static const bool is_ba_update_map_points = basics::Config::getBool("is_ba_update_map_points");
     static const bool is_ba_update_map_points = !is_ba_fix_map_points;
-    // cout << is_ba_fix_map_points << is_ba_update_map_points << endl;
 
     // Set params
     const int kTotalFrames = frames_buff_.size();

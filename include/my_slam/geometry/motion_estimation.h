@@ -37,9 +37,9 @@ int helperEstimatePossibleRelativePosesByEpipolarGeometry(
     vector<vector<cv::DMatch>> &list_matches,
     vector<cv::Mat> &list_normal,
     vector<vector<cv::Point3f>> &sols_pts3d_in_cam1,
-    const bool is_print_res = false,
-    const bool compute_homography = true,
-    const bool is_frame_cam2_to_cam1 = true);
+    bool is_print_res = false,
+    bool is_calc_homo = true,
+    bool is_frame_cam2_to_cam1 = true);
 
 /* @brief Compute:
  *      - The error of eppipolar onstraint
@@ -66,7 +66,7 @@ void helperEstiMotionByEssential(
     const cv::Mat &K, // camera intrinsics
     cv::Mat &R, cv::Mat &t,
     vector<cv::DMatch> &inlier_matches,
-    const bool is_print_res = false);
+    bool is_print_res = false);
 
 /* @brief After feature matching, find inlier matches 
  *      by using epipolar constraint to exclude wrong matches.

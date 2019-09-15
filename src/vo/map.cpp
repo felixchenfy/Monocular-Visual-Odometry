@@ -39,7 +39,7 @@ Frame::Ptr Map::findKeyFrame(int frame_id)
         return keyframes_[frame_id];
 }
 
-bool Map::checkKeyFrame(int frame_id)
+bool Map::hasKeyFrame(int frame_id)
 {
     if (keyframes_.find(frame_id) == keyframes_.end())
         return false;

@@ -83,9 +83,9 @@ int main(int argc, char **argv)
     {
         const string dataset_dir = config_dataset.get<string>("dataset_dir");
         const int num_images = config_dataset.get<int>("num_images");
-        constexpr bool kIsPrintRes = false;
+        constexpr bool is_print_res = false;
         const string image_formatting = "/rgb_%05d.png";
-        image_paths = vo::readImagePaths(dataset_dir, num_images, image_formatting, kIsPrintRes);
+        image_paths = vo::readImagePaths(dataset_dir, num_images, image_formatting, is_print_res);
     }
 
     // -- Read camera prameters.
@@ -157,8 +157,8 @@ int main(int argc, char **argv)
 bool checkInputArguments(int argc, char **argv)
 {
     // The only argument is Path to the configuration file, which stores the dataset_dir and camera_info
-    const int NUM_ARGUMENTS = 1;
-    if (argc - 1 != NUM_ARGUMENTS)
+    const int kNumArguments = 1;
+    if (argc - 1 != kNumArguments)
     {
         cout << "Lack arguments: Please input the path to the .yaml config file" << endl;
         return false;
@@ -235,7 +235,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
     basics::getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
     pcl_displayer->updateCameraPose(R_vec, t,
-                                    vo->map_->checkKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
+                                    vo->map_->hasKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
 
     // -- Update truth camera pose
     static const bool is_draw_true_traj = config_dataset.getBool("is_draw_true_traj");
@@ -286,7 +286,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
     }
-    if (1 && vo->map_->checkKeyFrame(frame->id_) == true)
+    if (1 && vo->map_->hasKeyFrame(frame->id_) == true)
     {
         // --  If frame is a keyframe, Draw newly triangulated points with color
         // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
@@ -316,7 +316,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
 
 void waitPclKeyPress(display::PclViewer::Ptr pcl_displayer)
 {
-    while (!pcl_displayer->checkKeyPressed())
+    while (!pcl_displayer->isKeyPressed())
     {
         pcl_displayer->spinOnce(10);
     }

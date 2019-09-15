@@ -37,11 +37,11 @@ int main ( int argc, char** argv )
     cv::Mat descriptors_1, descriptors_2;
     string filename = "config/config.yaml";
     basics::Config::setParameterFile(filename);
-    extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
-    extractKeyPoints(img_2, keypoints_2);
+    calcKeyPoints(img_1, keypoints_1); // Choose the config file before running this
+    calcKeyPoints(img_2, keypoints_2);
     cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-    computeDescriptors(img_1, keypoints_1, descriptors_1);
-    computeDescriptors(img_2, keypoints_2, descriptors_2);
+    calcDescriptors(img_1, keypoints_1, descriptors_1);
+    calcDescriptors(img_2, keypoints_2, descriptors_2);
     matchFeatures(descriptors_1, descriptors_2, matches,
         true); // print result
 

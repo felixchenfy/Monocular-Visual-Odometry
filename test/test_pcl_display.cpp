@@ -45,9 +45,9 @@ int main()
 
         // Simulate camera motion.
         //      Return: R_vec, t
-        const double period = 10.0;
-        t.at<double>(0, 0) = sin(cnt / period);
-        t.at<double>(1, 0) = cos(cnt / period);
+        const double kRotationPeriod = 10.0;
+        t.at<double>(0, 0) = sin(cnt / kRotationPeriod);
+        t.at<double>(1, 0) = cos(cnt / kRotationPeriod);
         t.at<double>(2, 0) -= 0.01;
         enum
         {

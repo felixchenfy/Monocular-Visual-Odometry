@@ -97,7 +97,7 @@ PclViewer::PclViewer(double x, double y, double z,
     truth_cam_t_ = cv::Mat::zeros(3, 1, CV_64F);
 }
 
-bool PclViewer::checkKeyPressed()
+bool PclViewer::isKeyPressed()
 {
     if (bKeyPressed)
     {
@@ -114,7 +114,7 @@ bool PclViewer::checkKeyPressed()
 void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
                             ViewerPtr viewer, cv::Mat &R_vec_curr, cv::Mat &t_curr,
                             const string cam_traj_name, const unsigned char color[3],
-                            int cnt_cam, int line_width, double line_color[3])
+                            int cnt_cam, int kLineWidth, double line_color[3])
 {
     // Add a line between new_pos and old_pos. Also, add a point.
     if (cnt_cam > 0)
@@ -127,7 +127,7 @@ void addNewCameraPoseToTraj(const cv::Mat &R_vec_new, const cv::Mat &t_new,
         viewer_->addLine<pcl::PointXYZ>(
             cam_pos_old, cam_pos_new, line_color[0], line_color[1], line_color[2], line_name);
         viewer_->setShapeRenderingProperties(
-            pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, line_width, line_name);
+            pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, kLineWidth, line_name);
 
         // add a point of the new camera pos
         pcl::PointXYZRGB point;
@@ -147,7 +147,7 @@ void copyColor(const unsigned char c1[3], double c2[3])
 void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_keyframe)
 {
     static int cnt_cam = 0;
-    const int line_width = 3;
+    constexpr int kLineWidth = 3;
     double line_color[3];
     unsigned char point_color[3] = {pc_cam_traj_color[0], pc_cam_traj_color[1], pc_cam_traj_color[2]};
     if (is_keyframe == true)
@@ -159,17 +159,18 @@ void PclViewer::updateCameraPose(const cv::Mat &R_vec, const cv::Mat &t, int is_
     copyColor(pc_cam_traj_color, line_color);
     addNewCameraPoseToTraj(
         R_vec, t, viewer_, cam_R_vec_, cam_t_,
-        pc_cam_traj, point_color, cnt_cam++, line_width, line_color);
+        pc_cam_traj, point_color, cnt_cam++, kLineWidth, line_color);
 }
+
 void PclViewer::updateCameraTruthPose(const cv::Mat &R_vec, const cv::Mat &t)
 {
     static int cnt_cam = 0;
-    const int line_width = 1;
+    constexpr int kLineWidth = 1;
     double line_color[3];
     copyColor(pc_cam_traj_ground_truth_color, line_color);
     addNewCameraPoseToTraj(
         R_vec, t, viewer_, truth_cam_R_vec_, truth_cam_t_,
-        pc_cam_traj_ground_truth, pc_cam_traj_ground_truth_color, cnt_cam++, line_width, line_color);
+        pc_cam_traj_ground_truth, pc_cam_traj_ground_truth_color, cnt_cam++, kLineWidth, line_color);
 }
 
 // -- Insert points ---------------------------------------------------------------------

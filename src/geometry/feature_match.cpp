@@ -8,84 +8,58 @@ namespace my_slam
 namespace geometry
 {
 
-// set default ORB params
-#define _num_keypoints 5000
-#define _scale_factor 1.2
-#define _level_pyramid 4
-#define _score_threshold 15
-
-// set default Grid params for non-maximum suppression
-#define _max_num_keypoints 1000
-#define _grid_size 8
-#define _max_pts_in_grid 2 /*x=8, y=2, (640/x)*(480/x)*y=4800*2=9600*/
-
-// set default feature matching params
-#define _match_ratio 2.0
-#define _lowe_dist_ratio 0.6 /*for method 2*/
-
-void extractKeyPoints(cv::Mat &image, vector<cv::KeyPoint> &keypoints,
-                      const bool SET_PARAM_BY_YAML)
+void calcKeyPoints(
+    const cv::Mat &image,
+    vector<cv::KeyPoint> &keypoints)
 {
-    static int num_keypoints = _num_keypoints, level_pyramid = _level_pyramid, score_threshold = _score_threshold;
-    static double scale_factor = _scale_factor;
-    static int cnt_call_times_ = 0;
-    if (cnt_call_times_++ == 0 && SET_PARAM_BY_YAML)
-    {
-        num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = basics::Config::get<double>("scale_factor");
-        level_pyramid = basics::Config::get<int>("level_pyramid");
-        score_threshold = basics::Config::get<int>("score_threshold");
-    }
-    // int 	nlevels = 8,
-    // int 	edgeThreshold = 31,
-    // int 	firstLevel = 0,
-    // int 	WTA_K = 2,
-    // ORB::ScoreType 	scoreType = ORB::HARRIS_SCORE,
-    // int 	patchSize = 31,
-    // int 	fastThreshold = 20
+    // -- Set arguments
+    static const int num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
+    static const double scale_factor = basics::Config::get<double>("scale_factor");
+    static const int level_pyramid = basics::Config::get<int>("level_pyramid");
+    static const int score_threshold = basics::Config::get<int>("score_threshold");
+
+    // -- Create ORB
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid,
                                                   31, 0, 2, cv::ORB::HARRIS_SCORE, 31, score_threshold);
+    // Default arguments of ORB:
+    //          int 	nlevels = 8,
+    //          int 	edgeThreshold = 31,
+    //          int 	firstLevel = 0,
+    //          int 	WTA_K = 2,
+    //          ORB::ScoreType 	scoreType = ORB::HARRIS_SCORE,
+    //          int 	patchSize = 31,
+    //          int 	fastThreshold = 20
 
     // compute
     orb->detect(image, keypoints);
-    selectUniformByGrid(keypoints, image.rows, image.cols, SET_PARAM_BY_YAML);
+    selectUniformKptsByGrid(keypoints, image.rows, image.cols);
 }
 
-void computeDescriptors(cv::Mat &image, vector<cv::KeyPoint> &keypoints, cv::Mat &descriptors,
-                        const bool SET_PARAM_BY_YAML)
+void calcDescriptors(
+    const cv::Mat &image,
+    vector<cv::KeyPoint> &keypoints, cv::Mat &descriptors)
 {
-    static int num_keypoints = _num_keypoints, level_pyramid = _level_pyramid;
-    static double scale_factor = _scale_factor;
-    static int cnt_call_times_ = 0;
-    if (cnt_call_times_++ == 0 && SET_PARAM_BY_YAML)
-    {
-        num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
-        scale_factor = basics::Config::get<double>("scale_factor");
-        level_pyramid = basics::Config::get<int>("level_pyramid");
-    }
+    static const int num_keypoints = basics::Config::get<int>("number_of_keypoints_to_extract");
+    static const double scale_factor = basics::Config::get<double>("scale_factor");
+    static const int level_pyramid = basics::Config::get<int>("level_pyramid");
     static cv::Ptr<cv::ORB> orb = cv::ORB::create(num_keypoints, scale_factor, level_pyramid);
 
     // compute
     orb->compute(image, keypoints, descriptors);
 }
 
-void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
-                         const int image_rows, const int image_cols,
-                         const bool SET_PARAM_BY_YAML)
+void selectUniformKptsByGrid(
+    vector<cv::KeyPoint> &keypoints,
+    int image_rows, int image_cols)
 {
-    static int kpts_uniform_selection_grid_size = _grid_size, kpts_uniform_selection_max_pts_per_grid = _max_pts_in_grid;
-    static int max_num_keypoints = _max_num_keypoints;
-    static int cnt_call_times_ = 0;
-    if (cnt_call_times_++ == 0 && SET_PARAM_BY_YAML)
-    {
-        max_num_keypoints = basics::Config::get<int>("max_number_of_keypoints");
-        kpts_uniform_selection_grid_size = basics::Config::get<int>("kpts_uniform_selection_grid_size");
-        kpts_uniform_selection_max_pts_per_grid = basics::Config::get<int>("kpts_uniform_selection_max_pts_per_grid");
-    }
-    static int rows = image_rows / kpts_uniform_selection_grid_size, cols = image_cols / kpts_uniform_selection_grid_size;
+    // -- Set arguments
+    static const int max_num_keypoints = basics::Config::get<int>("max_number_of_keypoints");
+    static const int kpts_uniform_selection_grid_size = basics::Config::get<int>("kpts_uniform_selection_grid_size");
+    static const int kpts_uniform_selection_max_pts_per_grid = basics::Config::get<int>("kpts_uniform_selection_max_pts_per_grid");
+    static const int rows = image_rows / kpts_uniform_selection_grid_size, cols = image_cols / kpts_uniform_selection_grid_size;
+
+    // Create an empty grid
     static vector<vector<int>> grid(rows, vector<int>(cols, 0));
-    // clear grid
-    // for (int i=0;i<rows;i++)for(int j=0;j<cols;j++)grid[i][j]=0;
     for (auto &row : grid) //clear grid
         std::fill(row.begin(), row.end(), 0);
 
@@ -112,24 +86,23 @@ void selectUniformByGrid(vector<cv::KeyPoint> &keypoints,
 void matchFeatures(
     const cv::Mat &descriptors_1, const cv::Mat &descriptors_2,
     vector<cv::DMatch> &matches,
-    const bool PRINT_RES, const bool SET_PARAM_BY_YAML)
+    bool is_print_res)
 {
-    matches.clear();
-    static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
-    static double MATCH_RATIO = _match_ratio, DIST_RATIO = _lowe_dist_ratio;
-    static int cnt_call_times_ = 0, METHOD_INDEX = 2;
-    if (cnt_call_times_++ == 0 && SET_PARAM_BY_YAML)
-    {
-        MATCH_RATIO = basics::Config::get<int>("match_ratio");
-        DIST_RATIO = basics::Config::get<int>("lowe_dist_ratio");
-        METHOD_INDEX = basics::Config::get<int>("feature_match_method_index");
-    }
+    // -- Set arguments
+    static const double match_ratio = basics::Config::get<int>("match_ratio");
+    static const double dist_ratio = basics::Config::get<int>("lowe_dist_ratio");
+    static const int feature_matching_method_index = basics::Config::get<int>("feature_match_method_index");
 
+    static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
+    static cv::Ptr<cv::DescriptorMatcher> matcher_bf = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+    // Start matching
+    matches.clear();
     double min_dis = 9999999, max_dis = 0, distance_threshold = -1;
-    if (METHOD_INDEX == 1)
-    { // by the method in Dr. Xiang Gao's slambook
+    if (feature_matching_method_index == 1) // the method in Dr. Xiang Gao's slambook
         // Match keypoints with similar descriptors.
         // For kpt_i, if kpt_j's descriptor if most similar to kpt_i's, then they are matched.
+    {
         vector<cv::DMatch> all_matches;
         matcher_flann.match(descriptors_1, descriptors_2, all_matches);
 
@@ -142,7 +115,7 @@ void matchFeatures(
             if (dist > max_dis)
                 max_dis = dist;
         }
-        distance_threshold = std::max<float>(min_dis * MATCH_RATIO, 30.0);
+        distance_threshold = std::max<float>(min_dis * match_ratio, 30.0);
         // Another way of getting the minimum:
         // min_dis = std::min_element(all_matches.begin(), all_matches.end(),
         //     [](const cv::DMatch &m1, const cv::DMatch &m2) {return m1.distance < m2.distance;})->distance;
@@ -152,18 +125,17 @@ void matchFeatures(
             if (m.distance < distance_threshold)
                 matches.push_back(m);
     }
-    else if (METHOD_INDEX == 2)
+    else if (feature_matching_method_index == 2)
     { // method in Lowe's 2004 paper
-        static cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
         // Calculate the features's distance of the two images.
         vector<vector<cv::DMatch>> knn_matches;
         vector<cv::Mat> train_desc(1, descriptors_2);
-        matcher->add(train_desc);
-        matcher->train();
+        matcher_bf->add(train_desc);
+        matcher_bf->train();
         // For a point "PA_i" in image A,
         // only return its nearest 2 points "PB_i0" and "PB_i1" in image B.
         // The result is saved in knn_matches.
-        matcher->knnMatch(descriptors_1, descriptors_2, knn_matches, 2);
+        matcher_bf->knnMatch(descriptors_1, descriptors_2, knn_matches, 2);
 
         // Remove bad matches using the method proposed by Lowe in his SIFT paper
         //		by checking the ratio of the nearest and the second nearest distance.
@@ -171,29 +143,26 @@ void matchFeatures(
         {
 
             double dist = knn_matches[i][0].distance;
-            if (dist < min_dis)
-                min_dis = dist; // This is not required. Do this for debug
-            if (dist > max_dis)
-                max_dis = dist; // This is not required. Do this for debug
-            if (dist < DIST_RATIO * knn_matches[i][1].distance)
-            {
+            if (dist < dist_ratio * knn_matches[i][1].distance)
                 matches.push_back(knn_matches[i][0]);
-            }
+            if (dist < min_dis)
+                min_dis = dist;
+            if (dist > max_dis)
+                max_dis = dist;
         }
     }
     else
-    {
-        assert(0);
-    }
+        throw std::runtime_error("feature_match.cpp::matchFeatures: wrong method index.");
+
     // Sort res by "trainIdx", and then
     // remove duplicated "trainIdx" to obtain unique matches.
     removeDuplicatedMatches(matches);
 
-    if (PRINT_RES)
+    if (is_print_res)
     {
         printf("Matching features:\n");
-        printf("Using method %d, threshold = %f\n", METHOD_INDEX, distance_threshold);
-        printf("Number of matches: %d\n", (int)matches.size());
+        printf("Using method %d, threshold = %f\n", feature_matching_method_index, distance_threshold);
+        printf("Number of matches: %d\n", int(matches.size()));
         printf("-- Max dist : %f \n", max_dis);
         printf("-- Min dist : %f \n", min_dis);
     }
@@ -221,7 +190,7 @@ void removeDuplicatedMatches(vector<cv::DMatch> &matches)
 }
 
 // --------------------- Other assistant functions ---------------------
-double computeMeanDistBetweenkeypoints(
+double computeMeanDistBetweenKeypoints(
     const vector<cv::KeyPoint> &kpts1, const vector<cv::KeyPoint> &kpts2, const vector<cv::DMatch> &matches)
 {
 
@@ -251,7 +220,7 @@ vector<cv::DMatch> inliers2DMatches(const vector<int> inliers)
     }
     return matches;
 }
-vector<cv::KeyPoint> pts2keypts(const vector<cv::Point2f> pts)
+vector<cv::KeyPoint> pts2Keypts(const vector<cv::Point2f> pts)
 {
     // cv.cv::KeyPoint(	x, y, _size[, _angle[, _response[, _octave[, _class_id]]]]	)
     // cv.cv::KeyPoint(	pt, _size[, _angle[, _response[, _octave[, _class_id]]]]	)

@@ -83,26 +83,26 @@ int main(int argc, char **argv)
     cv::Mat descriptors_1, descriptors_2;
     // doFeatureMatching(img_1, img_2, keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches);
 
-    bool PRINT_RES = true, SET_PARAM_BY_YAML = false;
+    bool is_print_res = true, SET_PARAM_BY_YAML = false;
     if (0)
     {                                                            // use default settings
-        geometry::extractKeyPoints(img_1, keypoints_1, SET_PARAM_BY_YAML); // Choose the config file before running this
-        geometry::extractKeyPoints(img_2, keypoints_2, SET_PARAM_BY_YAML);
+        geometry::calcKeyPoints(img_1, keypoints_1, SET_PARAM_BY_YAML); // Choose the config file before running this
+        geometry::calcKeyPoints(img_2, keypoints_2, SET_PARAM_BY_YAML);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        geometry::computeDescriptors(img_1, keypoints_1, descriptors_1, SET_PARAM_BY_YAML);
-        geometry::computeDescriptors(img_2, keypoints_2, descriptors_2, SET_PARAM_BY_YAML);
-        geometry::matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES, SET_PARAM_BY_YAML);
+        geometry::calcDescriptors(img_1, keypoints_1, descriptors_1, SET_PARAM_BY_YAML);
+        geometry::calcDescriptors(img_2, keypoints_2, descriptors_2, SET_PARAM_BY_YAML);
+        geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res, SET_PARAM_BY_YAML);
     }
     else
     { // use settings in .yaml file
         string filename = "config/config.yaml";
         basics::Config::setParameterFile(filename);
-        geometry::extractKeyPoints(img_1, keypoints_1); // Choose the config file before running this
-        geometry::extractKeyPoints(img_2, keypoints_2);
+        geometry::calcKeyPoints(img_1, keypoints_1); // Choose the config file before running this
+        geometry::calcKeyPoints(img_2, keypoints_2);
         cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        geometry::computeDescriptors(img_1, keypoints_1, descriptors_1);
-        geometry::computeDescriptors(img_2, keypoints_2, descriptors_2);
-        geometry::matchFeatures(descriptors_1, descriptors_2, matches, PRINT_RES);
+        geometry::calcDescriptors(img_1, keypoints_1, descriptors_1);
+        geometry::calcDescriptors(img_2, keypoints_2, descriptors_2);
+        geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res);
         printf("Number of matches: %d\n", (int)matches.size());
 
     }
@@ -111,14 +111,14 @@ int main(int argc, char **argv)
     vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<cv::DMatch>> list_matches;
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool is_print_res = false, compute_homography = true, is_frame_cam2_to_cam1 = true;
+    const bool is_print_res = false, is_calc_homo = true, is_frame_cam2_to_cam1 = true;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
         /*Output*/
         list_R, list_t, list_matches, list_normal, sols_pts3d_in_cam1_by_triang,
         /*settings*/
-        is_print_res, compute_homography, is_frame_cam2_to_cam1);
+        is_print_res, is_calc_homo, is_frame_cam2_to_cam1);
     cout << "Best solution is: " << best_sol << endl;
 
     // Compute [epipolar error] and [trigulation error on norm plane] for the 3 solutions (E, H1, H2)

@@ -88,14 +88,14 @@ vector<cv::Mat> readPoseFromFile(const string filename)
     assert(fin.is_open()); // Fail to find the config file
 
     // Read data
-    const int NUM_IN_ROW = 12; // x,y,z, 1st column of R, 2nd column of R, 3rd column of R
-    vector<double> pose(NUM_IN_ROW, 0.0);
+    constexpr int kNumValsPerRow = 12; // x,y,z, 1st column of R, 2nd column of R, 3rd column of R
+    vector<double> pose(kNumValsPerRow, 0.0);
     double val;
     int cnt = 0;
     while (fin >> val)
     {
         pose[cnt++] = val;
-        if (cnt == NUM_IN_ROW)
+        if (cnt == kNumValsPerRow)
         {
             cnt = 0;
             list_pose.push_back(pose);
