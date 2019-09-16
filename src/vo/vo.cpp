@@ -13,7 +13,7 @@ VisualOdometry::VisualOdometry() : map_(new (Map))
     vo_state_ = BLANK;
 }
 
-void VisualOdometry::getMappointsInCurrentView(
+void VisualOdometry::getMappointsInCurrentView_(
     vector<MapPoint::Ptr> &candidate_mappoints_in_map,
     cv::Mat &corresponding_mappoints_descriptors)
 {
@@ -255,7 +255,7 @@ bool VisualOdometry::poseEstimationPnP_()
     // -- From the local map, find the keypoints that fall into the current view
     vector<MapPoint::Ptr> candidate_mappoints_in_map;
     cv::Mat corresponding_mappoints_descriptors;
-    getMappointsInCurrentView(candidate_mappoints_in_map, corresponding_mappoints_descriptors);
+    getMappointsInCurrentView_(candidate_mappoints_in_map, corresponding_mappoints_descriptors);
 
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
     geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
@@ -448,13 +448,13 @@ void VisualOdometry::callBundleAdjustment_()
 
 // ------------------- Mapping -------------------
 
-void VisualOdometry::addKeyFrame(Frame::Ptr frame)
+void VisualOdometry::addKeyFrame_(Frame::Ptr frame)
 {
     map_->insertKeyFrame(frame);
     ref_ = frame;
 }
 
-void VisualOdometry::optimizeMap()
+void VisualOdometry::optimizeMap_()
 {
     static const double default_erase = 0.1;
     static double map_point_erase_ratio = default_erase;
@@ -475,7 +475,7 @@ void VisualOdometry::optimizeMap()
             continue;
         }
 
-        double angle = getViewAngle(curr_, iter->second);
+        double angle = getViewAngle_(curr_, iter->second);
         if (angle > M_PI / 4.)
         {
             iter = map_->map_points_.erase(iter);
@@ -494,7 +494,7 @@ void VisualOdometry::optimizeMap()
     cout << "map points: " << map_->map_points_.size() << endl;
 }
 
-void VisualOdometry::pushCurrPointsToMap()
+void VisualOdometry::pushCurrPointsToMap_()
 {
     // -- Input
     const vector<cv::Point3f> &inliers_pts3d_in_curr = curr_->inliers_pts3d_;
@@ -544,7 +544,7 @@ void VisualOdometry::pushCurrPointsToMap()
     return;
 }
 
-double VisualOdometry::getViewAngle(Frame::Ptr frame, MapPoint::Ptr point)
+double VisualOdometry::getViewAngle_(Frame::Ptr frame, MapPoint::Ptr point)
 {
     cv::Mat n = basics::point3f_to_mat3x1(point->pos_) - frame->getCamCenter();
     n = basics::getNormalizedMat(n);

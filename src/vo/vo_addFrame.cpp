@@ -1,3 +1,4 @@
+// The member function `addFrame` of class VisualOdometry is defined here.
 
 #include "my_slam/vo/vo.h"
 
@@ -9,7 +10,7 @@ namespace vo
 void VisualOdometry::addFrame(Frame::Ptr frame)
 {
     // Settings
-    pushFrameToBuff(frame);
+    pushFrameToBuff_(frame);
 
     // Renamed vars
     curr_ = frame;
@@ -30,7 +31,7 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     {
         curr_->T_w_c_ = cv::Mat::eye(4, 4, CV_64F);
         vo_state_ = DOING_INITIALIZATION;
-        addKeyFrame(curr_); // curr_ becomes the ref_
+        addKeyFrame_(curr_); // curr_ becomes the ref_
     }
     else if (vo_state_ == DOING_INITIALIZATION)
     {
@@ -47,8 +48,8 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
         if (isVoGoodToInit_())
         {
             cout << "Large movement detected at frame " << img_id << ". Start initialization" << endl;
-            pushCurrPointsToMap();
-            addKeyFrame(curr_);
+            pushCurrPointsToMap_();
+            addKeyFrame_(curr_);
             vo_state_ = DOING_TRACKING;
             cout << "Inilialiation success !!!" << endl;
             cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
@@ -102,9 +103,9 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
                 retainGoodTriangulationResult_();
 
                 // -- Update state
-                pushCurrPointsToMap();
-                optimizeMap();
-                addKeyFrame(curr_);
+                pushCurrPointsToMap_();
+                optimizeMap_();
+                addKeyFrame_(curr_);
             }
         }
     }

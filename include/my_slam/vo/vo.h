@@ -33,9 +33,17 @@ namespace vo
 class VisualOdometry
 {
 
-public: // ------------------------------- Member variables -------------------------------
+public:
   typedef std::shared_ptr<VisualOdometry> Ptr;
+  VisualOdometry();
 
+  void addFrame(vo::Frame::Ptr frame); // Add a new frame to the visual odometry system and compute its pose.
+
+  bool isInitialized();                         // Is visual odometry initialized.
+  Frame::Ptr getPrevRef() { return prev_ref_; } // for run_vo.cpp to draw result
+  Map::Ptr getMap() { return map_; }            // for run_vo.cpp to draw result
+
+private:
   enum VOState
   {
     BLANK,
@@ -45,6 +53,7 @@ public: // ------------------------------- Member variables --------------------
   };
   VOState vo_state_;
 
+private:
   // Frame
   Frame::Ptr curr_ = nullptr;         // current frame
   Frame::Ptr prev_ = nullptr;         // previous frame
@@ -64,44 +73,40 @@ public: // ------------------------------- Member variables --------------------
   vector<cv::Point3f> matched_pts_3d_in_map_;
   vector<int> matched_pts_2d_idx_;
 
-private:
+  // Parameters
   const int kBuffSize_ = 20; // How much prev frames to store.
 
-  // ================================ Functions ================================
-public: // basics
-  VisualOdometry();
-  void addFrame(vo::Frame::Ptr frame);
-  void pushFrameToBuff(Frame::Ptr frame)
+private: // functions
+  // Push a frame to the buff.
+  void pushFrameToBuff_(Frame::Ptr frame)
   {
     frames_buff_.push_back(frame);
     if (frames_buff_.size() > kBuffSize_)
       frames_buff_.pop_front();
   }
 
-public: // ------------------------------- Initialization -------------------------------
+  // Initialization
   void estimateMotionAnd3DPoints_();
-  bool isVoGoodToInit_();
-  bool isInitialized();
 
-public: // ------------------------------- Triangulation -------------------------------
-  // 1. motion_estimation.h: helperTriangulatePoints
-  // 2. Some triangulated points have a small viewing angle between two frames.
-  //    Remove these points: change "pts3d_in_curr", return a new "inlier_matches"
+  // Check if visual odmetry is good to be initialized.
+  bool isVoGoodToInit_();
+
+  // Remove bad triangulation points
+  // Change "pts3d_in_curr", return a new "inlier_matches".
   void retainGoodTriangulationResult_();
 
 public: // ------------------------------- Tracking -------------------------------
-  // void find3Dto2DCorrespondences()
   bool checkLargeMoveForAddKeyFrame_(Frame::Ptr curr, Frame::Ptr ref);
-  void optimizeMap();
+  void optimizeMap_();
   bool poseEstimationPnP_();
 
 public: // ------------------------------- Mapping -------------------------------
-  void addKeyFrame(Frame::Ptr frame);
-  void getMappointsInCurrentView(
+  void addKeyFrame_(Frame::Ptr keyframe);
+  void pushCurrPointsToMap_();
+  void getMappointsInCurrentView_(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
       cv::Mat &corresponding_mappoints_descriptors);
-  void pushCurrPointsToMap();
-  double getViewAngle(Frame::Ptr frame, MapPoint::Ptr point);
+  double getViewAngle_(Frame::Ptr frame, MapPoint::Ptr point);
 
 public: // ------------------------------- BundleAdjustment -------------------------------
   void callBundleAdjustment_();

@@ -193,7 +193,7 @@ bool drawResultByOpenCV(const cv::Mat &rgb_img, const vo::Frame::Ptr frame, cons
     if (img_id != 0 && // draw matches during initialization stage
         (!vo->isInitialized() || first_time_vo_init))
     {
-        drawMatches(vo->prev_ref_->rgb_img_, vo->prev_ref_->keypoints_, // keywords: feature matching / matched features
+        drawMatches(vo->getPrevRef()->rgb_img_, vo->getPrevRef()->keypoints_, // keywords: feature matching / matched features
                     frame->rgb_img_, frame->keypoints_,
                     frame->matches_with_ref_,
                     img_show);
@@ -241,7 +241,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
     basics::getRtFromT(frame->T_w_c_, R, t);
     Rodrigues(R, R_vec);
     pcl_displayer->updateCameraPose(R_vec, t,
-                                    vo->map_->hasKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
+                                    vo->getMap()->hasKeyFrame(frame->id_)); // If it's keyframe, draw a red dot. Otherwise, white dot.
 
     // -- Update truth camera pose
     static const bool is_draw_true_traj = config_dataset.getBool("is_draw_true_traj");
@@ -279,7 +279,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
         // -- Draw map points
         vec_pos.clear();
         vec_color.clear();
-        for (auto &iter_map_point : vo->map_->map_points_)
+        for (auto &iter_map_point : vo->getMap()->map_points_)
         {
             const vo::MapPoint::Ptr &p = iter_map_point.second;
             vec_pos.push_back(p->pos_);
@@ -287,7 +287,7 @@ bool drawResultByPcl(basics::Yaml config_dataset,
         }
         pcl_displayer->updateMapPoints(vec_pos, vec_color);
     }
-    if (1 && vo->map_->hasKeyFrame(frame->id_) == true)
+    if (1 && vo->getMap()->hasKeyFrame(frame->id_) == true)
     {
         // --  If frame is a keyframe, Draw newly triangulated points with color
         // cout << "number of current triangulated points:"<<frame->inliers_pts3d_.size()<<endl;
