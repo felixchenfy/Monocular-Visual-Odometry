@@ -83,10 +83,17 @@ void selectUniformKptsByGrid(
     keypoints = tmp_keypoints;
 }
 
+// void MatcherBfRadius()
+// {
+
+// }
 void matchFeatures(
-    const cv::Mat &descriptors_1, const cv::Mat &descriptors_2,
+    const cv::Mat1b &descriptors_1, const cv::Mat1b &descriptors_2,
     vector<cv::DMatch> &matches,
-    bool is_print_res)
+    bool is_print_res,
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const double max_dist_between_two_matched_kpts)
 {
     // -- Set arguments
     static const double match_ratio = basics::Config::get<int>("match_ratio");
@@ -95,6 +102,12 @@ void matchFeatures(
 
     static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
     static cv::Ptr<cv::DescriptorMatcher> matcher_bf = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+    // -- Debug: see descriptors_1's content:
+    //    Result: It'S 8UC1, the value ranges from 0 to 255. It's not binary!
+    // basics::print_MatProperty(descriptors_1);
+    // for (int i = 0; i < 32; i++)
+    //     std::cout << int(descriptors_1.at<unsigned char>(0, i)) << std::endl;
 
     // Start matching
     matches.clear();

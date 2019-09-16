@@ -1,5 +1,5 @@
-// Test functions in "include/geometry", including:
-//  * cv::KeyPoint extraction and feature matching.
+// Test functions in "include/my_slam/geometry", including:
+//  * Keypoint extraction and feature matching.
 //  * Estimate camera motion by Essential/Homography matrix (totally 1+2=3 solutions). All returned in a vector.
 //  * Triangulation.
 //  * Compute epipolar error and triangulation error in pixel.
@@ -10,17 +10,17 @@ bin/test_epipolor_geometry image0001.jpg image0002.jpg
 bin/test_epipolor_geometry image0001.jpg image0015.jpg
 */
 
-#include <iostream>
-#include <algorithm> // std::min
-#include <opencv2/core/core.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-
 #include "my_slam/geometry/feature_match.h"
 #include "my_slam/geometry/epipolar_geometry.h"
 #include "my_slam/geometry/motion_estimation.h"
 #include "my_slam/basics/config.h"
+
+#include <iostream>
+#include <algorithm>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 using namespace std;
 using namespace my_slam;
@@ -38,6 +38,10 @@ int main(int argc, char **argv)
     string img_file1, img_file2;
     string folder = "data/test_data/";
     int IDX_TEST_CASE = 1;
+
+    // Feature extraction and matching's parameters
+    const string kConfigFile = "config/config.yaml";
+    basics::Config::setParameterFile(kConfigFile); // Use Config to read .yaml
 
     if (argc - 1 == 2)
     {
@@ -74,8 +78,8 @@ int main(int argc, char **argv)
     //====================================== Main program starts =========================================
 
     // Read image
-    cv::Mat img_1 = imread(folder + img_file1);
-    cv::Mat img_2 = imread(folder + img_file2);
+    cv::Mat img_1 = cv::imread(folder + img_file1);
+    cv::Mat img_2 = cv::imread(folder + img_file2);
 
     // Extract keypoints and features. Match keypoints
     vector<cv::KeyPoint> keypoints_1, keypoints_2;
@@ -83,35 +87,21 @@ int main(int argc, char **argv)
     cv::Mat descriptors_1, descriptors_2;
     // doFeatureMatching(img_1, img_2, keypoints_1, keypoints_2, descriptors_1, descriptors_2, matches);
 
-    bool is_print_res = true, SET_PARAM_BY_YAML = false;
-    if (0)
-    {                                                            // use default settings
-        geometry::calcKeyPoints(img_1, keypoints_1, SET_PARAM_BY_YAML); // Choose the config file before running this
-        geometry::calcKeyPoints(img_2, keypoints_2, SET_PARAM_BY_YAML);
-        cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        geometry::calcDescriptors(img_1, keypoints_1, descriptors_1, SET_PARAM_BY_YAML);
-        geometry::calcDescriptors(img_2, keypoints_2, descriptors_2, SET_PARAM_BY_YAML);
-        geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res, SET_PARAM_BY_YAML);
-    }
-    else
-    { // use settings in .yaml file
-        string filename = "config/config.yaml";
-        basics::Config::setParameterFile(filename);
-        geometry::calcKeyPoints(img_1, keypoints_1); // Choose the config file before running this
-        geometry::calcKeyPoints(img_2, keypoints_2);
-        cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
-        geometry::calcDescriptors(img_1, keypoints_1, descriptors_1);
-        geometry::calcDescriptors(img_2, keypoints_2, descriptors_2);
-        geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res);
-        printf("Number of matches: %d\n", (int)matches.size());
-
-    }
+    bool is_print_res = true;
+    geometry::calcKeyPoints(img_1, keypoints_1);
+    geometry::calcKeyPoints(img_2, keypoints_2);
+    cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
+    geometry::calcDescriptors(img_1, keypoints_1, descriptors_1);
+    geometry::calcDescriptors(img_2, keypoints_2, descriptors_2);
+    geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res);
+    printf("Number of matches: %d\n", (int)matches.size());
 
     // Estimation motion
     vector<cv::Mat> list_R, list_t, list_normal;
     vector<vector<cv::DMatch>> list_matches;
     vector<vector<cv::Point3f>> sols_pts3d_in_cam1_by_triang;
-    const bool is_print_res = false, is_calc_homo = true, is_frame_cam2_to_cam1 = true;
+    const bool is_calc_homo = true, is_frame_cam2_to_cam1 = true;
+    is_print_res = false;
     int best_sol = geometry::helperEstimatePossibleRelativePosesByEpipolarGeometry(
         /*Input*/
         keypoints_1, keypoints_2, matches, K,
@@ -135,34 +125,36 @@ int main(int argc, char **argv)
 
     window_name = "Detected and matched keypoints";
     cv::drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, Idst);
-    cv::namedWindow(window_name, WINDOW_AUTOSIZE);
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     cv::imshow(window_name, Idst);
     cv::imwrite(window_name + ".png", Idst);
     cv::waitKey(1);
 
     window_name = "Detected and inliers keypoints";
     cv::drawMatches(img_1, keypoints_1, img_2, keypoints_2, list_matches[0], Idst);
-    cv::namedWindow(window_name, WINDOW_AUTOSIZE);
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     cv::imshow(window_name, Idst);
     cv::imwrite(window_name + ".png", Idst);
     cv::waitKey(1);
 
-    // -- I spot some wrong inliers, I'm going to show it.
-    // int cnt=0;
-    // for (const cv::DMatch &d:list_matches[0]){
-    //     cv::Point2f p1=keypoints_1[d.queryIdx].pt;
-    //     cv::Point2f p2=keypoints_2[d.trainIdx].pt;
-    //     if(abs(p1.x-p2.x)>20){
-    //         cout << endl;
-    //         printf("The %dth kpt, p1(%.2f, %.2f), p2(%.2f, %.2f)\n",
-    //             cnt, p1.x, p1.y, p2.x, p2.y);
-    //         double error=computeEpipolarConsError(p1,p2,list_R[0],list_t[0],K);
-    //         printf("Print its epi error:%.6f", error);
-    //         cout<<endl;
-    //     }
-    //     cnt++;
-    // }
-    // return
+    // -- Print error
+    int cnt = 0;
+    for (const cv::DMatch &d : list_matches[0])
+    {
+        cv::Point2f p1 = keypoints_1[d.queryIdx].pt;
+        cv::Point2f p2 = keypoints_2[d.trainIdx].pt;
+        if (abs(p1.x - p2.x) > 20)
+        {
+            cout << endl;
+            printf("The %dth kpt, p1(%.2f, %.2f), p2(%.2f, %.2f)\n",
+                   cnt, p1.x, p1.y, p2.x, p2.y);
+            double error = geometry::computeEpipolarConsError(p1, p2, list_R[0], list_t[0], K);
+            printf("Print its epi error:%.6f", error);
+            cout << endl;
+        }
+        cnt++;
+    }
+
     cv::waitKey();
     cv::destroyAllWindows();
     return 0;

@@ -42,8 +42,8 @@ public:
 
   // -- vectors for triangulation
   vector<double> triangulation_angles_of_inliers_;
-  vector<cv::DMatch> inliers_matches_for_3d_;                   // matches whose triangulation result is good.
-  vector<cv::Point3f> inliers_pts3d_;                           // 3d points triangulated from inliers_matches_for_3d_
+  vector<cv::DMatch> inliers_matches_for_3d_;                    // matches whose triangulation result is good.
+  vector<cv::Point3f> inliers_pts3d_;                            // 3d points triangulated from inliers_matches_for_3d_
   std::unordered_map<int, PtConn> inliers_to_mappt_connections_; // curr idx -> idx in ref, and map
 
   // -- Matches with map points (for PnP)
@@ -84,14 +84,14 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
       kpts_colors_.push_back(basics::getPixelAt(rgb_img_, x, y));
     }
   };
-  void matchFeatures(Frame::Ptr prev_frame)
+  void matchFeatures(Frame::Ptr prev_frame, double max_dist_between_two_matched_kpts)
   {
     geometry::matchFeatures(
-        // descriptors_, prev_frame->descriptors_,
         prev_frame->descriptors_, descriptors_,
         matches_with_ref_,
-        true // print result
-    );
+        true, // print result
+        prev_frame->keypoints_, keypoints_,
+        max_dist_between_two_matched_kpts);
   }
   bool isInFrame(const cv::Point3f &p_world);
   bool isInFrame(const cv::Mat &p_world);
