@@ -18,6 +18,14 @@ Frame::Ptr Frame::createFrame(cv::Mat rgb_img, geometry::Camera::Ptr camera, dou
     return frame;
 }
 
+cv::Point2f Frame::projectWorldPointToImage(const cv::Point3f &p_world)
+{
+    cv::Point3f p_cam = basics::preTranslatePoint3f(p_world, T_w_c_.inv()); // T_c_w * p_w = p_c
+    cv::Point2f pixel = geometry::cam2pixel(p_cam, camera_->K_);
+    return pixel;
+}
+
+
 bool Frame::isInFrame(const cv::Point3f &p_world)
 {
     cv::Point3f p_cam = basics::preTranslatePoint3f(p_world, T_w_c_.inv()); // T_c_w * p_w = p_c
@@ -26,10 +34,12 @@ bool Frame::isInFrame(const cv::Point3f &p_world)
     cv::Point2f pixel = geometry::cam2pixel(p_cam, camera_->K_);
     return pixel.x > 0 && pixel.y > 0 && pixel.x < rgb_img_.cols && pixel.y < rgb_img_.rows;
 }
+
 bool Frame::isInFrame(const cv::Mat &p_world)
 {
     return isInFrame(basics::Mat3x1_to_Point3f(p_world));
 }
+
 cv::Mat Frame::getCamCenter()
 {
     return basics::getPosFromT(T_w_c_);

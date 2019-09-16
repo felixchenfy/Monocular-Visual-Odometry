@@ -22,11 +22,19 @@ void calcDescriptors(const cv::Mat &image,
 void matchFeatures(
     const cv::Mat1b &descriptors_1, const cv::Mat1b &descriptors_2,
     vector<cv::DMatch> &matches,
+    int method_index = 1,
     bool is_print_res = false,
     // Below are optional arguments for feature_matching_method_index==3
     const vector<cv::KeyPoint> &keypoints_1 = vector<cv::KeyPoint>(),
     const vector<cv::KeyPoint> &keypoints_2 = vector<cv::KeyPoint>(),
-    const double max_dist_between_two_matched_kpts = 0.0);
+    float max_matching_pixel_dist = 0.0);
+
+vector<cv::DMatch> matchByRadiusAndBruteForce(
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const cv::Mat1b &descriptors_1,
+    const cv::Mat1b &descriptors_2,
+    float max_matching_pixel_dist);
 
 // Remove duplicate matches.
 // After cv's match func, many kpts in I1 might matched to a same kpt in I2.

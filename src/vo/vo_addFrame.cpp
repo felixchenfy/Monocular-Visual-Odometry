@@ -36,7 +36,15 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
     else if (vo_state_ == DOING_INITIALIZATION)
     {
         // Match features
-        geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+        static const float max_matching_pixel_dist_in_initialization =
+            basics::Config::get<float>("max_matching_pixel_dist_in_initialization");
+        static const int method_index = basics::Config::get<float>("feature_match_method_index_initialization");
+        geometry::matchFeatures(
+            ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_, method_index,
+            false,
+            ref_->keypoints_, curr_->keypoints_,
+            max_matching_pixel_dist_in_initialization);
+
         printf("Number of matches with the 1st frame: %d\n", (int)curr_->matches_with_ref_.size());
 
         // Estimae motion and triangulate points
@@ -85,7 +93,14 @@ void VisualOdometry::addFrame(Frame::Ptr frame)
             if (checkLargeMoveForAddKeyFrame_(curr_, ref_))
             {
                 // Feature matching
-                geometry::matchFeatures(ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_);
+                static const float max_matching_pixel_dist_in_triangulation =
+                    basics::Config::get<float>("max_matching_pixel_dist_in_triangulation");
+                static const int method_index = basics::Config::get<float>("feature_match_method_index_pnp");
+                geometry::matchFeatures(
+                    ref_->descriptors_, curr_->descriptors_, curr_->matches_with_ref_, method_index,
+                    false,
+                    ref_->keypoints_, curr_->keypoints_,
+                    max_matching_pixel_dist_in_triangulation);
 
                 // Find inliers by epipolar constraint
                 curr_->inliers_matches_with_ref_ = geometry::helperFindInlierMatchesByEpipolarCons(

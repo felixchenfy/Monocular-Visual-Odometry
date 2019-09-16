@@ -150,7 +150,10 @@ double scalePointPos(cv::Point3f &p, double scale)
     p.y *= scale;
     p.z *= scale;
 }
+
 double calcMatNorm(const cv::Mat &mat)
+// You should use this instead:
+// C++: double norm(InputArray src1, InputArray src2, int normType=NORM_L2, InputArray mask=noArray() )
 {
     double sum = 0;
     for (int i = 0; i < mat.rows; i++)

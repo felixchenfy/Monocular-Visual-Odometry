@@ -105,6 +105,7 @@ public: // ------------------------------- Mapping -----------------------------
   void pushCurrPointsToMap_();
   void getMappointsInCurrentView_(
       vector<MapPoint::Ptr> &candidate_mappoints_in_map,
+      vector<cv::Point2f> &candidate_mappoints_in_2d_image,
       cv::Mat &corresponding_mappoints_descriptors);
   double getViewAngle_(Frame::Ptr frame, MapPoint::Ptr point);
 

@@ -52,7 +52,7 @@ fr1_desk: # fr1_desk dataset
 max_num_imgs_to_proc: 300
 # is_pcl_wait_for_keypress: "true" # If true, PCL Viewer will stop after each update, and wait for your keypress.
 is_pcl_wait_for_keypress: "false" 
-cv_waitkey_time: 30
+cv_waitkey_time: 1
 save_predicted_traj_to: /home/feiyu/Documents/Projects/2018-winter/EECS432_CV_VO/data/test_data/cam_traj.txt
 output_folder: "output"
 
@@ -61,27 +61,40 @@ output_folder: "output"
 # ==============================================================
 
 # ------------------- Feature Matching -------------------
+# ORB settings 
+number_of_keypoints_to_extract: 8000
+max_number_of_keypoints: 1500
+scale_factor: 1.2
+level_pyramid: 4
+score_threshold: 20
+
+# ------------------- Feature Matching -------------------
+
+feature_match_method_index_initialization: 1
+feature_match_method_index_triangulation: 1
+feature_match_method_index_pnp: 1
 
 # Matching descriptos
-feature_match_method_index: 1
+feature_match_method_index: 3
   # method 1: the method in Dr. Xiang Gao's slambook:
   #           distance_threshold = max<float>(min_dis * match_ratio, 30.0);
   # method 2: the method in Lowe's 2004 paper:
   #           min dis / second min dis < 0.8
   # method 3: match a point with its neighboring points and then apply Dr. Xiang Gao's criteria.
-match_ratio: 2 # This is for method 1 used in Dr. Xiang Gao's slambook:
-lowe_dist_ratio: 0.8 # This is for method 2 of Lowe's 2004 SIFT paper
+xiang_gao_method_match_ratio: 2 # This is for method 1 used in Dr. Xiang Gao's slambook:
+lowe_method_dist_ratio: 0.8 # This is for method 2 of Lowe's 2004 SIFT paper
+method_3_feature_dist_threshold: 50.0
+
+# Method 3 parameters:
+max_matching_pixel_dist_in_initialization: 100
+max_matching_pixel_dist_in_triangulation: 100
+max_matching_pixel_dist_in_pnp: 50
 
 # remove wrong matches
 kpts_uniform_selection_grid_size: 16
 kpts_uniform_selection_max_pts_per_grid: 8
 
-# ORB settings 
-number_of_keypoints_to_extract: 8000
-max_number_of_keypoints: 1500
-scale_factor: 1.2
-level_pyramid: 3
-score_threshold: 15
+
 
 # ------------------- RANSAC Essential matrix -------------------
 

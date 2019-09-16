@@ -83,23 +83,60 @@ void selectUniformKptsByGrid(
     keypoints = tmp_keypoints;
 }
 
-// void MatcherBfRadius()
-// {
+vector<cv::DMatch> matchByRadiusAndBruteForce(
+    const vector<cv::KeyPoint> &keypoints_1,
+    const vector<cv::KeyPoint> &keypoints_2,
+    const cv::Mat1b &descriptors_1,
+    const cv::Mat1b &descriptors_2,
+    float max_matching_pixel_dist)
+{
+    int N1 = keypoints_1.size(), N2 = keypoints_2.size();
+    assert(N1 == descriptors_1.rows && N2 == descriptors_2.rows);
+    vector<cv::DMatch> matches;
+    float r2 = max_matching_pixel_dist * max_matching_pixel_dist;
+    for (int i = 0; i < N1; i++)
+    {
+        const cv::KeyPoint &kpt1 = keypoints_1[i];
+        bool is_matched = false;
+        float x = kpt1.pt.x, y = kpt1.pt.y;
+        double min_feature_dist = 99999999.0, target_idx = 0;
+        for (int j = 0; j < N2; j++)
+        {
+            float x2 = keypoints_2[j].pt.x, y2 = keypoints_2[j].pt.y;
+            if ((x - x2) * (x - x2) + (y - y2) * (y - y2) <= r2)
+            {
+                // double feature_dist = cv::norm(descriptors_1.row(i), descriptors_2.row(j));
+                cv::Mat diff;
+                cv::absdiff(descriptors_1.row(i), descriptors_2.row(j), diff);
+                double feature_dist = cv::sum(diff)[0] / descriptors_1.cols;
+                if (feature_dist < min_feature_dist)
+                {
+                    min_feature_dist = feature_dist;
+                    target_idx = j;
+                    is_matched = true;
+                }
+            }
+        }
+        if (is_matched)
+            matches.push_back(cv::DMatch(i, target_idx, static_cast<float>(min_feature_dist)));
+    }
+    return matches;
+}
 
-// }
 void matchFeatures(
     const cv::Mat1b &descriptors_1, const cv::Mat1b &descriptors_2,
     vector<cv::DMatch> &matches,
+    int method_index,
     bool is_print_res,
+    // Below are optional arguments for feature_matching_method_index==3
     const vector<cv::KeyPoint> &keypoints_1,
     const vector<cv::KeyPoint> &keypoints_2,
-    const double max_dist_between_two_matched_kpts)
+    float max_matching_pixel_dist)
 {
     // -- Set arguments
-    static const double match_ratio = basics::Config::get<int>("match_ratio");
-    static const double dist_ratio = basics::Config::get<int>("lowe_dist_ratio");
-    static const int feature_matching_method_index = basics::Config::get<int>("feature_match_method_index");
-
+    static const double xiang_gao_method_match_ratio = basics::Config::get<int>("xiang_gao_method_match_ratio");
+    static const double lowe_method_dist_ratio = basics::Config::get<int>("lowe_method_dist_ratio");
+    static const double method_3_feature_dist_threshold = basics::Config::get<int>("method_3_feature_dist_threshold");
     static cv::FlannBasedMatcher matcher_flann(new cv::flann::LshIndexParams(5, 10, 2));
     static cv::Ptr<cv::DescriptorMatcher> matcher_bf = cv::DescriptorMatcher::create("BruteForce-Hamming");
 
@@ -112,14 +149,33 @@ void matchFeatures(
     // Start matching
     matches.clear();
     double min_dis = 9999999, max_dis = 0, distance_threshold = -1;
-    if (feature_matching_method_index == 1) // the method in Dr. Xiang Gao's slambook
+    if (method_index == 1 || method_index == 3) // the method in Dr. Xiang Gao's slambook
         // Match keypoints with similar descriptors.
         // For kpt_i, if kpt_j's descriptor if most similar to kpt_i's, then they are matched.
     {
         vector<cv::DMatch> all_matches;
-        matcher_flann.match(descriptors_1, descriptors_2, all_matches);
+        if (method_index == 3)
+            all_matches = matchByRadiusAndBruteForce(
+                keypoints_1, keypoints_2, descriptors_1, descriptors_2,
+                max_matching_pixel_dist);
+        else
+            matcher_flann.match(descriptors_1, descriptors_2, all_matches);
 
-        // Find a min-distance threshold for selecting good matches
+        // if (method_index == 3)
+        //     distance_threshold = method_3_feature_dist_threshold;
+        // else
+        // {
+        //     // Find a min-distance threshold for selecting good matches
+        //     for (int i = 0; i < all_matches.size(); i++)
+        //     {
+        //         double dist = all_matches[i].distance;
+        //         if (dist < min_dis)
+        //             min_dis = dist;
+        //         if (dist > max_dis)
+        //             max_dis = dist;
+        //     }
+        //     distance_threshold = std::max<float>(min_dis * xiang_gao_method_match_ratio, 30.0);
+        // }
         for (int i = 0; i < all_matches.size(); i++)
         {
             double dist = all_matches[i].distance;
@@ -128,7 +184,8 @@ void matchFeatures(
             if (dist > max_dis)
                 max_dis = dist;
         }
-        distance_threshold = std::max<float>(min_dis * match_ratio, 30.0);
+        distance_threshold = std::max<float>(min_dis * xiang_gao_method_match_ratio, 30.0);
+
         // Another way of getting the minimum:
         // min_dis = std::min_element(all_matches.begin(), all_matches.end(),
         //     [](const cv::DMatch &m1, const cv::DMatch &m2) {return m1.distance < m2.distance;})->distance;
@@ -138,7 +195,7 @@ void matchFeatures(
             if (m.distance < distance_threshold)
                 matches.push_back(m);
     }
-    else if (feature_matching_method_index == 2)
+    else if (method_index == 2)
     { // method in Lowe's 2004 paper
         // Calculate the features's distance of the two images.
         vector<vector<cv::DMatch>> knn_matches;
@@ -156,7 +213,7 @@ void matchFeatures(
         {
 
             double dist = knn_matches[i][0].distance;
-            if (dist < dist_ratio * knn_matches[i][1].distance)
+            if (dist < lowe_method_dist_ratio * knn_matches[i][1].distance)
                 matches.push_back(knn_matches[i][0]);
             if (dist < min_dis)
                 min_dis = dist;
@@ -174,7 +231,7 @@ void matchFeatures(
     if (is_print_res)
     {
         printf("Matching features:\n");
-        printf("Using method %d, threshold = %f\n", feature_matching_method_index, distance_threshold);
+        printf("Using method %d, threshold = %f\n", method_index, distance_threshold);
         printf("Number of matches: %d\n", int(matches.size()));
         printf("-- Max dist : %f \n", max_dis);
         printf("-- Min dist : %f \n", min_dis);

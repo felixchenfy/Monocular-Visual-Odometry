@@ -55,10 +55,10 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 add_subdirectory( src )
 add_subdirectory( test )
 
-# add_executable(run_vo run_vo.cpp)
-# target_link_libraries( run_vo
-#     basics
-#     geometry
-#     display
-#     vo
-# )
+add_executable(run_vo run_vo.cpp)
+target_link_libraries( run_vo
+    basics
+    geometry
+    display
+    vo
+)

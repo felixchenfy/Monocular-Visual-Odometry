@@ -93,7 +93,9 @@ int main(int argc, char **argv)
     cout << "Number of keypoints: " << keypoints_1.size() << ", " << keypoints_2.size() << endl;
     geometry::calcDescriptors(img_1, keypoints_1, descriptors_1);
     geometry::calcDescriptors(img_2, keypoints_2, descriptors_2);
-    geometry::matchFeatures(descriptors_1, descriptors_2, matches, is_print_res);
+    static const int method_index = basics::Config::get<int>("feature_match_method_index");
+    geometry::matchFeatures(descriptors_1, descriptors_2, matches, method_index, is_print_res,
+                            keypoints_1, keypoints_2, 50);
     printf("Number of matches: %d\n", (int)matches.size());
 
     // Estimation motion

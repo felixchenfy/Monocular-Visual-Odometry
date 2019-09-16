@@ -15,6 +15,7 @@ VisualOdometry::VisualOdometry() : map_(new (Map))
 
 void VisualOdometry::getMappointsInCurrentView_(
     vector<MapPoint::Ptr> &candidate_mappoints_in_map,
+    vector<cv::Point2f> &candidate_2d_pts_in_image,
     cv::Mat &corresponding_mappoints_descriptors)
 {
     // vector<MapPoint::Ptr> candidate_mappoints_in_map;
@@ -23,13 +24,26 @@ void VisualOdometry::getMappointsInCurrentView_(
     corresponding_mappoints_descriptors.release();
     for (auto &iter_map_point : map_->map_points_)
     {
-        MapPoint::Ptr &p = iter_map_point.second;
-        if (curr_->isInFrame(p->pos_)) // check if p in curr frame image
+        MapPoint::Ptr &p_world = iter_map_point.second;
+
+        // -- Check if p in curr frame image
+        bool is_p_in_curr_frame = true;
+        cv::Point3f p_cam = basics::preTranslatePoint3f(p_world->pos_, curr_->T_w_c_.inv()); // T_c_w * p_w = p_c
+        if (p_cam.z < 0)
+            is_p_in_curr_frame = false;
+        cv::Point2f pixel = geometry::cam2pixel(p_cam, curr_->camera_->K_);
+        const bool is_inside_image = pixel.x > 0 && pixel.y > 0 && pixel.x < curr_->rgb_img_.cols && pixel.y < curr_->rgb_img_.rows;
+        if (!is_inside_image)
+            is_p_in_curr_frame = false;
+
+        // -- If is in current frame,
+        //      then add this point to candidate_mappoints_in_map
+        if (is_p_in_curr_frame)
         {
-            // -- add to candidate_mappoints_in_map
-            candidate_mappoints_in_map.push_back(p);
-            corresponding_mappoints_descriptors.push_back(p->descriptor_);
-            p->visible_times_++;
+            candidate_mappoints_in_map.push_back(p_world);
+            candidate_2d_pts_in_image.push_back(pixel);
+            corresponding_mappoints_descriptors.push_back(p_world->descriptor_);
+            p_world->visible_times_++;
         }
     }
 }
@@ -254,11 +268,26 @@ bool VisualOdometry::poseEstimationPnP_()
 {
     // -- From the local map, find the keypoints that fall into the current view
     vector<MapPoint::Ptr> candidate_mappoints_in_map;
+    vector<cv::Point2f> candidate_2d_pts_in_image;
     cv::Mat corresponding_mappoints_descriptors;
-    getMappointsInCurrentView_(candidate_mappoints_in_map, corresponding_mappoints_descriptors);
+    getMappointsInCurrentView_(
+        candidate_mappoints_in_map,
+        candidate_2d_pts_in_image,
+        corresponding_mappoints_descriptors);
+    vector<cv::KeyPoint> candidate_2d_kpts_in_image = geometry::pts2Keypts(candidate_2d_pts_in_image);
 
     // -- Compare descriptors to find matches, and extract 3d 2d correspondance
-    geometry::matchFeatures(corresponding_mappoints_descriptors, curr_->descriptors_, curr_->matches_with_map_);
+    static const float max_matching_pixel_dist_in_pnp =
+        basics::Config::get<float>("max_matching_pixel_dist_in_pnp");
+    static const int method_index = basics::Config::get<float>("feature_match_method_index_pnp");
+    geometry::matchFeatures(
+        corresponding_mappoints_descriptors, curr_->descriptors_,
+        curr_->matches_with_map_,
+        method_index,
+        false,
+        candidate_2d_kpts_in_image, curr_->keypoints_,
+        max_matching_pixel_dist_in_pnp);
+
     const int num_matches = curr_->matches_with_map_.size();
     cout << "Number of 3d-2d pairs: " << num_matches << endl;
     vector<cv::Point3f> pts_3d;
@@ -338,7 +367,9 @@ bool VisualOdometry::poseEstimationPnP_()
                    dist_to_prev_keyframe, max_possible_dist_to_prev_keyframe);
             is_pnp_good = false;
         }
-    }else{
+    }
+    else
+    {
         printf("PnP num inlier matches: %d.\n", num_matches);
     }
 

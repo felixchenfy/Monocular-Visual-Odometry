@@ -84,15 +84,7 @@ public: // Below are deprecated. These were used in the two-frame-matching vo.
       kpts_colors_.push_back(basics::getPixelAt(rgb_img_, x, y));
     }
   };
-  void matchFeatures(Frame::Ptr prev_frame, double max_dist_between_two_matched_kpts)
-  {
-    geometry::matchFeatures(
-        prev_frame->descriptors_, descriptors_,
-        matches_with_ref_,
-        true, // print result
-        prev_frame->keypoints_, keypoints_,
-        max_dist_between_two_matched_kpts);
-  }
+  cv::Point2f projectWorldPointToImage(const cv::Point3f &p_world);
   bool isInFrame(const cv::Point3f &p_world);
   bool isInFrame(const cv::Mat &p_world);
   bool isMappoint(int idx)
