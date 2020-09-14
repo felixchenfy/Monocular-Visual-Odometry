@@ -33,19 +33,19 @@ Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const cv::Mat &R0, const cv::Mat &t
 
 // -------------- CV <--> Sophus --------------
 
-Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv)
+Sophus::SE3d transT_cv2sophus(const cv::Mat &T_cv)
 {
     Eigen::Matrix3d R_eigen;
     cv::cv2eigen(T_cv(cv::Rect2d(0, 0, 3, 3)), R_eigen);
     Eigen::Vector3d t_eigen(T_cv.at<double>(0, 3), T_cv.at<double>(1, 3), T_cv.at<double>(2, 3));
-    Sophus::SE3 SE3_Rt(R_eigen, t_eigen);
+    Sophus::SE3d SE3_Rt(R_eigen, t_eigen);
     return SE3_Rt;
 }
 
-cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus)
+cv::Mat transT_sophus2cv(const Sophus::SE3d &T_sophus)
 {
     Eigen::Vector3d eigen_t(T_sophus.translation());
-    Eigen::Matrix3d eigen_R(T_sophus.rotation_matrix());
+    Eigen::Matrix3d eigen_R(T_sophus.rotationMatrix());
 
     cv::Mat cv_t, cv_R;
     eigen2cv(eigen_t, cv_t);

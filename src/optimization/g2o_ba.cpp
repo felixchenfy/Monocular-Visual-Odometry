@@ -40,9 +40,9 @@ void optimizeSingleFrame(
 {
     const cv::Mat pose_src0 = pose_src.clone();
 
-    // Change pose format from OpenCV to Sophus::SE3
+    // Change pose format from OpenCV to Sophus::SE3d
     cv::Mat T_cam_to_world_cv = pose_src.inv();
-    Sophus::SE3 T_cam_to_world = basics::transT_cv2sophus(T_cam_to_world_cv);
+    Sophus::SE3d T_cam_to_world = basics::transT_cv2sophus(T_cam_to_world_cv);
 
     // Init g2o
     std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linear_solver;
@@ -60,7 +60,7 @@ void optimizeSingleFrame(
     g2o::VertexSE3Expmap *pose = new g2o::VertexSE3Expmap(); // camera pose
     pose->setId(0);
     pose->setEstimate(g2o::SE3Quat(
-        T_cam_to_world.rotation_matrix(),
+        T_cam_to_world.rotationMatrix(),
         T_cam_to_world.translation()));
 
     optimizer.addVertex(pose);
@@ -123,7 +123,7 @@ void optimizeSingleFrame(
     // -- Final: get the result from solver
 
     // 1. Camera pose
-    T_cam_to_world = Sophus::SE3(
+    T_cam_to_world = Sophus::SE3d(
         pose->estimate().rotation(),
         pose->estimate().translation());
     // Eigen::Matrix4d T_cam_to_world = Eigen::Isometry3d(pose->estimate()).matrix();
@@ -181,10 +181,10 @@ void bundleAdjustment(
     bool is_fix_map_pts, bool is_update_map_pts)
 {
 
-    // Change pose format from OpenCV to Sophus::SE3
+    // Change pose format from OpenCV to Sophus::SE3d
     int num_frames = v_camera_g2o_poses.size();
-    // vector<Sophus::SE3, aligned_allocator<Sophus::SE3>> v_T_cam_to_world;
-    vector<Sophus::SE3> v_T_cam_to_world;
+    // vector<Sophus::SE3d, aligned_allocator<Sophus::SE3d>> v_T_cam_to_world;
+    vector<Sophus::SE3d> v_T_cam_to_world;
     for (int i = 0; i < num_frames; i++)
     {
         v_T_cam_to_world.push_back(
@@ -212,7 +212,7 @@ void bundleAdjustment(
         // if (num_frames > 1 && ith_frame == num_frames - 1)
         // pose->setFixed(true); // Fix the last one -- which is the earliest frame
         pose->setEstimate(g2o::SE3Quat(
-            v_T_cam_to_world[ith_frame].rotation_matrix(),
+            v_T_cam_to_world[ith_frame].rotationMatrix(),
             v_T_cam_to_world[ith_frame].translation()));
         optimizer.addVertex(pose);
         g2o_poses.push_back(pose);
@@ -299,7 +299,7 @@ void bundleAdjustment(
     // 1. Camera pose
     for (int i = 0; i < num_frames; i++)
     {
-        Sophus::SE3 T_cam_to_world = Sophus::SE3(
+        Sophus::SE3d T_cam_to_world = Sophus::SE3d(
             g2o_poses[i]->estimate().rotation(),
             g2o_poses[i]->estimate().translation());
         cv::Mat pose_src = basics::transT_sophus2cv(T_cam_to_world).inv(); // Change data format back to OpenCV
