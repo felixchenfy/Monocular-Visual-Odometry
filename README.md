@@ -184,11 +184,28 @@ Download here: https://github.com/RainerKuemmerle/g2o.
 Checkout to the last version in year 2017. Do cmake, make, make install.
 
 # 4. How to Run  
-> $ mkdir build && mkdir lib && mkdir bin   
-> $ cd build && cmake .. && make && cd ..  
 
-Then, set up things in [config/config.yaml](config/config.yaml), and run:  
-> $ bin/run_vo config/config.yaml  
+Compile:
+```bash
+mkdir -p build lib bin   
+cd build && cmake .. && make -j4 && cd ..  
+```
+
+Download some data:
+```bash
+mkdir -p data
+cd data
+git clone https://github.com/felixchenfy/Monocular-Visual-Odometry-Data
+mv Monocular-Visual-Odometry-Data/* ./
+rm Monocular-Visual-Odometry-Data
+ls
+# dataset_images_matlab  README.md  result  test_data
+```
+
+Then, take a look at the configurations in [config/config.yaml](config/config.yaml). The file paths have already been configured, so you don't need to change anything at this moment.
+
+Finally, run:
+> bin/run_vo config/config.yaml  
 
 # 5. Results
 
