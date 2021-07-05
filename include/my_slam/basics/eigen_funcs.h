@@ -9,8 +9,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <sophus/so3.h>
-#include <sophus/se3.h>
+#include <sophus/so3.hpp>
+#include <sophus/se3.hpp>
 
 #include <opencv2/core/eigen.hpp>
 
@@ -30,8 +30,8 @@ Eigen::Affine3d getAffine3d(double x, double y, double z, double rot_axis_x, dou
 Eigen::Affine3d transT_CVRt_to_EigenAffine3d(const cv::Mat &R, const cv::Mat &t);
 
 // -------------- CV <--> Sophus --------------
-Sophus::SE3 transT_cv2sophus(const cv::Mat &T_cv);
-cv::Mat transT_sophus2cv(const Sophus::SE3 &T_sophus);
+Sophus::SE3d transT_cv2sophus(const cv::Mat &T_cv);
+cv::Mat transT_sophus2cv(const Sophus::SE3d &T_sophus);
 
 } // namespace basics
 } // namespace my_slam

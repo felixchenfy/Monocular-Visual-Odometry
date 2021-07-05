@@ -45,7 +45,7 @@ set( THIRD_PARTY_LIBS
     ${OpenCV_LIBS}
     ${PCL_LIBRARIES}
     ${Sophus_LIBRARIES} # If "make install" is good, use this line
-    libSophus.so # If "make install" failed, copy files manully to usr/lib and usr/include, and use this line
+    # libSophus.so # If "make install" failed, copy files manully to usr/lib and usr/include, and use this line
     g2o_core g2o_stuff g2o_types_sba g2o_csparse_extension
     ${CSPARSE_LIBRARY}
 )
