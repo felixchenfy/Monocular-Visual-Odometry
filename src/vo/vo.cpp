@@ -86,7 +86,7 @@ void VisualOdometry::estimateMotionAnd3DPoints_()
     // -- Output
 
     // compute camera pose
-    T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev).inv();
+    T = ref_->T_w_c_ * basics::convertRt2T(R_curr_to_prev, t_curr_to_prev);
 
     // Get points that are used for triangulating new map points
     retainGoodTriangulationResult_();
